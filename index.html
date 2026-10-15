@@ -861,7 +861,7 @@ function reportsSheet(){return{live:true,render(){
 function settingsSheet(){return{live:false,render(){
   const p=S.profile;const f=(k,l,type='text',extra='')=>`<div class="field"><label for="st-${k}">${l}</label><input class="in" id="st-${k}" data-s="${k}" type="${type}" value="${esc(p[k])}" ${extra}></div>`;
   return sheetHead(t('settings'),{close:true,right:`<button class="textbtn" data-act="saveSettings">${t('save')}</button>`})+`<div class="wrap sheet-b"><div style="margin-top:14px"></div>
-  ${f('company',t('company'),'text','placeholder="HOPKINS CONSTRUCTION LLC"')}
+  ${f('company',t('company'),'text','placeholder="'+(lang==='es'?'Ej. Tu Compañía LLC':'e.g. Your Company LLC')+'"')}
   <div class="field"><label for="st-address">${t('address')}</label><textarea class="in" id="st-address" data-s="address">${esc(p.address)}</textarea></div>
   <div class="grid2">${f('phone',t('phone'),'tel')}${f('email',t('email'),'email')}</div>
   ${f('license',t('license'))}
