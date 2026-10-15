@@ -217,7 +217,7 @@ textarea.in{min-height:84px;resize:vertical}
 
 /* ---------- i18n ---------- */
 const L={
-en:{secWorkflow:'Workflow',secCashflow:'Cashflow',secItems:'Items & expenses',secInsights:'Insights',secBusiness:'Business',secSupport:'Support',help:'Help',expenses:'Expenses',thisMonth:'This month',newExpense:'New expense',vendor:'Vendor / store',category:'Category',noExpenses:'No expenses yet',noExpensesSub:'Log materials, dump fees, fuel and crew pay to see your real profit per job.',profit:'Profit',spent:'Expenses',receipt:'Receipt photo',tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
+en:{secWorkflow:'Workflow',secCashflow:'Cashflow',secItems:'Items & expenses',secInsights:'Insights',secBusiness:'Business',secSupport:'Support',help:'Help',shareApp:'Share the app',shareAppSub:'Free for every contractor',shareAppTitle:'Share Invoice Free del Obrero',shareAppText:'Free invoicing app for contractors. No sign-up, no fees, your data stays on your phone.',scanToOpen:'Scan with the camera to open the app',shareBtn:'Share link',copyLink:'Copy link',expenses:'Expenses',thisMonth:'This month',newExpense:'New expense',vendor:'Vendor / store',category:'Category',noExpenses:'No expenses yet',noExpensesSub:'Log materials, dump fees, fuel and crew pay to see your real profit per job.',profit:'Profit',spent:'Expenses',receipt:'Receipt photo',tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Get started',install:'Install app',iosInstall:'On iPhone: tap Share → Add to Home Screen.',privacyLine:'Your data stays on this device. No accounts, no trackers.',
 unsentAlert:n=>`${n} unpaid invoice${n==1?'':'s'} not yet sent`,readySend:'Ready to send?',overview:'Overview',overdue:'Overdue',unpaid:'Unpaid',unsent:'Unsent',sent:'Sent',partial:'Partial',paid:'Paid',draft:'Draft',accepted:'Accepted',receivedMonth:'Received this month',owedTotal:'Total owed to you',recent:'Recent invoices',
 noInvoices:'No invoices yet',noInvoicesSub:'Tap + to make your first invoice.',newInvoice:'New invoice',newEstimate:'New estimate',invoice:'Invoice',estimate:'Estimate',save:'Save',cancel:'Cancel',billTo:'Bill to',chooseClient:'Choose client',addClient:'Add client',
@@ -241,7 +241,7 @@ payTitle:'Pay / Pagar',rateAsOf:'Rate as of',refresh:'Refresh',priceUnavailable:
 backupReminder:'Your data lives only on this device. Download a backup regularly.',lastBackup:'Last backup',never:'never',storageFull:'Storage is full. Download a backup and remove old photos.',
 aboutText:'Invoice Free del Obrero is free and open source (MIT). There are no accounts, no ads and no trackers: everything you enter is saved only on this device. Use “Download full backup” to keep a copy or move to another phone.',
 continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent'},
-es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
+es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',shareApp:'Compartir la app',shareAppSub:'Gratis para todo contratista',shareAppTitle:'Comparte Invoice Free del Obrero',shareAppText:'App gratis para hacer facturas de contratista. Sin registro, sin cuotas, tus datos se quedan en tu teléfono.',scanToOpen:'Escanea con la cámara para abrir la app',shareBtn:'Compartir link',copyLink:'Copiar link',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Empezar',install:'Instalar app',iosInstall:'En iPhone: toca Compartir → Agregar a inicio.',privacyLine:'Tus datos se quedan en este dispositivo. Sin cuentas, sin rastreadores.',
 unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,readySend:'¿Listo para enviar?',overview:'Resumen',overdue:'Vencidas',unpaid:'Pendientes',unsent:'No enviada',sent:'Enviada',partial:'Parcial',paid:'Pagada',draft:'Borrador',accepted:'Aceptado',receivedMonth:'Cobrado este mes',owedTotal:'Total que te deben',recent:'Facturas recientes',
 noInvoices:'Aún no hay facturas',noInvoicesSub:'Toca + para crear tu primera factura.',newInvoice:'Nueva factura',newEstimate:'Nuevo presupuesto',invoice:'Factura',estimate:'Presupuesto',save:'Guardar',cancel:'Cancelar',billTo:'Facturar a',chooseClient:'Elegir cliente',addClient:'Agregar cliente',
@@ -493,7 +493,7 @@ function vMore(){
   ${sec(t('secItems'),it('savedItems',t('savedItems'))+it('expensesOpen',t('expenses'),expMonth?t('thisMonth')+': '+money(expMonth):''))}
   ${sec(t('secInsights'),it('reports',t('reports')))}
   ${sec(t('secBusiness'),(window.cloudMoreRow?window.cloudMoreRow():'')+it('settings',t('settings'),esc(S.profile.company))+it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never'))))}
-  ${sec(t('secSupport'),it('helpOpen',t('help'))+it('aboutOpen',t('about')))}
+  ${sec(t('secSupport'),it('shareApp',t('shareApp'),t('shareAppSub'))+it('helpOpen',t('help'))+it('aboutOpen',t('about')))}
   </div>
   <div class="group"><div class="gl">${t('language')}</div><div class="seg"><button data-act="setLang" data-v="es" aria-pressed="${lang==='es'}">Español</button><button data-act="setLang" data-v="en" aria-pressed="${lang==='en'}">English</button></div></div>
   ${installEvt?`<button class="btn outline" data-act="install">${t('install')}</button>`:''}
@@ -884,6 +884,17 @@ function ieSheet(){return{live:true,render(){
 }}}
 function aboutSheet(){return{live:false,render(){return sheetHead(t('about'))+`<div class="wrap sheet-b"><h2 class="brand" style="font-size:44px;margin-top:18px"><span>INVOICE FREE</span><span class="b2">DEL OBRERO</span></h2><p>${t('aboutText')}</p><p class="small">${t('credit')}</p><p class="small">MIT License · v1.0</p></div>`}}}
 
+const APP_URL='https://freeinvoicedelobrero-ctrl.github.io/invoice-free-del-obrero/';
+function shareAppSheet(){return{live:false,render(){return sheetHead(t('shareApp'))+`<div class="wrap sheet-b" style="display:flex;flex-direction:column;gap:12px">
+<p>${t('shareAppText')}</p>
+${window.qrcode?`<div class="qr">${qrSVG(APP_URL)}</div>
+<p class="small" style="text-align:center;margin:0">${t('scanToOpen')}</p>`:''}
+<p class="mono" style="text-align:center;word-break:break-all;margin:0">${APP_URL}</p>
+<div class="btns" style="margin:0"><div class="row2"><a class="btn" href="mailto:?subject=${encodeURIComponent('Invoice Free del Obrero')}&body=${encodeURIComponent(t('shareAppText')+'\n\n'+APP_URL)}">${ic('mail')} ${t('sendEmail')}</a><a class="btn" href="sms:${/iPhone|iPad/i.test(navigator.userAgent)?'&':'?'}body=${encodeURIComponent(t('shareAppText')+' '+APP_URL)}">${ic('chat')} ${t('sendText')}</a></div></div>
+<button class="btn primary" data-act="shareAppNow">${t('shareBtn')}</button>
+<button class="btn" data-act="copy" data-v="${APP_URL}">${t('copyLink')}</button></div>`}}}
+async function shareAppNow(){try{if(navigator.share){await navigator.share({title:'Invoice Free del Obrero',text:t('shareAppText'),url:APP_URL});return}}catch(e){if(e&&e.name==='AbortError')return}copyText(t('shareAppText')+' '+APP_URL)}
+
 /* ---------- CSV import ---------- */
 function parseCSV(text){
   const rows=[];let row=[],f='',q=false;
@@ -1114,6 +1125,8 @@ const A={
   askDelExpense:()=>{$('#delZone').innerHTML=`<div class="confirm"><p style="margin:0 0 10px">${t('confirmDel')}</p><div class="btns" style="margin:0"><button class="btn" data-act="back0">${t('cancel')}</button><button class="btn bad" data-act="delExpense">${t('yesDel')}</button></div></div>`},
   delExpense:()=>{delete S.expenses[E.id];E=null;closeSheet();commit()},
   helpOpen:()=>showSheet(helpSheet()),
+  shareApp:()=>showSheet(shareAppSheet()),
+  shareAppNow:()=>shareAppNow(),
   reports:()=>showSheet(reportsSheet()),
   savedItems:()=>showSheet(savedSheet(false)),
   newSaved:()=>showSheet(savedEditor()),
