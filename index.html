@@ -149,6 +149,22 @@ textarea.in{min-height:84px;resize:vertical}
 .btn[disabled]{opacity:.5}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .btns .wide{grid-column:1/-1}
+.edtabs{margin-top:12px}
+.btns .btn{display:flex;align-items:center;justify-content:center;gap:8px}.btns .btn svg{width:20px;height:20px;flex:none}
+.paper{background:#fff;color:#111;border-radius:6px;overflow:hidden;margin:14px 0;font-size:13px;box-shadow:0 2px 14px rgba(0,0,0,.5)}
+.paper .ph{background:#222;color:#fff;padding:16px;display:flex;justify-content:space-between;gap:10px}
+.paper .pco{font-weight:700;font-size:17px}.paper .ph .psm{color:#ddd}
+.paper .pr{text-align:right}.paper .pkind{font-weight:800;font-size:20px;letter-spacing:.5px}.paper .pno{font-weight:700}
+.paper .pb{padding:16px}.paper .psm{font-size:12px;color:#444;margin:2px 0}
+.paper .plbl{font-size:10px;font-weight:700;color:#777;letter-spacing:.6px;margin-top:12px}
+.paper .pmeta{display:flex;justify-content:space-between;gap:10px}
+.paper .ptab{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px}
+.paper .ptab th{background:#222;color:#fff;text-align:left;padding:6px;font-weight:600}
+.paper .ptab td{padding:6px;border-bottom:1px solid #eee;vertical-align:top}
+.paper .ptab td:nth-child(n+2),.paper .ptab th:nth-child(n+2){text-align:right;white-space:nowrap}
+.paper .ptab td:nth-child(3),.paper .ptab th:nth-child(3){text-align:left}
+.paper .ptot{margin:12px 0 0 auto;max-width:240px}.paper .ptot div{display:flex;justify-content:space-between;padding:3px 0}
+.paper .ptot .pbig{font-weight:800;font-size:15px}
 .btns .row2{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.btns .row2 .btn{display:flex;align-items:center;justify-content:center;gap:8px}.btns .row2 svg{width:20px;height:20px}
 .hero{padding:18px 0 6px}
 .hero .no{font-family:var(--display);font-weight:700;font-size:34px;line-height:1}
@@ -223,7 +239,7 @@ unsentAlert:n=>`${n} unpaid invoice${n==1?'':'s'} not yet sent`,readySend:'Ready
 noInvoices:'No invoices yet',noInvoicesSub:'Tap + to make your first invoice.',newInvoice:'New invoice',newEstimate:'New estimate',invoice:'Invoice',estimate:'Estimate',save:'Save',cancel:'Cancel',billTo:'Bill to',chooseClient:'Choose client',addClient:'Add client',
 job:'Job / project',noJob:'No job',newJob:'+ New job',jobName:'Job name',jobPh:'e.g. Smith – roof tear-off',jobSite:'Job site address',sameAsBilling:'Same as billing address',useLocation:'Use my current location',openMaps:'Open in Maps',locationFail:'Could not get your location.',
 items:'Items',addItem:'Add item',fromSaved:'From saved items',desc:'Description',qty:'Qty',unit:'Unit',rate:'Rate',amount:'Amount',subtotal:'Subtotal',discount:'Discount',tax:'Tax %',total:'Total',dueDate:'Due date',onReceipt:'On receipt',days:'days',payInstr:'Payment instructions',notes:'Notes / terms',date:'Date',number:'Number',
-recordPayment:'Record payment',markSent:'Mark as sent',markUnsent:'Mark as unsent',edit:'Edit',downloadPdf:'Download PDF',sharePdf:'Share PDF',copyText:'Copy text',sendEmail:'Email',sendText:'Text',attachNote:'The PDF was downloaded. Attach it to the email.',noEmail:'This client has no email. Add it in Clients.',noPhone:'This client has no phone. Add it in Clients.',duplicate:'Duplicate',del:'Delete',confirmDel:'Delete this for good?',yesDel:'Yes, delete',
+recordPayment:'Record payment',markSent:'Mark as sent',markUnsent:'Mark as unsent',edit:'Edit',downloadPdf:'Download PDF',sharePdf:'Share PDF',copyText:'Copy text',tab_edit:'Edit',tab_preview:'Preview',tab_send:'Send',sendTo:'Send to (email)',subject:'Subject',message:'Message',sendHow:'On your phone the PDF is attached automatically; pick Gmail, Messages or WhatsApp. On a computer the PDF downloads and your email opens ready — attach the PDF.',qrInPdf:n=>`Payment QR codes (${n}) are added to the PDF.`,photosInPdf:n=>`${n} photo(s) included in the PDF.`,yourCompany:'Your company',sendEmail:'Email',sendText:'Text',attachNote:'The PDF was downloaded. Attach it to the email.',noEmail:'This client has no email. Add it in Clients.',noPhone:'This client has no phone. Add it in Clients.',duplicate:'Duplicate',del:'Delete',confirmDel:'Delete this for good?',yesDel:'Yes, delete',
 payments:'Payments',noPayments:'No payments recorded yet.',balance:'Balance due',paidSoFar:'Paid',method:'Method',ref:'Check # / reference',note:'Note',coinAmount:'Coin amount (optional)',txid:'Transaction ID (optional)',
 billingName:'Billing name*',mobile:'Mobile',email:'Email',addEmail:'Add another email',address:'Billing address',noClients:'No clients yet',noClientsSub:'Add the GCs and companies you bill.',invoiced:'Invoiced',owes:'Owes',totalPaid:'Paid',openJobs:'Open jobs',
 convert:'Convert to invoice',estConverted:'Converted to invoice',markAccepted:'Mark accepted',noEstimates:'No estimates yet',noEstimatesSub:'Quote a job, then convert it to an invoice in one tap.',
@@ -247,7 +263,7 @@ unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,r
 noInvoices:'Aún no hay facturas',noInvoicesSub:'Toca + para crear tu primera factura.',newInvoice:'Nueva factura',newEstimate:'Nuevo presupuesto',invoice:'Factura',estimate:'Presupuesto',save:'Guardar',cancel:'Cancelar',billTo:'Facturar a',chooseClient:'Elegir cliente',addClient:'Agregar cliente',
 job:'Trabajo / proyecto',noJob:'Sin trabajo',newJob:'+ Nuevo trabajo',jobName:'Nombre del trabajo',jobPh:'ej. Smith – quitar techo',jobSite:'Dirección de la obra',sameAsBilling:'Igual que la dirección de cobro',useLocation:'Usar mi ubicación actual',openMaps:'Abrir en Mapas',locationFail:'No se pudo obtener tu ubicación.',
 items:'Conceptos',addItem:'Agregar concepto',fromSaved:'De conceptos guardados',desc:'Descripción',qty:'Cant.',unit:'Unidad',rate:'Precio',amount:'Importe',subtotal:'Subtotal',discount:'Descuento',tax:'Impuesto %',total:'Total',dueDate:'Fecha límite',onReceipt:'Al recibir',days:'días',payInstr:'Instrucciones de pago',notes:'Notas / términos',date:'Fecha',number:'Número',
-recordPayment:'Registrar pago',markSent:'Marcar enviada',markUnsent:'Marcar no enviada',edit:'Editar',downloadPdf:'Descargar PDF',sharePdf:'Compartir PDF',copyText:'Copiar texto',sendEmail:'Email',sendText:'Mensaje',attachNote:'Se descargó el PDF. Adjúntalo al correo.',noEmail:'Este cliente no tiene email. Agrégalo en Clientes.',noPhone:'Este cliente no tiene teléfono. Agrégalo en Clientes.',duplicate:'Duplicar',del:'Eliminar',confirmDel:'¿Eliminar para siempre?',yesDel:'Sí, eliminar',
+recordPayment:'Registrar pago',markSent:'Marcar enviada',markUnsent:'Marcar no enviada',edit:'Editar',downloadPdf:'Descargar PDF',sharePdf:'Compartir PDF',copyText:'Copiar texto',tab_edit:'Editar',tab_preview:'Vista previa',tab_send:'Enviar',sendTo:'Enviar a (email)',subject:'Asunto',message:'Mensaje',sendHow:'En el teléfono el PDF va adjunto solo; escoge Gmail, Mensajes o WhatsApp. En la computadora se descarga el PDF y se abre tu correo listo — adjunta el PDF.',qrInPdf:n=>`Los QR de pago (${n}) se agregan al PDF.`,photosInPdf:n=>`${n} foto(s) incluidas en el PDF.`,yourCompany:'Tu compañía',sendEmail:'Email',sendText:'Mensaje',attachNote:'Se descargó el PDF. Adjúntalo al correo.',noEmail:'Este cliente no tiene email. Agrégalo en Clientes.',noPhone:'Este cliente no tiene teléfono. Agrégalo en Clientes.',duplicate:'Duplicar',del:'Eliminar',confirmDel:'¿Eliminar para siempre?',yesDel:'Sí, eliminar',
 payments:'Pagos',noPayments:'Sin pagos registrados.',balance:'Saldo pendiente',paidSoFar:'Pagado',method:'Método',ref:'Cheque # / referencia',note:'Nota',coinAmount:'Cantidad en moneda (opcional)',txid:'ID de transacción (opcional)',
 billingName:'Nombre de facturación*',mobile:'Celular',email:'Correo',addEmail:'Agregar otro correo',address:'Dirección de cobro',noClients:'Aún no hay clientes',noClientsSub:'Agrega los contratistas y compañías que facturas.',invoiced:'Facturado',owes:'Debe',totalPaid:'Pagado',openJobs:'Trabajos abiertos',
 convert:'Convertir a factura',estConverted:'Convertido a factura',markAccepted:'Marcar aceptado',noEstimates:'Aún no hay presupuestos',noEstimatesSub:'Cotiza un trabajo y conviértelo en factura con un toque.',
@@ -630,7 +646,7 @@ function docDetail(id){return{live:true,pay:true,render(){
   <div class="btns">
   ${isEst?(d.convertedTo?`<button class="btn wide" data-act="openDoc" data-id="${d.convertedTo}">${t('estConverted')} →</button>`:`<button class="btn primary wide" data-act="convert" data-id="${id}">${t('convert')}</button>`)
   :`<button class="btn primary wide" data-act="pay" data-id="${id}" ${c.balance<=0.005?'disabled':''}>${c.balance<=0.005?t('paidInFull'):t('recordPayment')}</button>`}
-  <div class="row2"><button class="btn" data-act="emailDoc" data-id="${id}">${ic('mail')} ${t('sendEmail')}</button><button class="btn" data-act="textDoc" data-id="${id}">${ic('chat')} ${t('sendText')}</button></div>
+  <div class="row2"><button class="btn" data-act="openSend" data-id="${id}">${ic('mail')} ${t('tab_send')}</button><button class="btn" data-act="openPreview" data-id="${id}">${t('tab_preview')}</button></div>
   <button class="btn" data-act="sharePdf" data-id="${id}">${t('sharePdf')}</button>
   <button class="btn" data-act="pdf" data-id="${id}">${t('downloadPdf')}</button>
   <button class="btn" data-act="toggleSent" data-id="${id}">${d.sent?t('markUnsent'):t('markSent')}</button>
@@ -655,15 +671,20 @@ function newDoc(kind,preset){
   return {id:uid(),kind,number:String(num),date:todayISO(),clientId:'',jobId:'',items:[emptyItem()],discountType:'$',discountValue:0,taxRate:0,dueDays:+p.defDue||30,payInstr:p.payInstr||'',notes:p.terms||'',sent:false,payments:[],photos:[],includePhotos:true,_new:true,...(preset||{})};
 }
 let NJ=null;/* pending new job */
-function openEditor(doc){D=JSON.parse(JSON.stringify(doc));NJ=null;showSheet(editorSheet())}
+let edTab='edit',SM=null;
+function openEditor(doc,tabName){D=JSON.parse(JSON.stringify(doc));NJ=null;edTab=tabName||'edit';SM=null;showSheet(editorSheet())}
+function edTabs(){return `<div class="seg edtabs" role="tablist">${['edit','preview','send'].map(k=>`<button data-act="edTab" data-v="${k}" aria-pressed="${edTab===k}">${t('tab_'+k)}</button>`).join('')}</div>`}
 function editorSheet(){return{live:false,render(){
   const isEst=D.kind==='estimate';
+  const head=sheetHead(D._new?(isEst?t('newEstimate'):t('newInvoice')):(isEst?t('estimate'):t('invoice'))+' '+D.number,{close:true,right:`<button class="textbtn" data-act="saveDoc">${t('save')}</button>`});
+  if(edTab==='preview')return head+`<div class="wrap sheet-b">${edTabs()}${previewHTML(D)}<div class="btns"><button class="btn" data-act="edTab" data-v="edit">${t('tab_edit')}</button><button class="btn primary" data-act="edTab" data-v="send">${t('tab_send')} →</button></div></div>`;
+  if(edTab==='send')return head+`<div class="wrap sheet-b">${edTabs()}${sendPane()}</div>`;
   const cls=Object.values(S.clients).sort((a,b)=>a.name.localeCompare(b.name));
   const jobs=Object.values(S.jobs).filter(j=>j.clientId===D.clientId);
   const cur=D.jobId?S.jobs[D.jobId]:null;
   const dueOpts=[0,7,15,30,45,60,90];if(!dueOpts.includes(+D.dueDays))dueOpts.push(+D.dueDays);
   const jobSel=NJ?'__new':(D.jobId||'');
-  return sheetHead(D._new?(isEst?t('newEstimate'):t('newInvoice')):(isEst?t('estimate'):t('invoice'))+' '+D.number,{close:true,right:`<button class="textbtn" data-act="saveDoc">${t('save')}</button>`})+`<div class="wrap sheet-b">
+  return head+`<div class="wrap sheet-b">${edTabs()}
   <div class="grid2" style="margin-top:14px"><div class="field"><label for="e-num">${t('number')}</label><input class="in num" id="e-num" data-bind="number" value="${esc(D.number)}" inputmode="numeric"></div>
   <div class="field"><label for="e-date">${t('date')}</label><input class="in" type="date" id="e-date" data-bind="date" value="${esc(D.date)}"></div></div>
   <div class="group"><div class="gl">${t('billTo')}</div>
@@ -707,6 +728,72 @@ function updTotals(){
   D.items.forEach((i,k)=>{const a=$('#amt'+k);if(a)a.textContent=money((+i.qty||0)*(+i.rate||0))});
   box.innerHTML=`<div class="tot"><span>${t('subtotal')}</span><span>${money(c.sub)}</span></div>${c.disc?`<div class="tot"><span>${t('discount')}</span><span>−${money(c.disc)}</span></div>`:''}${c.tax?`<div class="tot"><span>${t('tax')}</span><span>${money(c.tax)}</span></div>`:''}<div class="tot big"><span>${t('total')}</span><span>${money(c.total)}</span></div>`;
   const dl=$('#dueLbl');if(dl)dl.textContent=fdate(c.due);
+}
+
+/* ---------- preview (looks like the PDF) ---------- */
+function previewHTML(d){
+  const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},j=jobOf(d),isEst=d.kind==='estimate';
+  const lines=a=>a.filter(Boolean).map(x=>esc(x).replace(/\n/g,'<br>')).join('<br>');
+  const pm=Object.values(S.wallet||{});
+  return `<div class="paper">
+  <div class="ph"><div><div class="pco">${esc(p.company||t('yourCompany'))}</div><div class="psm">${lines([p.address,p.phone,p.email,p.license])}</div></div>
+  <div class="pr"><div class="pkind">${isEst?'ESTIMATE':'INVOICE'}</div><div class="pno">${isEst?'EST ':'#'}${esc(d.number)}</div></div></div>
+  <div class="pb"><div class="pmeta"><div><div class="plbl">BILL TO</div><b>${esc(cl.name||'—')}</b><div class="psm">${lines([cl.address,cl.mobile,(cl.emails||[])[0]])}</div>
+  ${j?`<div class="plbl" style="margin-top:8px">JOB SITE</div><div class="psm">${lines([j.name,j.address])}</div>`:''}</div>
+  <div style="text-align:right"><div class="plbl">${isEst?'DATE':'DATE / DUE'}</div><div class="psm">${fdate(d.date)}${isEst?'':' / '+fdate(c.due)}</div></div></div>
+  <table class="ptab"><thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
+  ${(d.items||[]).filter(i=>i.desc||+i.rate).map(i=>`<tr><td>${esc(i.desc)}</td><td>${esc(i.qty)}</td><td>${esc(i.unit||'')}</td><td>${money(i.rate)}</td><td>${money((+i.qty||0)*(+i.rate||0))}</td></tr>`).join('')||`<tr><td colspan="5" style="color:#888">—</td></tr>`}
+  </tbody></table>
+  <div class="ptot"><div><span>Subtotal</span><span>${money(c.sub)}</span></div>
+  ${c.disc?`<div><span>Discount</span><span>−${money(c.disc)}</span></div>`:''}${c.tax?`<div><span>Tax</span><span>${money(c.tax)}</span></div>`:''}
+  <div class="pbig"><span>Total</span><span>${money(c.total)}</span></div>
+  ${isEst?'':`<div><span>Paid</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>Balance due</span><span>${money(c.balance)}</span></div>`}</div>
+  ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
+  ${pm.length&&!isEst?`<p class="psm">${t('qrInPdf',pm.length)}</p>`:''}
+  ${d.notes?`<div class="plbl">NOTES</div><p class="psm" style="white-space:pre-wrap">${esc(d.notes)}</p>`:''}
+  ${(d.photos||[]).length&&d.includePhotos!==false?`<p class="psm">📷 ${t('photosInPdf',d.photos.length)}</p>`:''}
+  </div></div>`;
+}
+/* ---------- send pane ---------- */
+function defaultMsg(d){
+  const c=calc(d),p=S.profile,isEst=d.kind==='estimate',cl=S.clients[d.clientId]||{};
+  const hi=cl.name?`Hi ${cl.name},`:'Hi,';
+  return isEst?`${hi}\n\nAttached is estimate EST ${d.number} for ${money(c.total)}.\n\nThank you,\n${p.company||''}${p.phone?'\n'+p.phone:''}`
+  :`${hi}\n\nAttached is invoice #${d.number} for ${money(c.total)}. Balance due: ${money(c.balance)} by ${fdate(c.due)}.${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nThank you for your business,\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
+}
+function sendPane(){
+  const d=D,cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
+  if(!SM)SM={to:(cl.emails||[]).filter(Boolean)[0]||'',phone:cl.mobile||'',subject:(isEst?'Estimate EST':'Invoice #')+d.number+(S.profile.company?' from '+S.profile.company:''),msg:defaultMsg(d)};
+  if(!d.clientId)return `<div class="note">${t('needClient')}</div><button class="btn" data-act="edTab" data-v="edit">${t('tab_edit')}</button>`;
+  const c=calc(d);
+  const summary=isEst?'':`<div class="group"><div class="tot"><span>${t('total')}</span><span>${money(c.total)}</span></div><div class="tot"><span>${t('paidSoFar')}</span><span>${money(c.paid)}</span></div><div class="tot big bal ${c.balance<=0.005?'zero':''}"><span>${t('balance')}</span><span>${money(c.balance)}</span></div>
+  ${S.docs[d.id]&&c.balance>0.005?`<button class="btn wide" data-act="smPay">${t('recordPayment')}</button>`:''}</div>`;
+  return summary+`<div class="group"><div class="field"><label for="sm-to">${t('sendTo')}</label><input class="in" id="sm-to" type="email" data-sm="to" value="${esc(SM.to)}" placeholder="client@email.com"></div>
+  <div class="field"><label for="sm-ph">${t('mobile')}</label><input class="in" id="sm-ph" type="tel" data-sm="phone" value="${esc(SM.phone)}"></div>
+  <div class="field"><label for="sm-sub">${t('subject')}</label><input class="in" id="sm-sub" data-sm="subject" value="${esc(SM.subject)}"></div>
+  <div class="field"><label for="sm-msg">${t('message')}</label><textarea class="in" id="sm-msg" data-sm="msg" style="min-height:170px">${esc(SM.msg)}</textarea></div></div>
+  <div class="btns"><button class="btn primary" data-act="smEmail">${ic('mail')} ${t('sendEmail')}</button><button class="btn primary" data-act="smText">${ic('chat')} ${t('sendText')}</button>
+  <button class="btn" data-act="smShare">${t('sharePdf')}</button><button class="btn" data-act="smPdf">${t('downloadPdf')}</button></div>
+  <p class="small">${t('sendHow')}</p>`;
+}
+/* save the draft in place (keeps the editor open) */
+function commitDraft(){
+  if(!D.clientId){toast(t('needClient'));return null}
+  if(NJ){const name=(NJ.name||'').trim()||t('job');const j={id:uid(),clientId:D.clientId,name,address:(NJ.address||'').trim()};S.jobs[j.id]=j;D.jobId=j.id;NJ=null}
+  const wasNew=D._new;delete D._new;
+  D.items=D.items.filter(i=>i.desc||+i.rate);if(!D.items.length)D.items=[emptyItem()];
+  D.discountValue=+D.discountValue||0;D.taxRate=+D.taxRate||0;D.dueDays=+D.dueDays||0;D.updatedAt=Date.now();
+  const keep=S.docs[D.id];if(keep){D.payments=keep.payments||D.payments;D.sent=keep.sent||D.sent}
+  S.docs[D.id]=JSON.parse(JSON.stringify(D));
+  const n=parseInt(D.number);if(!isNaN(n)&&wasNew!==undefined){const key=D.kind==='estimate'?'nextEstimate':'nextInvoice';if(n>=(+S.profile[key]||0))S.profile[key]=n+1}
+  commit();return S.docs[D.id];
+}
+async function smSend(how){
+  const d=commitDraft();if(!d)return;
+  // remember a new email / phone on the client
+  const cl=S.clients[d.clientId];if(cl){if(SM.to&&!(cl.emails||[]).includes(SM.to)){cl.emails=(cl.emails||[]).filter(Boolean);cl.emails.unshift(SM.to)}if(SM.phone&&!cl.mobile)cl.mobile=SM.phone;commit()}
+  await sendDoc(d,how,{to:how==='email'?SM.to:SM.phone,subject:SM.subject,body:SM.msg});
+  redrawSheet();
 }
 function saveDocFromEditor(){
   if(!D.clientId){toast(t('needClient'));return}
@@ -1018,18 +1105,19 @@ async function sharePDF(d){
 }
 
 /* send by email / text: share the PDF where the phone allows it, otherwise download it and open the mail or SMS app with the message ready */
-async function sendDoc(d,how){
-  const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
-  const to=how==='email'?((cl.emails||[]).filter(Boolean)[0]||''):(cl.mobile||'').replace(/[^\d+]/g,'');
-  const subj=(isEst?'Estimate EST':'Invoice #')+d.number+(S.profile.company?' — '+S.profile.company:'');
-  const body=docText(d);
+async function sendDoc(d,how,o){
+  o=o||{};const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
+  let to=o.to!==undefined?o.to:(how==='email'?((cl.emails||[]).filter(Boolean)[0]||''):(cl.mobile||''));
+  if(how!=='email')to=(to||'').replace(/[^\d+]/g,'');
+  const subj=o.subject||((isEst?'Estimate EST':'Invoice #')+d.number+(S.profile.company?' — '+S.profile.company:''));
+  const body=o.body||docText(d);
   const doc=await buildPDF(d);if(!doc)return;
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
   if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
   doc.save(pdfName(d));
   if(how==='email'){if(!to)toast(t('noEmail'));location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);setTimeout(()=>toast(t('attachNote')),600)}
-  else{if(!to)toast(t('noPhone'));location.href='sms:'+to+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(subj+'\n'+body)}
+  else{if(!to)toast(t('noPhone'));location.href='sms:'+to+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(o.body?body:subj+'\n'+body)}
   if(!d.sent){d.sent=true;commit()}
 }
 
@@ -1079,6 +1167,12 @@ const A={
   sameBilling:e=>{NJ.same=e.checked;if(NJ.same){NJ.address=S.clients[D.clientId]?.address||''}redrawSheet()},
   useLocation:()=>{if(!navigator.geolocation){toast(t('locationFail'));return}navigator.geolocation.getCurrentPosition(pos=>{const v=pos.coords.latitude.toFixed(5)+', '+pos.coords.longitude.toFixed(5);if(NJ)NJ.address=v;redrawSheet()},()=>toast(t('locationFail')),{enableHighAccuracy:true,timeout:15000})},
   saveDoc:()=>saveDocFromEditor(),
+  edTab:e=>{edTab=e.dataset.v;rememberScroll();redrawSheet(true)},
+  smEmail:()=>smSend('email'),
+  smPay:()=>{const d=commitDraft();if(!d)return;D=null;closeSheet();showSheet(docDetail(d.id));A.pay({dataset:{id:d.id}})},
+  smText:()=>smSend('text'),
+  smShare:()=>{const d=commitDraft();if(d)sharePDF(d)},
+  smPdf:()=>{const d=commitDraft();if(d)downloadPDF(d)},
   takePhoto:()=>{if((D.photos||[]).length>=9){toast(t('photoLimit'));return}$('#camIn').value='';$('#camIn').click()},
   pickPhotos:()=>{if((D.photos||[]).length>=9){toast(t('photoLimit'));return}$('#galIn').value='';$('#galIn').click()},
   incPhotos:e=>{D.includePhotos=e.checked},
@@ -1110,6 +1204,8 @@ const A={
   pdf:e=>downloadPDF(S.docs[e.dataset.id]),
   sharePdf:e=>sharePDF(S.docs[e.dataset.id]),
   emailDoc:e=>sendDoc(S.docs[e.dataset.id],'email'),
+  openSend:e=>openEditor(S.docs[e.dataset.id],'send'),
+  openPreview:e=>openEditor(S.docs[e.dataset.id],'preview'),
   textDoc:e=>sendDoc(S.docs[e.dataset.id],'text'),
   payTab:e=>{payTab=e.dataset.v;redrawSheet()},
   refreshPrices:()=>fetchPrices(true),
@@ -1162,6 +1258,7 @@ document.addEventListener('input',e=>{
   if(el.id==='q'){query=el.value;render();return}
   if(el.id==='cq'){clientQuery=el.value;const pos=el.selectionStart;redrawSheet();const q=$('#cq');if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}return}
   if(el.id==='sortSel'){S.profile.sortKey=el.value;persist();render();return}
+  if(SM&&el.dataset.sm){SM[el.dataset.sm]=el.value;return}
   if(D&&el.dataset.bind){
     if(el.dataset.bind==='clientId'){D.clientId=el.value;D.jobId='';NJ=null;redrawSheet();return}
     if(el.dataset.bind==='jobSel'){if(el.value==='__new'){NJ={name:'',address:'',same:false}}else{NJ=null;D.jobId=el.value}redrawSheet();return}
