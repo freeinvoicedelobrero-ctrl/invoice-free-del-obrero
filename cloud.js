@@ -104,7 +104,7 @@ let ACC=null;
 function loadAcc(){try{ACC=JSON.parse(localStorage.getItem(AKEY)||'null')}catch(e){ACC=null}}
 function saveAcc(){try{ACC?localStorage.setItem(AKEY,JSON.stringify(ACC)):localStorage.removeItem(AKEY)}catch(e){}}
 let syncState='idle';
-const SYNC_KEYS=['profile','clients','jobs','docs','saved','wallet'];
+const SYNC_KEYS=['profile','clients','jobs','docs','saved','wallet','expenses'];
 function snapshot(){const data={};SYNC_KEYS.forEach(k=>data[k]=S[k]);return JSON.stringify({v:1,savedAt:(S.meta&&S.meta.savedAt)||Date.now(),data})}
 function hasLocalData(){return Object.keys(S.docs).length+Object.keys(S.clients).length>0}
 function applyRemote(obj){
@@ -271,7 +271,7 @@ Object.assign(A,{
 window.cloudEnabled=()=>ENABLED;
 window.cloudWelcomeButtons=()=>ENABLED?`<button class="btn outline" data-act="welcomeLogin">${t('haveAccount')}</button>`:'';
 window.cloudHomeBanner=()=>ENABLED&&!ACC&&hasLocalData()?`<div class="banner" style="border-color:var(--accent)">${ic('user',2)}<div><p>${t('protectBanner')}</p><button class="textbtn" data-act="accountOpen">${t('createAccount')}</button></div></div>`:'';
-window.cloudMoreRow=()=>ENABLED?`<button class="row" data-act="accountOpen"><div class="main"><div class="t1">${t('account')}</div><div class="t2">${ACC?t('mode_'+ACC.mode):t('accountSub')}</div></div>${ic('chev')}</button>`:'';
+window.cloudMoreRow=()=>ENABLED?`<button class="mrow" data-act="accountOpen"><span>${t('account')}</span><span class="small">${ACC?t('mode_'+ACC.mode):t('accountSub')}</span></button>`:'';
 
 /* boot */
 loadAcc();

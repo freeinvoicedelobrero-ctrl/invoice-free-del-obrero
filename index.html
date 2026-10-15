@@ -78,6 +78,13 @@ main.withTotal{padding-bottom:calc(180px + env(safe-area-inset-bottom,0px))}
 .row .t2{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row .amt{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .row .amt .a1{font-weight:600}
+.row > svg{width:20px;height:20px;flex:none;color:var(--muted)}
+.mlist{margin-top:4px}
+.msec{border-bottom:1px solid var(--line);padding:14px 0 6px}
+.mgl{font-size:14px;color:var(--muted);font-weight:600;margin-bottom:4px}
+.mrow{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;background:none;border:0;text-align:left;padding:12px 0;font-size:18px;color:var(--fg)}
+.mrow .small{font-size:13px}
+svg:not([width]):not([class]){max-width:100%}
 .badge{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:4px;border:1px solid transparent;white-space:nowrap}
 .b-unsent{border-color:var(--muted);color:var(--muted)}
 .b-sent{background:var(--sent);color:#fff}
@@ -209,7 +216,7 @@ textarea.in{min-height:84px;resize:vertical}
 
 /* ---------- i18n ---------- */
 const L={
-en:{tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
+en:{secWorkflow:'Workflow',secCashflow:'Cashflow',secItems:'Items & expenses',secInsights:'Insights',secBusiness:'Business',secSupport:'Support',help:'Help',expenses:'Expenses',thisMonth:'This month',newExpense:'New expense',vendor:'Vendor / store',category:'Category',noExpenses:'No expenses yet',noExpensesSub:'Log materials, dump fees, fuel and crew pay to see your real profit per job.',profit:'Profit',spent:'Expenses',receipt:'Receipt photo',tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Get started',install:'Install app',iosInstall:'On iPhone: tap Share → Add to Home Screen.',privacyLine:'Your data stays on this device. No accounts, no trackers.',
 unsentAlert:n=>`${n} unpaid invoice${n==1?'':'s'} not yet sent`,readySend:'Ready to send?',overview:'Overview',overdue:'Overdue',unpaid:'Unpaid',unsent:'Unsent',sent:'Sent',partial:'Partial',paid:'Paid',draft:'Draft',accepted:'Accepted',receivedMonth:'Received this month',owedTotal:'Total owed to you',recent:'Recent invoices',
 noInvoices:'No invoices yet',noInvoicesSub:'Tap + to make your first invoice.',newInvoice:'New invoice',newEstimate:'New estimate',invoice:'Invoice',estimate:'Estimate',save:'Save',cancel:'Cancel',billTo:'Bill to',chooseClient:'Choose client',addClient:'Add client',
@@ -233,7 +240,7 @@ payTitle:'Pay / Pagar',rateAsOf:'Rate as of',refresh:'Refresh',priceUnavailable:
 backupReminder:'Your data lives only on this device. Download a backup regularly.',lastBackup:'Last backup',never:'never',storageFull:'Storage is full. Download a backup and remove old photos.',
 aboutText:'Invoice Free del Obrero is free and open source (MIT). There are no accounts, no ads and no trackers: everything you enter is saved only on this device. Use “Download full backup” to keep a copy or move to another phone.',
 continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent'},
-es:{tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
+es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Empezar',install:'Instalar app',iosInstall:'En iPhone: toca Compartir → Agregar a inicio.',privacyLine:'Tus datos se quedan en este dispositivo. Sin cuentas, sin rastreadores.',
 unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,readySend:'¿Listo para enviar?',overview:'Resumen',overdue:'Vencidas',unpaid:'Pendientes',unsent:'No enviada',sent:'Enviada',partial:'Parcial',paid:'Pagada',draft:'Borrador',accepted:'Aceptado',receivedMonth:'Cobrado este mes',owedTotal:'Total que te deben',recent:'Facturas recientes',
 noInvoices:'Aún no hay facturas',noInvoicesSub:'Toca + para crear tu primera factura.',newInvoice:'Nueva factura',newEstimate:'Nuevo presupuesto',invoice:'Factura',estimate:'Presupuesto',save:'Guardar',cancel:'Cancelar',billTo:'Facturar a',chooseClient:'Elegir cliente',addClient:'Agregar cliente',
@@ -297,7 +304,7 @@ function rooferSVG(cls){
 
 /* ---------- state & storage ---------- */
 const DEFAULT_PROFILE={company:'',address:'',phone:'',email:'',license:'',nextInvoice:1001,nextEstimate:1001,defDue:30,payInstr:'',terms:'Thank you for your business. / Gracias por su preferencia.',lang:'es',started:false,sortKey:'due',sortDir:'asc',lastBackup:''};
-const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},meta:{}};
+const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},meta:{}};
 const LKEY='invoice-free-del-obrero-v1';
 function load(){try{const r=localStorage.getItem(LKEY);if(r){const o=JSON.parse(r);for(const k of Object.keys(S)){if(o[k])S[k]=k==='profile'?{...DEFAULT_PROFILE,...o.profile}:o[k]}}}catch(e){}lang=S.profile.lang||'es'}
 let saveT;function persist(){if(!window.cloudApplying){S.meta=S.meta||{};S.meta.savedAt=Date.now();if(window.cloudSchedule)window.cloudSchedule()}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast(t('storageFull'))}},120)}
@@ -473,9 +480,18 @@ function vClients(){
   return `<div class="list" style="margin-top:14px">${list.map(c=>{const tt=clientTotals(c.id);return `<button class="row" data-act="openClient" data-id="${c.id}"><div class="main"><div class="t1">${esc(c.name)}</div><div class="t2">${tt.count} · ${esc(c.mobile||(c.emails||[])[0]||'')}</div></div><div class="amt num"><div class="a1 ${tt.owed>0?'red':''}">${money(tt.owed)}</div><div class="small">${t('owes')}</div></div></button>`}).join('')}</div>`;
 }
 function vMore(){
-  const it=(act,label,sub)=>`<button class="row" data-act="${act}"><div class="main"><div class="t1">${label}</div>${sub?`<div class="t2">${sub}</div>`:''}</div>${ic('chev')}</button>`;
-  return `<div class="group"><div class="list">${it('jobs',t('jobs'))}${it('reports',t('reports'))}${it('savedItems',t('savedItems'),Object.keys(S.saved).length+'')}${it('walletOpen',t('wallet'),esc(t('walletHeader')))}</div></div>
-  <div class="group"><div class="list">${window.cloudMoreRow?window.cloudMoreRow():''}${it('settings',t('settings'),esc(S.profile.company))}${it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never')))}${it('aboutOpen',t('about'))}</div></div>
+  const it=(act,label,sub)=>`<button class="mrow" data-act="${act}"><span>${label}</span>${sub?`<span class="small">${sub}</span>`:''}</button>`;
+  const sec=(title,items)=>`<section class="msec"><div class="mgl">${title}</div>${items}</section>`;
+  const mo=todayISO().slice(0,7);
+  const expMonth=Object.values(S.expenses).filter(e=>(e.date||'').slice(0,7)===mo).reduce((s,e)=>s+(+e.amount||0),0);
+  return `<div class="mlist">
+  ${sec(t('secWorkflow'),it('jobs',t('jobs')))}
+  ${sec(t('secCashflow'),it('walletOpen',t('wallet'),esc(t('walletHeader'))))}
+  ${sec(t('secItems'),it('savedItems',t('savedItems'))+it('expensesOpen',t('expenses'),expMonth?t('thisMonth')+': '+money(expMonth):''))}
+  ${sec(t('secInsights'),it('reports',t('reports')))}
+  ${sec(t('secBusiness'),(window.cloudMoreRow?window.cloudMoreRow():'')+it('settings',t('settings'),esc(S.profile.company))+it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never'))))}
+  ${sec(t('secSupport'),it('helpOpen',t('help'))+it('aboutOpen',t('about')))}
+  </div>
   <div class="group"><div class="gl">${t('language')}</div><div class="seg"><button data-act="setLang" data-v="es" aria-pressed="${lang==='es'}">Español</button><button data-act="setLang" data-v="en" aria-pressed="${lang==='en'}">English</button></div></div>
   ${installEvt?`<button class="btn outline" data-act="install">${t('install')}</button>`:''}
   <p class="small" style="margin-top:20px;text-align:center">Invoice Free del Obrero · open source (MIT)<br>${t('credit')}</p>`;
@@ -798,10 +814,37 @@ function savedEditor(s){const it=s||{id:uid(),desc:'',unit:'',rate:0};return{liv
 
 /* ---------- reports ---------- */
 function jobsSheet(){return{live:true,render(){
-  const m={};invoicesAll().forEach(d=>{const k=d.clientId+'|'+(d.jobId||'_');const c=calc(d);const j=jobOf(d);m[k]=m[k]||{client:clientName(d.clientId),job:j?j.name:t('noJob'),addr:j?j.address:'',b:0,p:0,n:0};m[k].b+=c.total;m[k].p+=c.paid;m[k].n++});
+  const m={};invoicesAll().forEach(d=>{const k=d.clientId+'|'+(d.jobId||'_');const c=calc(d);const j=jobOf(d);m[k]=m[k]||{client:clientName(d.clientId),job:j?j.name:t('noJob'),addr:j?j.address:'',b:0,p:0,n:0};m[k].b+=c.total;m[k].p+=c.paid;m[k].n++;m[k].jobId=d.jobId});
+  Object.values(m).forEach(r=>{r.e=Object.values(S.expenses).filter(x=>r.jobId&&x.jobId===r.jobId).reduce((s,x)=>s+(+x.amount||0),0)});
   const rows=Object.values(m).sort((a,b)=>(b.b-b.p)-(a.b-a.p));
-  return sheetHead(t('jobs'))+`<div class="wrap sheet-b">${rows.length?rows.map(r=>{const pct=r.b?Math.min(100,r.p/r.b*100):0;return `<div class="item"><div style="display:flex;justify-content:space-between;gap:10px"><div style="min-width:0"><div style="font-weight:600">${esc(r.job)}</div><div class="small">${esc(r.client)}${r.addr?' · '+esc(r.addr):''}</div></div><div class="num" style="text-align:right;flex:none"><div class="${r.b-r.p>0.005?'red':'green'}" style="font-weight:600">${money(r.b-r.p)}</div><div class="small">${t('owes')}</div></div></div><div class="bar"><i style="width:${pct}%"></i></div><div class="small num" style="margin-top:4px">${money(r.p)} / ${money(r.b)}</div></div>`}).join(''):`<div class="empty">${t('noData')}</div>`}</div>`;
+  return sheetHead(t('jobs'))+`<div class="wrap sheet-b">${rows.length?rows.map(r=>{const pct=r.b?Math.min(100,r.p/r.b*100):0;return `<div class="item"><div style="display:flex;justify-content:space-between;gap:10px"><div style="min-width:0"><div style="font-weight:600">${esc(r.job)}</div><div class="small">${esc(r.client)}${r.addr?' · '+esc(r.addr):''}</div></div><div class="num" style="text-align:right;flex:none"><div class="${r.b-r.p>0.005?'red':'green'}" style="font-weight:600">${money(r.b-r.p)}</div><div class="small">${t('owes')}</div></div></div><div class="bar"><i style="width:${pct}%"></i></div><div class="small num" style="margin-top:4px">${money(r.p)} / ${money(r.b)}</div>${r.e?`<div class="small num" style="margin-top:4px">${t('spent')}: ${money(r.e)} · ${t('profit')}: <b class="${r.b-r.e>=0?'green':'red'}">${money(r.b-r.e)}</b></div>`:''}</div>`}).join(''):`<div class="empty">${t('noData')}</div>`}</div>`;
 }}}
+const EXP_CATS=[['materials','Materials','Materiales'],['crew','Crew / labor','Cuadrilla / mano de obra'],['dump','Dump / disposal','Basura / dumpster'],['fuel','Fuel','Gasolina'],['tools','Tools / equipment','Herramienta / equipo'],['permits','Permits','Permisos'],['other','Other','Otro']];
+const catLabel=k=>{const c=EXP_CATS.find(x=>x[0]===k)||EXP_CATS[6];return lang==='es'?c[2]:c[1]};
+function expensesSheet(){return{live:true,render(){
+  const list=Object.values(S.expenses).sort((a,b)=>String(b.date).localeCompare(a.date));
+  const mo=todayISO().slice(0,7);const month=list.filter(e=>(e.date||'').slice(0,7)===mo).reduce((s,e)=>s+(+e.amount||0),0);
+  return sheetHead(t('expenses'),{right:`<button class="textbtn" data-act="newExpense">+</button>`})+`<div class="wrap sheet-b">
+  <div class="cards" style="margin-top:14px"><div class="card"><span class="lbl">${t('thisMonth')}</span><span class="val num">${money(month)}</span></div><div class="card"><span class="lbl">${t('total')}</span><span class="val num">${money(list.reduce((s,e)=>s+(+e.amount||0),0))}</span></div></div>
+  ${list.length?`<div class="list" style="margin-top:14px">${list.map(e=>{const j=e.jobId?S.jobs[e.jobId]:null;return `<button class="row" data-act="editExpense" data-id="${e.id}"><div class="main"><div class="t1">${esc(e.vendor||catLabel(e.category))}</div><div class="t2">${fdate(e.date)} · ${esc(catLabel(e.category))}${j?' · '+esc(j.name):''}</div></div><div class="amt num"><div class="a1">${money(e.amount)}</div></div></button>`}).join('')}</div>`:emptyBox(t('noExpenses'),t('noExpensesSub'),'newExpense',t('newExpense'))}
+  </div>`;
+}}}
+let E=null;
+function expenseEditor(e){E=JSON.parse(JSON.stringify(e||{id:uid(),date:todayISO(),vendor:'',category:'materials',amount:'',jobId:'',note:'',_new:true}));return{live:false,render(){
+  const jobs=Object.values(S.jobs).sort((a,b)=>a.name.localeCompare(b.name));
+  return sheetHead(E._new?t('newExpense'):t('expenses'),{close:true,right:`<button class="textbtn" data-act="saveExpense">${t('save')}</button>`})+`<div class="wrap sheet-b"><div style="margin-top:14px"></div>
+  <div class="grid2"><div class="field"><label for="x-amt">${t('amount')}</label><input class="in num" id="x-amt" type="number" step="0.01" inputmode="decimal" value="${esc(E.amount)}"></div>
+  <div class="field"><label for="x-date">${t('date')}</label><input class="in" id="x-date" type="date" value="${esc(E.date)}"></div></div>
+  <div class="field"><label for="x-cat">${t('category')}</label><select class="in" id="x-cat">${EXP_CATS.map(c=>`<option value="${c[0]}" ${c[0]===E.category?'selected':''}>${lang==='es'?c[2]:c[1]}</option>`).join('')}</select></div>
+  <div class="field"><label for="x-vendor">${t('vendor')}</label><input class="in" id="x-vendor" value="${esc(E.vendor)}" placeholder="ABC Supply, Menards, HB Construction…"></div>
+  <div class="field"><label for="x-job">${t('job')}</label><select class="in" id="x-job"><option value="">${t('noJob')}</option>${jobs.map(j=>`<option value="${j.id}" ${j.id===E.jobId?'selected':''}>${esc(j.name)} — ${esc(clientName(j.clientId))}</option>`).join('')}</select></div>
+  <div class="field"><label for="x-note">${t('note')}</label><textarea class="in" id="x-note">${esc(E.note)}</textarea></div>
+  <button class="btn primary" data-act="saveExpense">${t('save')}</button>
+  ${E._new?'':`<div id="delZone" style="margin-top:10px"><button class="btn bad" data-act="askDelExpense">${t('del')}</button></div>`}</div>`;
+}}}
+const HELP={es:[['¿Cómo hago una factura?','Toca + en Inicio o en Facturas. Elige el cliente, el trabajo, agrega conceptos y toca Guardar. Luego Compartir PDF.'],['¿Cómo registro un pago?','Abre la factura y toca Registrar pago. Puedes poner pagos parciales; el saldo se actualiza solo.'],['¿Dónde se guardan mis datos?','En este teléfono. Crea una cuenta (email o frase de 12 palabras) en Más → Cuenta y respaldo, o descarga un respaldo seguido.'],['¿Qué pasa si pierdo el teléfono?','Si tienes cuenta, instala la app en el nuevo teléfono y entra. Si no, restaura tu archivo de respaldo.'],['¿Cómo la instalo como app?','Abre el link en Chrome o Brave y toca Instalar app (en iPhone: Compartir → Agregar a inicio).'],['¿Cómo me pagan con crypto?','Agrega tus direcciones en Mi cartera. Cada factura muestra un código QR para pagarte directo.']],
+en:[['How do I make an invoice?','Tap + on Home or Invoices. Pick the client and job, add items and tap Save. Then Share PDF.'],['How do I record a payment?','Open the invoice and tap Record payment. Partial payments are fine; the balance updates itself.'],['Where is my data saved?','On this phone. Create an account (email or 12-word phrase) in More → Account & backup, or download a backup often.'],['What if I lose my phone?','If you have an account, install the app on the new phone and sign in. If not, restore your backup file.'],['How do I install it as an app?','Open the link in Chrome or Brave and tap Install app (iPhone: Share → Add to Home Screen).'],['How do clients pay me with crypto?','Add your addresses in My wallet. Each invoice shows a QR code so they pay you directly.']]};
+function helpSheet(){return{live:false,render(){return sheetHead(t('help'))+`<div class="wrap sheet-b">${HELP[lang==='es'?'es':'en'].map(([q,a])=>`<div class="group"><b>${q}</b><p style="margin:6px 0 0">${a}</p></div>`).join('')}</div>`}}}
 function reportsSheet(){return{live:true,render(){
   const byC={};invoicesAll().forEach(d=>{const c=calc(d);if(c.balance>0.005)byC[d.clientId]=(byC[d.clientId]||0)+c.balance});
   const months=[];const now=new Date();for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))}
@@ -969,7 +1012,7 @@ async function exportJSON(){
 async function restoreJSON(o){
   let n=0;
   if(o.profile)S.profile={...S.profile,...o.profile,started:true};
-  for(const col of ['clients','jobs','docs','saved','wallet'])for(const [k,v] of Object.entries(o[col]||{})){S[col][k]=v;n++}
+  for(const col of ['clients','jobs','docs','saved','wallet','expenses'])for(const [k,v] of Object.entries(o[col]||{})){S[col][k]=v;n++}
   for(const [id,u] of Object.entries(o.photos||{})){try{await idb.put(id,await dataURLToBlob(u))}catch(e){}}
   lang=S.profile.lang||lang;commit();toast(t('imported',n));
 }
@@ -1042,6 +1085,13 @@ const A={
   askDel:e=>{$('#delZone').innerHTML=`<div class="confirm"><p style="margin:0 0 10px">${t('confirmDel')}</p><div class="btns" style="margin:0"><button class="btn" data-act="back0">${t('cancel')}</button><button class="btn bad" data-act="delDoc" data-id="${e.dataset.id}">${t('yesDel')}</button></div></div>`},
   delDoc:e=>{const d=S.docs[e.dataset.id];delete S.docs[e.dataset.id];(d.photos||[]).forEach(p=>{if(!Object.values(S.docs).some(x=>(x.photos||[]).some(q=>q.id===p.id)))idb.del(p.id).catch(()=>{})});closeSheet();commit()},
   jobs:()=>showSheet(jobsSheet()),
+  expensesOpen:()=>showSheet(expensesSheet()),
+  newExpense:()=>showSheet(expenseEditor()),
+  editExpense:e=>showSheet(expenseEditor(S.expenses[e.dataset.id])),
+  saveExpense:()=>{const amt=r2(+$('#x-amt').value);if(!amt){toast(t('amount'));return}const isNew=E._new;delete E._new;Object.assign(E,{amount:amt,date:$('#x-date').value||todayISO(),category:$('#x-cat').value,vendor:$('#x-vendor').value.trim(),jobId:$('#x-job').value,note:$('#x-note').value.trim()});S.expenses[E.id]=E;E=null;closeSheet();commit();toast(t('saved'))},
+  askDelExpense:()=>{$('#delZone').innerHTML=`<div class="confirm"><p style="margin:0 0 10px">${t('confirmDel')}</p><div class="btns" style="margin:0"><button class="btn" data-act="back0">${t('cancel')}</button><button class="btn bad" data-act="delExpense">${t('yesDel')}</button></div></div>`},
+  delExpense:()=>{delete S.expenses[E.id];E=null;closeSheet();commit()},
+  helpOpen:()=>showSheet(helpSheet()),
   reports:()=>showSheet(reportsSheet()),
   savedItems:()=>showSheet(savedSheet(false)),
   newSaved:()=>showSheet(savedEditor()),
