@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" translate="no">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Invoice Free del Obrero</title>
 <meta name="description" content="Free, open-source invoicing for roofers and tradespeople. English / Español. Your data stays on your device.">
 <meta name="theme-color" content="#000000">
+<meta name="google" content="notranslate">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -196,6 +197,8 @@ textarea.in{min-height:84px;resize:vertical}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -294,10 +297,10 @@ function rooferSVG(cls){
 
 /* ---------- state & storage ---------- */
 const DEFAULT_PROFILE={company:'',address:'',phone:'',email:'',license:'',nextInvoice:1001,nextEstimate:1001,defDue:30,payInstr:'',terms:'Thank you for your business. / Gracias por su preferencia.',lang:'es',started:false,sortKey:'due',sortDir:'asc',lastBackup:''};
-const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{}};
+const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},meta:{}};
 const LKEY='invoice-free-del-obrero-v1';
 function load(){try{const r=localStorage.getItem(LKEY);if(r){const o=JSON.parse(r);for(const k of Object.keys(S)){if(o[k])S[k]=k==='profile'?{...DEFAULT_PROFILE,...o.profile}:o[k]}}}catch(e){}lang=S.profile.lang||'es'}
-let saveT;function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast(t('storageFull'))}},120)}
+let saveT;function persist(){if(!window.cloudApplying){S.meta=S.meta||{};S.meta.savedAt=Date.now();if(window.cloudSchedule)window.cloudSchedule()}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast(t('storageFull'))}},120)}
 function commit(){persist();render();const top=stack[stack.length-1];if(top&&top.live)redrawSheet()}
 
 const idb=(()=>{let dbp;
@@ -375,6 +378,7 @@ function renderWelcome(){
   <p class="tag">${t('tagline')}</p>
   <div style="display:flex;flex-direction:column;gap:10px">
   <button class="btn primary" data-act="getStarted">${S.profile.started?t('welcomeBack'):t('getStarted')}</button>
+  ${window.cloudWelcomeButtons?window.cloudWelcomeButtons():''}
   ${installEvt?`<button class="btn outline" data-act="install">${t('install')}</button>`:(isIOS?`<p class="small">${t('iosInstall')}</p>`:'')}
   <div class="seg" style="margin-top:6px"><button data-act="setLang" data-v="es" aria-pressed="${lang==='es'}">Español</button><button data-act="setLang" data-v="en" aria-pressed="${lang==='en'}">English</button></div>
   </div>
@@ -418,6 +422,7 @@ function vHome(){
   const needSetup=!S.profile.company;
   const lb=S.profile.lastBackup?daysBetween(S.profile.lastBackup,todayISO()):999;
   return `${rooferSVG('small')}<div class="company">${esc(S.profile.company||'')}</div>
+  ${window.cloudHomeBanner?window.cloudHomeBanner():''}
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
   ${unsentOpen.length?`<div class="banner">${ic('bell',2)}<div><p>${t('unsentAlert',unsentOpen.length)}</p><button class="textbtn" data-act="filterTo" data-v="unsent">${t('readySend')}</button></div></div>`:''}
   ${Object.keys(S.docs).length&&lb>14?`<div class="note">${t('backupReminder')} <button class="textbtn" style="padding:0" data-act="exportJson">${t('exportJson')}</button></div>`:''}
@@ -470,7 +475,7 @@ function vClients(){
 function vMore(){
   const it=(act,label,sub)=>`<button class="row" data-act="${act}"><div class="main"><div class="t1">${label}</div>${sub?`<div class="t2">${sub}</div>`:''}</div>${ic('chev')}</button>`;
   return `<div class="group"><div class="list">${it('jobs',t('jobs'))}${it('reports',t('reports'))}${it('savedItems',t('savedItems'),Object.keys(S.saved).length+'')}${it('walletOpen',t('wallet'),esc(t('walletHeader')))}</div></div>
-  <div class="group"><div class="list">${it('settings',t('settings'),esc(S.profile.company))}${it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never')))}${it('aboutOpen',t('about'))}</div></div>
+  <div class="group"><div class="list">${window.cloudMoreRow?window.cloudMoreRow():''}${it('settings',t('settings'),esc(S.profile.company))}${it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never')))}${it('aboutOpen',t('about'))}</div></div>
   <div class="group"><div class="gl">${t('language')}</div><div class="seg"><button data-act="setLang" data-v="es" aria-pressed="${lang==='es'}">Español</button><button data-act="setLang" data-v="en" aria-pressed="${lang==='en'}">English</button></div></div>
   ${installEvt?`<button class="btn outline" data-act="install">${t('install')}</button>`:''}
   <p class="small" style="margin-top:20px;text-align:center">Invoice Free del Obrero · open source (MIT)<br>${t('credit')}</p>`;
@@ -1112,5 +1117,6 @@ render();
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
 </script>
+<script src="cloud.js"></script>
 </body>
 </html>
