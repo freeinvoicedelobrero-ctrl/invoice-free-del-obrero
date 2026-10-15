@@ -35,7 +35,12 @@ signOutKeep:'Sign out (keep data on this phone)',signOutWipe:'Sign out and erase
 photosLocal:'Job photos stay on this phone and are not uploaded.',protectBanner:'Protect your invoices: create a free account so you don’t lose them if you lose your phone.',
 cloudOff:'Cloud accounts are not set up yet in this copy of the app.',wordlistFail:'Need internet to create or enter your phrase.',
 emailPrivacy:'Your data is stored on the server and protected by your account.',seedPrivacy:'Your data is encrypted on this phone before upload. Nobody else can read it.',
-signedIn:'Signed in',created:'Account created'
+signedIn:'Signed in',created:'Account created',
+mfaTitle:'Authenticator app (2-step)',mfaOffSub:'Optional. Adds a 6-digit code from an app like Aegis, 2FAS, Google Authenticator or Authy when you sign in.',
+mfaOn:'2-step is ON',mfaTurnOn:'Turn on 2-step',mfaTurnOff:'Turn off 2-step',mfaScan:'1. Open your authenticator app and scan this code (or copy the key).',
+mfaKey:'Key',mfaEnterCode:'2. Type the 6-digit code from the app',mfaVerify:'Verify and turn on',mfaEnabled:'2-step turned on',mfaDisabled:'2-step turned off',
+mfaLoginCode:'Type the 6-digit code from your authenticator app',mfaBadCode:'Wrong or expired code. Try the new one.',
+mfaLost:'Lost your authenticator? Write to the app owner from the email on your account to reset it.',copyKey:'Copy key'
 });
 Object.assign(L.es,{
 account:'Cuenta y respaldo',accountSub:'Para no perder tus datos si pierdes el teléfono',noAccount:'Sin cuenta. Tus datos están solo en este teléfono.',
@@ -57,7 +62,12 @@ signOutKeep:'Cerrar sesión (dejar datos en este teléfono)',signOutWipe:'Cerrar
 photosLocal:'Las fotos del trabajo se quedan en este teléfono y no se suben.',protectBanner:'Protege tus facturas: crea una cuenta gratis para no perderlas si pierdes el teléfono.',
 cloudOff:'Las cuentas en la nube todavía no están configuradas en esta copia de la app.',wordlistFail:'Necesitas internet para crear o escribir tu frase.',
 emailPrivacy:'Tus datos se guardan en el servidor, protegidos por tu cuenta.',seedPrivacy:'Tus datos se cifran en este teléfono antes de subirse. Nadie más los puede leer.',
-signedIn:'Sesión iniciada',created:'Cuenta creada'
+signedIn:'Sesión iniciada',created:'Cuenta creada',
+mfaTitle:'App autenticadora (2 pasos)',mfaOffSub:'Opcional. Al entrar te pide un código de 6 dígitos de una app como Aegis, 2FAS, Google Authenticator o Authy.',
+mfaOn:'2 pasos ACTIVADO',mfaTurnOn:'Activar 2 pasos',mfaTurnOff:'Desactivar 2 pasos',mfaScan:'1. Abre tu app autenticadora y escanea este código (o copia la llave).',
+mfaKey:'Llave',mfaEnterCode:'2. Escribe el código de 6 dígitos de la app',mfaVerify:'Verificar y activar',mfaEnabled:'2 pasos activado',mfaDisabled:'2 pasos desactivado',
+mfaLoginCode:'Escribe el código de 6 dígitos de tu app autenticadora',mfaBadCode:'Código incorrecto o vencido. Usa el nuevo.',
+mfaLost:'¿Perdiste tu app autenticadora? Escribe al dueño de la app desde el correo de tu cuenta para restablecerla.',copyKey:'Copiar llave'
 });
 
 /* ---------- small crypto helpers ---------- */
@@ -161,7 +171,11 @@ window.addEventListener('online',()=>{if(ACC)pushNow(false)});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&ACC&&pushT){pushNow(false)}});
 
 /* ---------- UI ---------- */
-let view='menu',phrase=[],confirmIdx=[],pending=null,busy=false;
+let view='menu',phrase=[],confirmIdx=[],pending=null,busy=false,mfa={checked:false,on:false,enroll:null,factorId:null},afterMfa=null;
+async function mfaRefresh(){try{const {data}=await sb.auth.mfa.listFactors();const f=(data&&data.totp||[]).find(x=>x.status==='verified');mfa.on=!!f;mfa.factorId=f?f.id:null}catch(e){}mfa.checked=true}
+async function mfaOff(){const {error}=await sb.auth.mfa.unenroll({factorId:mfa.factorId});if(error)throw error;await sb.auth.refreshSession().catch(()=>{});await mfaRefresh();toast(t('mfaDisabled'));redrawSheet()}
+function qrSrc(q){q=String(q||'');const m=q.match(/^data:image\/svg\+xml;(?:utf-?8|charset=utf-?8),(.*)$/i);return m?'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(m[1]):q}
+async function needsMfa(){try{const {data}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();return data&&data.nextLevel==='aal2'&&data.currentLevel!=='aal2'}catch(e){return false}}
 function refreshAcct(){const top=stack[stack.length-1];if(top&&top.acct)redrawSheet();if(tab==='more'||tab==='home')render()}
 function field(id,label,type,val,extra){return `<div class="field"><label for="${id}">${label}</label><input class="in" id="${id}" type="${type}" value="${esc(val||'')}" ${extra||''}></div>`}
 function accountSheet(start){view=start||'menu';return{live:false,acct:true,render(){
@@ -173,6 +187,7 @@ function accountSheet(start){view=start||'menu';return{live:false,acct:true,rend
     <p class="small">${ACC.mode==='seed'?t('seedPrivacy'):t('emailPrivacy')} ${t('photosLocal')}</p>
     <div class="kv"><span>${t('lastSync')}</span><span>${syncState==='syncing'?t('syncing'):esc(ls)}</span></div>
     ${syncState==='fail'?`<p class="small red">${t('syncFail')}</p>`:''}
+    ${ACC.mode==='email'?`<div class="group"><div class="gl">${t('mfaTitle')}</div>${!mfa.checked?'<p class="small">…</p>':mfa.on?`<p style="margin:0 0 8px"><b class="green">✓ ${t('mfaOn')}</b></p><button class="btn" data-act="acMfaOff">${t('mfaTurnOff')}</button>`:`<p class="small">${t('mfaOffSub')}</p><button class="btn" data-act="acMfaStart">${t('mfaTurnOn')}</button>`}</div>`:''}
     <div class="btns"><button class="btn primary wide" data-act="acSync">${t('syncNow')}</button>
     <button class="btn wide" data-act="acSignOut" data-v="keep">${t('signOutKeep')}</button>
     <div class="wide" id="wipeZone"><button class="btn bad" data-act="acAskWipe">${t('signOutWipe')}</button></div></div>`;
@@ -212,6 +227,18 @@ function accountSheet(start){view=start||'menu';return{live:false,acct:true,rend
     <div class="field"><label for="ac-phrase">${t('enterPhrase')}</label><textarea class="in mono" id="ac-phrase" style="min-height:120px" autocapitalize="off" autocomplete="off" spellcheck="false"></textarea></div>
     <button class="btn primary" data-act="acSeedLogin" ${busy?'disabled':''}>${t('signIn')}</button>`;
   }
+  else if(view==='mfaEnroll'&&mfa.enroll){
+    body=`<p style="margin-top:14px">${t('mfaScan')}</p>
+    <div class="qr" style="width:220px;margin:0 auto"><img src="${esc(qrSrc(mfa.enroll.qr))}" alt="QR" style="width:100%;display:block"></div>
+    <div class="kv"><span>${t('mfaKey')}</span><span class="mono" style="word-break:break-all">${esc(mfa.enroll.secret)}</span></div>
+    <button class="btn" data-act="copy" data-v="${esc(mfa.enroll.secret)}">${t('copyKey')}</button>
+    ${field('ac-code',t('mfaEnterCode'),'text','','inputmode="numeric" autocomplete="one-time-code" maxlength="6"')}
+    <button class="btn primary" data-act="acMfaVerify" ${busy?'disabled':''}>${t('mfaVerify')}</button>`;
+  }
+  else if(view==='mfaLogin'){
+    body=`<div style="margin-top:14px"></div>${field('ac-code',t('mfaLoginCode'),'text','','inputmode="numeric" autocomplete="one-time-code" maxlength="6"')}
+    <button class="btn primary" data-act="acMfaLogin" ${busy?'disabled':''}>${t('signIn')}</button><p class="small">${t('mfaLost')}</p>`;
+  }
   else if(view==='replace'){
     body=`<p style="margin-top:16px">${t('replaceLocal')}</p><div class="btns"><button class="btn" data-act="acSignOut">${t('cancel')}</button><button class="btn primary" data-act="acReplace">${t('replaceYes')}</button></div>`;
   }
@@ -219,7 +246,8 @@ function accountSheet(start){view=start||'menu';return{live:false,acct:true,rend
 }}}
 
 async function finishLogin(acc,isNew){
-  ACC=acc;saveAcc();
+  if(acc.mode==='email'&&!isNew&&await needsMfa()){afterMfa=acc;view='mfaLogin';redrawSheet();return}
+  ACC=acc;saveAcc();if(acc.mode==='email')mfaRefresh().then(()=>{const top=stack[stack.length-1];if(top&&top.acct)redrawSheet()});
   if(isNew){await pushNow(false);toast(t('created'));view='menu';redrawSheet();return}
   const r=await remoteGet();
   if(!r){if(acc.mode==='seed'){ACC=null;saveAcc();throw new Error(t('noVault'))}await pushNow(false);toast(t('signedIn'));view='menu';redrawSheet();return}
@@ -230,7 +258,7 @@ async function run(fn){if(busy)return;busy=true;const v0=view;try{await fn()}cat
 const val=id=>{const el=document.getElementById(id);return el?el.value.trim():''};
 
 Object.assign(A,{
-  accountOpen:()=>showSheet(accountSheet()),
+  accountOpen:()=>{showSheet(accountSheet());if(ACC&&ACC.mode==='email'&&ENABLED)mfaRefresh().then(()=>{const top=stack[stack.length-1];if(top&&top.acct)redrawSheet()})},
   welcomeLogin:()=>{S.profile.started=true;showWelcome=false;persist();render();showSheet(accountSheet('login'))},
   acView:e=>{view=e.dataset.v;redrawSheet()},
   acNewPhrase:()=>run(async()=>{phrase=await newPhrase();view='seedShow'}),
@@ -262,6 +290,29 @@ Object.assign(A,{
   acSavePass:()=>run(async()=>{const p=val('ac-newpass');if(p.length<8)throw new Error(t('passwordLbl'));const {data,error}=await sb.auth.updateUser({password:p});if(error)throw error;toast(t('passwordSaved'));await finishLogin({mode:'email',email:data.user&&data.user.email},false)}),
   acReplace:()=>{if(pending){applyRemote(pending);pending=null;ACC.lastSync=Date.now();saveAcc();toast(t('signedIn'))}view='menu';redrawSheet()},
   acSync:()=>pushNow(true),
+  acMfaStart:()=>run(async()=>{
+    try{const {data:l}=await sb.auth.mfa.listFactors();for(const f of (l&&l.all||[]).filter(f=>f.factor_type==='totp'&&f.status!=='verified'))await sb.auth.mfa.unenroll({factorId:f.id})}catch(e){}
+    const {data,error}=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'Invoice Free del Obrero '+Date.now()});if(error)throw error;
+    mfa.enroll={id:data.id,qr:data.totp.qr_code,secret:data.totp.secret};view='mfaEnroll';
+  }),
+  acMfaVerify:()=>run(async()=>{
+    const code=val('ac-code').replace(/\D/g,'');const {error}=await sb.auth.mfa.challengeAndVerify({factorId:mfa.enroll.id,code});
+    if(error)throw new Error(t('mfaBadCode'));mfa.enroll=null;await mfaRefresh();toast(t('mfaEnabled'));view='menu';
+  }),
+  acMfaOff:()=>run(async()=>{
+    if(!mfa.factorId)return;
+    if(await needsMfa()){afterMfa={off:true};view='mfaLogin';return}
+    await mfaOff();
+  }),
+  acMfaLogin:()=>run(async()=>{
+    const code=val('ac-code').replace(/\D/g,'');
+    const {data:l,error:e1}=await sb.auth.mfa.listFactors();if(e1)throw e1;
+    const f=(l.totp||[]).find(x=>x.status==='verified');if(!f)throw new Error(t('mfaBadCode'));
+    const {error}=await sb.auth.mfa.challengeAndVerify({factorId:f.id,code});if(error)throw new Error(t('mfaBadCode'));
+    const a=afterMfa;afterMfa=null;
+    if(a&&a.off){await mfaOff();view='menu';return}
+    await finishLogin(a||{mode:'email',email:ACC&&ACC.email},false);
+  }),
   acSignOut:async()=>{if(ACC&&ACC.mode==='email'){try{await sb.auth.signOut()}catch(e){}}ACC=null;saveAcc();view='menu';redrawSheet();render()},
   acAskWipe:()=>{document.getElementById('wipeZone').innerHTML=`<div class="confirm"><p style="margin:0 0 10px">${t('wipeConfirm')}</p><div class="btns" style="margin:0"><button class="btn" data-act="back0">${t('cancel')}</button><button class="btn bad" data-act="acWipe">${t('yesDel')}</button></div></div>`},
   acWipe:async()=>{await pushNow(false);if(ACC&&ACC.mode==='email'){try{await sb.auth.signOut()}catch(e){}}ACC=null;saveAcc();try{localStorage.removeItem(LKEY)}catch(e){}location.reload()}
