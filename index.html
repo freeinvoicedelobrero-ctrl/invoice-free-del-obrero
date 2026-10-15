@@ -149,6 +149,7 @@ textarea.in{min-height:84px;resize:vertical}
 .btn[disabled]{opacity:.5}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .btns .wide{grid-column:1/-1}
+#langBtn{display:flex;gap:2px;padding:3px;border:1px solid var(--line,#333);border-radius:999px;font-size:13px;font-weight:700}#langBtn .lp{padding:4px 9px;border-radius:999px;color:var(--muted,#888)}#langBtn .lp.on{background:#fff;color:#000}
 .edtabs{margin-top:12px}
 .btns .btn{display:flex;align-items:center;justify-content:center;gap:8px}.btns .btn svg{width:20px;height:20px;flex:none}
 .paper{background:#fff;color:#111;border-radius:6px;overflow:hidden;margin:14px 0;font-size:13px;box-shadow:0 2px 14px rgba(0,0,0,.5)}
@@ -420,7 +421,7 @@ function render(){
   const w=$('#welcome'),shell=$('#appShell');
   if(showWelcome){w.hidden=false;shell.hidden=true;w.innerHTML=renderWelcome();return}
   w.hidden=true;shell.hidden=false;
-  $('#langBtn').textContent=lang==='en'?'ES':'EN';
+  $('#langBtn').innerHTML=`<span class="lp${lang==='en'?' on':''}">EN</span><span class="lp${lang==='es'?' on':''}">ES</span>`;
   const tabs=['home','clients','invoices','estimates','more'];
   $('#tabs').innerHTML=tabs.map(k=>`<button class="tab" data-act="tab" data-v="${k}" ${k===tab?'aria-current="page"':''}>${ic(k,1.9)}<span>${t(k)}</span></button>`).join('');
   $('#title').textContent=t(tab);
