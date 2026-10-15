@@ -149,6 +149,7 @@ textarea.in{min-height:84px;resize:vertical}
 .btn[disabled]{opacity:.5}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .btns .wide{grid-column:1/-1}
+.btns .row2{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.btns .row2 .btn{display:flex;align-items:center;justify-content:center;gap:8px}.btns .row2 svg{width:20px;height:20px}
 .hero{padding:18px 0 6px}
 .hero .no{font-family:var(--display);font-weight:700;font-size:34px;line-height:1}
 .hero .due{color:var(--muted);margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -222,7 +223,7 @@ unsentAlert:n=>`${n} unpaid invoice${n==1?'':'s'} not yet sent`,readySend:'Ready
 noInvoices:'No invoices yet',noInvoicesSub:'Tap + to make your first invoice.',newInvoice:'New invoice',newEstimate:'New estimate',invoice:'Invoice',estimate:'Estimate',save:'Save',cancel:'Cancel',billTo:'Bill to',chooseClient:'Choose client',addClient:'Add client',
 job:'Job / project',noJob:'No job',newJob:'+ New job',jobName:'Job name',jobPh:'e.g. Smith – roof tear-off',jobSite:'Job site address',sameAsBilling:'Same as billing address',useLocation:'Use my current location',openMaps:'Open in Maps',locationFail:'Could not get your location.',
 items:'Items',addItem:'Add item',fromSaved:'From saved items',desc:'Description',qty:'Qty',unit:'Unit',rate:'Rate',amount:'Amount',subtotal:'Subtotal',discount:'Discount',tax:'Tax %',total:'Total',dueDate:'Due date',onReceipt:'On receipt',days:'days',payInstr:'Payment instructions',notes:'Notes / terms',date:'Date',number:'Number',
-recordPayment:'Record payment',markSent:'Mark as sent',markUnsent:'Mark as unsent',edit:'Edit',downloadPdf:'Download PDF',sharePdf:'Share PDF',copyText:'Copy text',duplicate:'Duplicate',del:'Delete',confirmDel:'Delete this for good?',yesDel:'Yes, delete',
+recordPayment:'Record payment',markSent:'Mark as sent',markUnsent:'Mark as unsent',edit:'Edit',downloadPdf:'Download PDF',sharePdf:'Share PDF',copyText:'Copy text',sendEmail:'Email',sendText:'Text',attachNote:'The PDF was downloaded. Attach it to the email.',noEmail:'This client has no email. Add it in Clients.',noPhone:'This client has no phone. Add it in Clients.',duplicate:'Duplicate',del:'Delete',confirmDel:'Delete this for good?',yesDel:'Yes, delete',
 payments:'Payments',noPayments:'No payments recorded yet.',balance:'Balance due',paidSoFar:'Paid',method:'Method',ref:'Check # / reference',note:'Note',coinAmount:'Coin amount (optional)',txid:'Transaction ID (optional)',
 billingName:'Billing name*',mobile:'Mobile',email:'Email',addEmail:'Add another email',address:'Billing address',noClients:'No clients yet',noClientsSub:'Add the GCs and companies you bill.',invoiced:'Invoiced',owes:'Owes',totalPaid:'Paid',openJobs:'Open jobs',
 convert:'Convert to invoice',estConverted:'Converted to invoice',markAccepted:'Mark accepted',noEstimates:'No estimates yet',noEstimatesSub:'Quote a job, then convert it to an invoice in one tap.',
@@ -246,7 +247,7 @@ unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,r
 noInvoices:'Aún no hay facturas',noInvoicesSub:'Toca + para crear tu primera factura.',newInvoice:'Nueva factura',newEstimate:'Nuevo presupuesto',invoice:'Factura',estimate:'Presupuesto',save:'Guardar',cancel:'Cancelar',billTo:'Facturar a',chooseClient:'Elegir cliente',addClient:'Agregar cliente',
 job:'Trabajo / proyecto',noJob:'Sin trabajo',newJob:'+ Nuevo trabajo',jobName:'Nombre del trabajo',jobPh:'ej. Smith – quitar techo',jobSite:'Dirección de la obra',sameAsBilling:'Igual que la dirección de cobro',useLocation:'Usar mi ubicación actual',openMaps:'Abrir en Mapas',locationFail:'No se pudo obtener tu ubicación.',
 items:'Conceptos',addItem:'Agregar concepto',fromSaved:'De conceptos guardados',desc:'Descripción',qty:'Cant.',unit:'Unidad',rate:'Precio',amount:'Importe',subtotal:'Subtotal',discount:'Descuento',tax:'Impuesto %',total:'Total',dueDate:'Fecha límite',onReceipt:'Al recibir',days:'días',payInstr:'Instrucciones de pago',notes:'Notas / términos',date:'Fecha',number:'Número',
-recordPayment:'Registrar pago',markSent:'Marcar enviada',markUnsent:'Marcar no enviada',edit:'Editar',downloadPdf:'Descargar PDF',sharePdf:'Compartir PDF',copyText:'Copiar texto',duplicate:'Duplicar',del:'Eliminar',confirmDel:'¿Eliminar para siempre?',yesDel:'Sí, eliminar',
+recordPayment:'Registrar pago',markSent:'Marcar enviada',markUnsent:'Marcar no enviada',edit:'Editar',downloadPdf:'Descargar PDF',sharePdf:'Compartir PDF',copyText:'Copiar texto',sendEmail:'Email',sendText:'Mensaje',attachNote:'Se descargó el PDF. Adjúntalo al correo.',noEmail:'Este cliente no tiene email. Agrégalo en Clientes.',noPhone:'Este cliente no tiene teléfono. Agrégalo en Clientes.',duplicate:'Duplicar',del:'Eliminar',confirmDel:'¿Eliminar para siempre?',yesDel:'Sí, eliminar',
 payments:'Pagos',noPayments:'Sin pagos registrados.',balance:'Saldo pendiente',paidSoFar:'Pagado',method:'Método',ref:'Cheque # / referencia',note:'Nota',coinAmount:'Cantidad en moneda (opcional)',txid:'ID de transacción (opcional)',
 billingName:'Nombre de facturación*',mobile:'Celular',email:'Correo',addEmail:'Agregar otro correo',address:'Dirección de cobro',noClients:'Aún no hay clientes',noClientsSub:'Agrega los contratistas y compañías que facturas.',invoiced:'Facturado',owes:'Debe',totalPaid:'Pagado',openJobs:'Trabajos abiertos',
 convert:'Convertir a factura',estConverted:'Convertido a factura',markAccepted:'Marcar aceptado',noEstimates:'Aún no hay presupuestos',noEstimatesSub:'Cotiza un trabajo y conviértelo en factura con un toque.',
@@ -290,7 +291,9 @@ back:'<path d="M15 5l-7 7 7 7"/>',chev:'<path d="M9 5l7 7-7 7"/>',close:'<path d
 bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',star:'<path d="M12 4l2.5 5.2 5.5.7-4 3.8 1 5.5-5-2.7-5 2.7 1-5.5-4-3.8 5.5-.7z"/>',
 trash:'<path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/>',user:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6.5 18.5c1.3-2 3.2-3 5.5-3s4.2 1 5.5 3"/>',
 pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
-sort:'<path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4"/>'
+sort:'<path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4"/>',
+mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+chat:'<path d="M4 5h16v11H9l-5 4z"/>'
 };
 const ic=(n,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 function toast(msg){const el=$('#toast');el.textContent=msg;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2400)}
@@ -627,6 +630,7 @@ function docDetail(id){return{live:true,pay:true,render(){
   <div class="btns">
   ${isEst?(d.convertedTo?`<button class="btn wide" data-act="openDoc" data-id="${d.convertedTo}">${t('estConverted')} →</button>`:`<button class="btn primary wide" data-act="convert" data-id="${id}">${t('convert')}</button>`)
   :`<button class="btn primary wide" data-act="pay" data-id="${id}" ${c.balance<=0.005?'disabled':''}>${c.balance<=0.005?t('paidInFull'):t('recordPayment')}</button>`}
+  <div class="row2"><button class="btn" data-act="emailDoc" data-id="${id}">${ic('mail')} ${t('sendEmail')}</button><button class="btn" data-act="textDoc" data-id="${id}">${ic('chat')} ${t('sendText')}</button></div>
   <button class="btn" data-act="sharePdf" data-id="${id}">${t('sharePdf')}</button>
   <button class="btn" data-act="pdf" data-id="${id}">${t('downloadPdf')}</button>
   <button class="btn" data-act="toggleSent" data-id="${id}">${d.sent?t('markUnsent'):t('markSent')}</button>
@@ -1002,6 +1006,22 @@ async function sharePDF(d){
   doc.save(pdfName(d));
 }
 
+/* send by email / text: share the PDF where the phone allows it, otherwise download it and open the mail or SMS app with the message ready */
+async function sendDoc(d,how){
+  const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
+  const to=how==='email'?((cl.emails||[]).filter(Boolean)[0]||''):(cl.mobile||'').replace(/[^\d+]/g,'');
+  const subj=(isEst?'Estimate EST':'Invoice #')+d.number+(S.profile.company?' — '+S.profile.company:'');
+  const body=docText(d);
+  const doc=await buildPDF(d);if(!doc)return;
+  const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
+  const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
+  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+  doc.save(pdfName(d));
+  if(how==='email'){if(!to)toast(t('noEmail'));location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);setTimeout(()=>toast(t('attachNote')),600)}
+  else{if(!to)toast(t('noPhone'));location.href='sms:'+to+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(subj+'\n'+body)}
+  if(!d.sent){d.sent=true;commit()}
+}
+
 /* ---------- backup ---------- */
 async function exportJSON(){
   const photos={};for(const d of Object.values(S.docs))for(const p of d.photos||[]){try{const b=await idb.get(p.id);if(b)photos[p.id]=await blobToDataURL(b)}catch(e){}}
@@ -1078,6 +1098,8 @@ const A={
   copy:e=>copyText(e.dataset.v),
   pdf:e=>downloadPDF(S.docs[e.dataset.id]),
   sharePdf:e=>sharePDF(S.docs[e.dataset.id]),
+  emailDoc:e=>sendDoc(S.docs[e.dataset.id],'email'),
+  textDoc:e=>sendDoc(S.docs[e.dataset.id],'text'),
   payTab:e=>{payTab=e.dataset.v;redrawSheet()},
   refreshPrices:()=>fetchPrices(true),
   duplicate:e=>{const s=S.docs[e.dataset.id];openEditor(newDoc(s.kind,{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,payInstr:s.payInstr,notes:s.notes}))},
