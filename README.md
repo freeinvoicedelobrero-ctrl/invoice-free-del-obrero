@@ -3,6 +3,10 @@
 **Invoices in your language. Hecho por un obrero.**
 Hecho gratis por Roofs by Hopkins, para el emprendedor.
 
+## 👉 [ABRIR LA APP / OPEN THE APP](https://freeinvoicedelobrero-ctrl.github.io/invoice-free-del-obrero/)
+
+https://freeinvoicedelobrero-ctrl.github.io/invoice-free-del-obrero/
+
 Free, open-source invoicing app for roofers, siding, gutter crews and every trade.
 English / Español. Works on any phone, installs to the home screen, and works offline.
 
@@ -27,7 +31,7 @@ The only outside calls: Google Fonts, the cdnjs libraries, and CoinGecko for liv
 1. Create a public repository (for example `invoice-free-del-obrero`).
 2. Upload every file in this folder: `index.html`, `manifest.webmanifest`, `sw.js`, `icon.svg`, `icon-192.png`, `icon-512.png`, `README.md`, `LICENSE`.
 3. **Settings → Pages → Build and deployment → Source: Deploy from a branch → `main` / `(root)` → Save.**
-4. In 1–2 minutes your app is live at `https://YOUR-USER.github.io/invoice-free-del-obrero/`.
+4. In 1–2 minutes your app is live at `https://YOUR-GITHUB-NAME.github.io/invoice-free-del-obrero/` (replace with your GitHub name).
 5. Open it in Chrome on your phone → **Install app** (or ⋮ → Add to Home screen).
 
 When you change files, bump `VERSION` in `sw.js` so phones pick up the update.
