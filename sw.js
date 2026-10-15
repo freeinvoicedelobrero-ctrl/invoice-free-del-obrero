@@ -1,6 +1,6 @@
 /* Invoice Free del Obrero — offline support. Bump VERSION when you change files. */
-const VERSION = 'obrero-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
+const VERSION = 'obrero-v3';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './roofer.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
