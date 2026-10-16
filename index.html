@@ -240,6 +240,33 @@ textarea.in{min-height:84px;resize:vertical}
 .sugg button .small{color:var(--muted);font-size:13px;display:block}
 .sugg .src{padding:6px 12px;font-size:11px;color:var(--muted)}
 
+/* quick sale (store mode) */
+.tile-wide{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;background:linear-gradient(135deg,#F07A1A,#C2550B)}
+.tile-wide .ti{flex:none}
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:12px}
+.prod{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 10px;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:var(--fg)}
+.prod b{font-size:15px;line-height:1.2;overflow-wrap:anywhere}
+.prod .pp{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.prod .q{position:absolute;top:-8px;right:-6px;min-width:26px;height:26px;border-radius:13px;background:#F07A1A;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;padding:0 7px}
+.prod.add{border-style:dashed;color:var(--accent);align-items:center;justify-content:center;font-weight:600}
+.cart{margin-top:14px;border-top:1px solid var(--line)}
+.cl{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.cl .n{flex:1;min-width:0}.cl .n div{overflow-wrap:anywhere}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);font-size:18px;line-height:1}
+.stepper span{min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.saletot{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;font-family:var(--display);font-weight:700;font-size:30px}
+.paym{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.paym button{border-radius:12px;padding:14px 10px;font-weight:600;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:6px}
+.paym button[aria-pressed="true"]{border-color:#F07A1A;box-shadow:0 0 0 1px #F07A1A inset}
+.cashq{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.cashq button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 14px;font-variant-numeric:tabular-nums}
+.change{font-family:var(--display);font-size:26px;font-weight:700;color:var(--good)}
+.btn.sale{background:#F07A1A;border-color:#F07A1A;color:#fff;font-size:18px}
+.btn.sale:disabled{opacity:.45}
+.done{text-align:center;padding:30px 0 10px}
+.done .big{font-family:var(--display);font-size:44px;font-weight:700}
+
 /* + button menu */
 .fabmenu{position:fixed;inset:0;z-index:7;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .fabmenu .fm{position:absolute;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(156px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:12px}
@@ -248,7 +275,7 @@ textarea.in{min-height:84px;resize:vertical}
 .fmi .fl{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:600;font-size:15px}
 .fmi .fc{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 .fmi .fc svg{width:24px;height:24px}
-.fc.c-cli{background:#3A3D44}.fc.c-inv{background:#2F5BFF}.fc.c-est{background:#7B2BE0}.fc.c-exp{background:#1F9D5C}
+.fc.c-sale{background:#F07A1A}.fc.c-cli{background:#3A3D44}.fc.c-inv{background:#2F5BFF}.fc.c-est{background:#7B2BE0}.fc.c-exp{background:#1F9D5C}
 .fab.open{z-index:8}.fab.open svg{transform:rotate(45deg)}
 .fab svg{transition:transform .15s}
 @media (prefers-reduced-motion:no-preference){.fabmenu:not([hidden]) .fmi{animation:fmIn .16s ease-out both}.fabmenu .fmi:nth-child(2){animation-delay:.03s}.fabmenu .fmi:nth-child(3){animation-delay:.06s}.fabmenu .fmi:nth-child(4){animation-delay:.09s}@keyframes fmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}}
@@ -327,7 +354,7 @@ walletHeader:'Built for the future of payments.',walletIntro:'Add where you get 
 payTitle:'Pay / Pagar',rateAsOf:'Rate as of',refresh:'Refresh',priceUnavailable:'Live price unavailable. Use the USD amount.',memoNote:n=>`Include Invoice #${n} in the memo if your wallet allows it.`,noSubs:'No Monero subaddresses left. Add more in My wallet.',copyAddress:'Copy address',copyAmount:'Copy amount',noMethods:'No payment methods yet. Add them in More → My wallet.',doubleCheck:'Check every address twice. Payments sent to a wrong address cannot be recovered.',taxNote:'Crypto payments are still business income for taxes.',payWith:'Pay with',
 backupReminder:'Your data lives only on this device. Download a backup regularly.',lastBackup:'Last backup',never:'never',storageFull:'Storage is full. Download a backup and remove old photos.',
 aboutText:'Invoice Free del Obrero is free and open source (MIT). There are no accounts, no ads and no trackers: everything you enter is saved only on this device. Use “Download full backup” to keep a copy or move to another phone.',
-continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent',create:'Create',acceptsCrypto:'Get paid in Bitcoin and Monero',acceptsCryptoSub:'Add your wallets and a QR shows on every invoice',findPlace:'Look up address or business',findPlaceHint:'Type a business name or address',findNone:'No matches. Type the address by hand.',findErr:'Lookup is not available right now.',mapsOpen:'Open in Google Maps',mapsSrc:'Results from OpenStreetMap',fmClient:'New client',fmInvoice:'New invoice',fmEstimate:'New estimate',fmExpense:'New expense',tInv:'Invoice',tInvS:'Create and send',tEst:'Estimate',tEstS:'Quote a job',tExp:'Expense',tExpS:'Log a receipt',tCli:'Client',tCliS:'Add a client',tabPending:'PENDING',tabDone:'DONE',approvedOn:'Approved',allYears:'All years',totalYear:y=>`Total (${y})`},
+continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent',create:'Create',qsTitle:'Quick sale',qsSub:'For a store: charge a walk-in customer for drinks or products',walkIn:'Walk-in customer',qsProducts:'Products',qsAddProd:'+ Product',qsNoProds:'Add your products once (name and price). Then each sale is a few taps.',qsProdName:'Product name',qsPrice:'Price',qsCart:'This sale',qsEmpty:'Tap a product to add it.',qsTax:'Sales tax %',qsPayWith:'Pay with',qsCash:'Cash',qsCard:'Card',qsOther:'Other',qsReceived:'Cash received',qsChange:'Change',qsShort:'Not enough',qsCharge:'Charge',qsDone:'Sale saved',qsNew:'New sale',qsReceipt:'Receipt PDF',qsCryptoNote:'Show the QR to the customer. Mark it paid when it arrives.',qsNameNeeded:'Type a name and price',qsRemove:'Remove',acceptsCrypto:'Get paid in Bitcoin and Monero',acceptsCryptoSub:'Add your wallets and a QR shows on every invoice',findPlace:'Look up address or business',findPlaceHint:'Type a business name or address',findNone:'No matches. Type the address by hand.',findErr:'Lookup is not available right now.',mapsOpen:'Open in Google Maps',mapsSrc:'Results from OpenStreetMap',fmClient:'New client',fmInvoice:'New invoice',fmEstimate:'New estimate',fmExpense:'New expense',tInv:'Invoice',tInvS:'Create and send',tEst:'Estimate',tEstS:'Quote a job',tExp:'Expense',tExpS:'Log a receipt',tCli:'Client',tCliS:'Add a client',tabPending:'PENDING',tabDone:'DONE',approvedOn:'Approved',allYears:'All years',totalYear:y=>`Total (${y})`},
 es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',useAppArt:'Usar el roofer de la app ✈',lp_header:'Arriba',lp_watermark:'De fondo',lp_both:'Los dos',logo:'Logo',addLogo:'Agregar logo',changeLogo:'Cambiar logo',removeLogo:'Quitar logo',logoNote:'Sale arriba en tus facturas y presupuestos. Los logos cuadrados o redondos se ven mejor.',donate:'Apoya el proyecto',donateSub:'Donaciones en Monero (XMR) y Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero es gratis y de código abierto, sin anuncios y sin cuotas. Si te ayuda en tu negocio, puedes apoyarlo con una donación privada en Monero (XMR) o Pirate Chain (ARRR).',donateNote:'¡Gracias! Cada donación ayuda a que la app siga gratis para todo contratista.',openWallet:'Abrir en wallet',copyDetails:'Copiar datos',achHolder:'Nombre del titular',achBank:'Nombre del banco',achRouting:'Número de ruta (9 dígitos)',achAccount:'Número de cuenta',achType:'Tipo de cuenta',achBadRouting:'El número de ruta no es válido. Revisa los 9 dígitos.',achSafety:'Estos datos salen en tus facturas para que te paguen por ACH o transferencia. Usa una cuenta de negocio. Vigila tu cuenta por cargos no autorizados y pregúntale a tu banco por el bloqueo de débitos ACH (ACH debit block).',shareApp:'Compartir la app',shareAppSub:'Gratis para todo contratista',shareAppTitle:'Comparte Invoice Free del Obrero',shareAppText:'App gratis para hacer facturas de contratista. Sin registro, sin cuotas, tus datos se quedan en tu teléfono.',scanToOpen:'Escanea con la cámara para abrir la app',shareBtn:'Compartir link',copyLink:'Copiar link',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Empezar',install:'Instalar app',iosInstall:'En iPhone: toca Compartir → Agregar a inicio.',privacyLine:'Tus datos se quedan en este dispositivo. Sin cuentas, sin rastreadores.',
 unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,readySend:'¿Listo para enviar?',overview:'Resumen',overdue:'Vencidas',unpaid:'Pendientes',unsent:'No enviada',sent:'Enviada',partial:'Parcial',paid:'Pagada',draft:'Borrador',accepted:'Aceptado',receivedMonth:'Cobrado este mes',owedTotal:'Total que te deben',recent:'Facturas recientes',
@@ -351,7 +378,7 @@ walletHeader:'Diseñado para el futuro de los pagos.',walletIntro:'Agrega dónde
 payTitle:'Pagar / Pay',rateAsOf:'Precio de las',refresh:'Actualizar',priceUnavailable:'Precio en vivo no disponible. Usa el monto en USD.',memoNote:n=>`Incluye "Factura #${n}" en la nota si tu wallet lo permite.`,noSubs:'No quedan subdirecciones de Monero. Agrega más en Mi cartera.',copyAddress:'Copiar dirección',copyAmount:'Copiar monto',noMethods:'Aún no hay métodos de pago. Agrégalos en Más → Mi cartera.',doubleCheck:'Revisa cada dirección dos veces. Un pago a una dirección equivocada no se puede recuperar.',taxNote:'Los pagos en crypto siguen siendo ingreso del negocio para impuestos.',payWith:'Pagar con',
 backupReminder:'Tus datos viven solo en este dispositivo. Descarga un respaldo seguido.',lastBackup:'Último respaldo',never:'nunca',storageFull:'El almacenamiento está lleno. Descarga un respaldo y borra fotos viejas.',
 aboutText:'Invoice Free del Obrero es gratis y de código abierto (MIT). No hay cuentas, ni anuncios, ni rastreadores: todo lo que escribes se guarda solo en este dispositivo. Usa “Descargar respaldo completo” para guardar una copia o pasar a otro teléfono.',
-continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado',create:'Crear',acceptsCrypto:'Cobra en Bitcoin y Monero',acceptsCryptoSub:'Agrega tus wallets y sale un QR en cada factura',findPlace:'Buscar dirección o negocio',findPlaceHint:'Escribe el nombre del negocio o la dirección',findNone:'Sin resultados. Escribe la dirección a mano.',findErr:'La búsqueda no está disponible ahorita.',mapsOpen:'Abrir en Google Maps',mapsSrc:'Resultados de OpenStreetMap',fmClient:'Cliente nuevo',fmInvoice:'Factura nueva',fmEstimate:'Presupuesto nuevo',fmExpense:'Gasto nuevo',tInv:'Factura',tInvS:'Crear y mandar',tEst:'Presupuesto',tEstS:'Cotizar un trabajo',tExp:'Gasto',tExpS:'Anotar un recibo',tCli:'Cliente',tCliS:'Agregar cliente',tabPending:'PENDIENTES',tabDone:'HECHOS',approvedOn:'Aprobado',allYears:'Todos los años',totalYear:y=>`Total (${y})`}
+continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado',create:'Crear',qsTitle:'Venta rápida',qsSub:'Para tienda: cóbrale a cualquier cliente bebidas o productos',walkIn:'Cliente general',qsProducts:'Productos',qsAddProd:'+ Producto',qsNoProds:'Agrega tus productos una sola vez (nombre y precio). Luego cada venta son unos toques.',qsProdName:'Nombre del producto',qsPrice:'Precio',qsCart:'Esta venta',qsEmpty:'Toca un producto para agregarlo.',qsTax:'Impuesto %',qsPayWith:'Pago con',qsCash:'Efectivo',qsCard:'Tarjeta',qsOther:'Otro',qsReceived:'Efectivo recibido',qsChange:'Cambio',qsShort:'Falta dinero',qsCharge:'Cobrar',qsDone:'Venta guardada',qsNew:'Nueva venta',qsReceipt:'Recibo PDF',qsCryptoNote:'Enséñale el QR al cliente. Márcala pagada cuando llegue.',qsNameNeeded:'Escribe nombre y precio',qsRemove:'Quitar',acceptsCrypto:'Cobra en Bitcoin y Monero',acceptsCryptoSub:'Agrega tus wallets y sale un QR en cada factura',findPlace:'Buscar dirección o negocio',findPlaceHint:'Escribe el nombre del negocio o la dirección',findNone:'Sin resultados. Escribe la dirección a mano.',findErr:'La búsqueda no está disponible ahorita.',mapsOpen:'Abrir en Google Maps',mapsSrc:'Resultados de OpenStreetMap',fmClient:'Cliente nuevo',fmInvoice:'Factura nueva',fmEstimate:'Presupuesto nuevo',fmExpense:'Gasto nuevo',tInv:'Factura',tInvS:'Crear y mandar',tEst:'Presupuesto',tEstS:'Cotizar un trabajo',tExp:'Gasto',tExpS:'Anotar un recibo',tCli:'Cliente',tCliS:'Agregar cliente',tabPending:'PENDIENTES',tabDone:'HECHOS',approvedOn:'Aprobado',allYears:'Todos los años',totalYear:y=>`Total (${y})`}
 };
 let lang='es';
 function t(k,...a){const v=(L[lang]&&L[lang][k])??L.en[k]??k;return typeof v==='function'?v(...a):v}
@@ -382,6 +409,7 @@ sort:'<path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4"/>',
 mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
 chat:'<path d="M4 5h16v11H9l-5 4z"/>',
 send:'<path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>',
+cart:'<path d="M3 4h2l2.4 11h10.2L20 8H6.2"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
 receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'
 };
 const ic=(n,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
@@ -530,7 +558,7 @@ function vHome(){
   const lb=S.profile.lastBackup?daysBetween(S.profile.lastBackup,todayISO()):999;
   const tile=(cls,act,icon,h,sub)=>`<button class="tile ${cls}" data-act="${act}"><span class="ti">${ic(icon,2)}</span><span><b>${t(h)}</b><br><span class="ts">${t(sub)}</span></span></button>`;
   return `${rooferSVG('small')}<div class="company">${esc(S.profile.company||'')}</div>
-  <div class="tiles">${tile('t-inv','newInvoice','send','tInv','tInvS')}${tile('t-est','newEstimate','estimates','tEst','tEstS')}${tile('t-exp','newExpense','receipt','tExp','tExpS')}${tile('t-cli','newClient','clients','tCli','tCliS')}</div>
+  <div class="tiles">${tile('t-inv','newInvoice','send','tInv','tInvS')}${tile('t-est','newEstimate','estimates','tEst','tEstS')}${tile('t-exp','newExpense','receipt','tExp','tExpS')}${tile('t-cli','newClient','clients','tCli','tCliS')}${tile('tile-wide','quickSale','cart','qsTitle','qsSub')}</div>
   <button class="accepts" data-act="walletOpen"><span class="logos">${coinLogo('btc')}${coinLogo('xmr')}</span><span><b>${t('acceptsCrypto')}</b><span class="small">${t('acceptsCryptoSub')}</span></span></button>
   ${window.cloudHomeBanner?window.cloudHomeBanner():''}
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
@@ -852,7 +880,7 @@ function previewHTML(d){
   const pm=Object.values(S.wallet||{});
   return `<div class="paper">
   <div class="ph"><div style="display:flex;gap:12px;align-items:center">${p.logo&&(p.logoPlace||'header')!=='watermark'?`<img src="${p.logo}" alt="" style="width:56px;height:56px;object-fit:contain;background:#fff;border-radius:6px;padding:3px">`:''}<div><div class="pco">${esc(p.company||t('yourCompany'))}</div><div class="psm">${lines([p.address,p.phone,p.email,p.license])}</div></div></div>
-  <div class="pr"><div class="pkind">${isEst?'ESTIMATE':'INVOICE'}</div><div class="pno">${isEst?'EST ':'#'}${esc(d.number)}</div></div></div>
+  <div class="pr"><div class="pkind">${isEst?'ESTIMATE':d.sale?'RECEIPT':'INVOICE'}</div><div class="pno">${isEst?'EST ':'#'}${esc(d.number)}</div></div></div>
   <div class="pb" style="position:relative">${p.logo&&(p.logoPlace||'header')!=='header'?`<img src="${p.logo}" alt="" style="position:absolute;inset:0;margin:auto;width:70%;max-height:80%;object-fit:contain;opacity:.07;pointer-events:none">`:''}<div class="pmeta"><div><div class="plbl">BILL TO</div><b>${esc(cl.name||'—')}</b><div class="psm">${lines([cl.address,cl.mobile,(cl.emails||[])[0]])}</div>
   ${j?`<div class="plbl" style="margin-top:8px">JOB SITE</div><div class="psm">${lines([j.name,j.address])}</div>`:''}</div>
   <div style="text-align:right"><div class="plbl">${isEst?'DATE':'DATE / DUE'}</div><div class="psm">${fdate(d.date)}${isEst?'':' / '+fdate(c.due)}</div></div></div>
@@ -947,6 +975,39 @@ function findPlaces(q){clearTimeout(placeTimer);const box=$('#c-sugg');if(!box)r
     placeHits=(j.features||[]).filter(f=>placeLine(f));
     box.innerHTML=placeHits.length?placeHits.map((f,i)=>{const a=f.properties||{};const head=isBiz(f)?a.name:placeLine(f).split('\n')[0];return `<button type="button" role="option" data-act="pickPlace" data-i="${i}"><b>${esc(head)}</b><span class="small">${esc(placeLine(f).replace('\n',', '))}</span></button>`}).join('')+`<div class="src">${t('mapsSrc')}</div>`:`<div class="src">${t('findNone')}</div>`;
   }catch(e){if(seq===placeSeq)box.innerHTML=`<div class="src">${t('findErr')}</div>`}},400)}
+/* ---------- quick sale (store mode) ---------- */
+let SALE=null;
+function newSale(){SALE={cart:{},method:'cash',received:'',adding:false,doneId:null}}
+function saleItems(){return Object.entries(SALE.cart).filter(([id,q])=>q>0&&S.saved[id]).map(([id,q])=>({desc:S.saved[id].desc,qty:q,unit:S.saved[id].unit||'',rate:+S.saved[id].rate||0}))}
+function saleTotal(){const sub=saleItems().reduce((s,i)=>s+i.qty*i.rate,0);const tx=+S.profile.saleTax||0;return r2(sub+r2(sub*tx/100))}
+function walkInId(){if(!S.clients.walkin)S.clients.walkin={id:'walkin',name:t('walkIn'),mobile:'',emails:[''],address:'',notes:''};return 'walkin'}
+function saleSheet(){return{live:false,render(){
+  if(!SALE)newSale();
+  if(SALE.doneId){const d=S.docs[SALE.doneId];const c=d?calc(d):{total:0};const rec=+SALE.received||0;
+    return sheetHead(t('qsTitle'),{close:true})+`<div class="wrap sheet-b"><div class="done"><div style="color:var(--good);font-weight:600">${t('qsDone')} · #${esc(d?d.number:'')}</div><div class="big num">${money(c.total)}</div>
+    ${SALE.method==='cash'&&rec>c.total?`<div class="small" style="margin-top:6px">${t('qsChange')}</div><div class="change num">${money(rec-c.total)}</div>`:''}</div>
+    <div class="btns"><button class="btn" data-act="pdf" data-id="${SALE.doneId}">${t('qsReceipt')}</button><button class="btn sale" data-act="qsNew">${t('qsNew')}</button></div></div>`}
+  const prods=Object.values(S.saved).sort((a,b)=>a.desc.localeCompare(b.desc));
+  const items=saleItems(),total=saleTotal(),tx=+S.profile.saleTax||0;
+  const crypto=enabledMethods().filter(m=>!PRESETS[m.type]?.fiat);
+  const opts=[['cash',t('qsCash'),''],['card',t('qsCard'),''],...crypto.map(m=>['w:'+m.id,m.name||PRESETS[m.type]?.label||m.type,coinLogo(m.type)]),['other',t('qsOther'),'']];
+  const rec=+SALE.received||0,short=SALE.method==='cash'&&SALE.received!==''&&rec<total;
+  const quick=[...new Set([Math.ceil(total),Math.ceil(total/5)*5,Math.ceil(total/10)*10,Math.ceil(total/20)*20])].filter(v=>v>0).slice(0,4);
+  return sheetHead(t('qsTitle'),{close:true})+`<div class="wrap sheet-b">
+  <div class="sec-h" style="margin-top:12px"><h2>${t('qsProducts')}</h2></div>
+  ${prods.length?'':`<p class="small">${t('qsNoProds')}</p>`}
+  <div class="prods">${prods.map(p=>{const q=SALE.cart[p.id]||0;return `<button class="prod" data-act="qsAdd" data-id="${p.id}">${q?`<span class="q">${q}</span>`:''}<b>${esc(p.desc)}</b><span class="pp">${money(p.rate)}</span></button>`}).join('')}<button class="prod add" data-act="qsNewProd">${t('qsAddProd')}</button></div>
+  ${SALE.adding?`<div class="group"><div class="grid2"><div class="field"><label for="qs-n">${t('qsProdName')}</label><input class="in" id="qs-n" autocomplete="off"></div><div class="field"><label for="qs-p">${t('qsPrice')}</label><input class="in num" id="qs-p" type="number" step="0.01" inputmode="decimal"></div></div><button class="btn primary" data-act="qsSaveProd">${t('save')}</button></div>`:''}
+  <div class="sec-h"><h2>${t('qsCart')}</h2></div>
+  <div class="cart">${items.length?Object.entries(SALE.cart).filter(([id,q])=>q>0&&S.saved[id]).map(([id,q])=>`<div class="cl"><div class="n"><div>${esc(S.saved[id].desc)}</div><div class="small num">${money(S.saved[id].rate)} × ${q} = ${money(q*S.saved[id].rate)}</div></div><div class="stepper"><button data-act="qsDec" data-id="${id}" aria-label="−">−</button><span>${q}</span><button data-act="qsAdd" data-id="${id}" aria-label="+">+</button></div></div>`).join(''):`<p class="small" style="padding:10px 0">${t('qsEmpty')}</p>`}</div>
+  <div class="grid2" style="margin-top:10px;align-items:end"><div class="field" style="margin:0"><label for="qs-tax">${t('qsTax')}</label><input class="in num" id="qs-tax" type="number" step="0.01" inputmode="decimal" value="${tx||''}" placeholder="0"></div><div></div></div>
+  <div class="saletot"><span>${t('total')}</span><span class="num" id="qs-total">${money(total)}</span></div>
+  <div class="field"><label>${t('qsPayWith')}</label><div class="paym">${opts.map(([k,l,lg])=>`<button data-act="qsMethod" data-v="${k}" aria-pressed="${SALE.method===k}">${lg}${esc(l)}</button>`).join('')}</div></div>
+  ${SALE.method==='cash'&&total>0?`<div class="field"><label for="qs-rec">${t('qsReceived')}</label><input class="in num" id="qs-rec" type="number" step="0.01" inputmode="decimal" value="${esc(SALE.received)}"><div class="cashq">${quick.map(v=>`<button data-act="qsRec" data-v="${v}">${money(v)}</button>`).join('')}</div>
+    <div style="margin-top:10px" id="qs-chg">${SALE.received!==''?(short?`<span class="red">${t('qsShort')}: ${money(total-rec)}</span>`:`<span class="small">${t('qsChange')}</span> <span class="change num">${money(rec-total)}</span>`):''}</div></div>`:''}
+  ${SALE.method.startsWith('w:')?`<p class="note">${t('qsCryptoNote')}</p>`:''}
+  <button class="btn sale" data-act="qsCharge" ${!items.length||short?'disabled':''}>${t('qsCharge')} ${money(total)}</button>
+  <div style="height:24px"></div></div>`}}}
 function clientEditor(){return{live:false,render(){
   return sheetHead(C._new?t('addClient'):C.name,{close:true,right:`<button class="textbtn" data-act="saveClient">${t('save')}</button>`})+`<div class="wrap sheet-b"><div style="margin-top:14px"></div>
   ${C._new?(hasPicker()?`<button class="btn outline" data-act="pickContacts">${t('chooseContacts')}</button><button class="linkbtn" style="width:100%;justify-content:center" data-act="pickVcf">${t('importVcf')}</button>`:`<button class="btn outline" data-act="pickVcf">${t('importVcf')}</button>`)+`<p class="small" style="text-align:center">${t('contactsNote')}</p>`:''}
@@ -1208,7 +1269,7 @@ async function buildPDF(d){
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(p.company||'',tx,44);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
   if(hdr.length)doc.text(hdr,tx,60,{lineHeightFactor:1.2});
-  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(isEst?'ESTIMATE':'INVOICE',W-M,44,{align:'right'});
+  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(isEst?'ESTIMATE':d.sale?'RECEIPT':'INVOICE',W-M,44,{align:'right'});
   doc.setFontSize(11);doc.text((isEst?'EST ':'#')+d.number,W-M,62,{align:'right'});
   doc.setTextColor(0,0,0);let y=hH+34;
   doc.setFontSize(9);doc.setTextColor(110);doc.text('BILL TO',M,y);doc.text(isEst?'DATE':'DATE / DUE',W-M,y,{align:'right'});
@@ -1259,7 +1320,7 @@ async function buildPDF(d){
   const pages=doc.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(140);doc.text('Made with Invoice Free del Obrero',W/2,H-20,{align:'center'})}
   return doc;
 }
-const pdfName=d=>(d.kind==='estimate'?'Estimate-':'Invoice-')+d.number+'.pdf';
+const pdfName=d=>(d.kind==='estimate'?'Estimate-':d.sale?'Receipt-':'Invoice-')+d.number+'.pdf';
 async function downloadPDF(d){const doc=await buildPDF(d);if(doc)doc.save(pdfName(d))}
 async function sharePDF(d){
   const doc=await buildPDF(d);if(!doc)return;
@@ -1302,9 +1363,24 @@ async function restoreJSON(o){
 
 /* ---------- actions ---------- */
 function fabItems(){const it=(act,cls,icon,lbl)=>`<button class="fmi" data-act="fabPick" data-v="${act}"><span class="fl">${t(lbl)}</span><span class="fc ${cls}">${ic(icon,2)}</span></button>`;
-  return it('newClient','c-cli','clients','fmClient')+it('newInvoice','c-inv','send','fmInvoice')+it('newEstimate','c-est','estimates','fmEstimate')+it('newExpense','c-exp','receipt','fmExpense')}
+  return it('quickSale','c-sale','cart','qsTitle')+it('newClient','c-cli','clients','fmClient')+it('newInvoice','c-inv','send','fmInvoice')+it('newEstimate','c-est','estimates','fmEstimate')+it('newExpense','c-exp','receipt','fmExpense')}
 function closeFab(){const f=$('#fab');f.classList.remove('open');f.setAttribute('aria-expanded','false');$('#fabMenu').hidden=true}
 const A={
+  quickSale:()=>{newSale();showSheet(saleSheet())},
+  qsNew:()=>{newSale();redrawSheet()},
+  qsAdd:e=>{SALE.cart[e.dataset.id]=(SALE.cart[e.dataset.id]||0)+1;redrawSheet()},
+  qsDec:e=>{const id=e.dataset.id;SALE.cart[id]=Math.max(0,(SALE.cart[id]||0)-1);if(!SALE.cart[id])delete SALE.cart[id];redrawSheet()},
+  qsNewProd:()=>{SALE.adding=!SALE.adding;redrawSheet();const n=$('#qs-n');if(n)n.focus()},
+  qsSaveProd:()=>{const n=$('#qs-n').value.trim(),p=+$('#qs-p').value;if(!n||!(p>0)){toast(t('qsNameNeeded'));return}const s={id:uid(),desc:n,unit:'',rate:r2(p)};S.saved[s.id]=s;SALE.adding=false;SALE.cart[s.id]=1;persist();redrawSheet()},
+  qsMethod:e=>{SALE.method=e.dataset.v;redrawSheet()},
+  qsRec:e=>{SALE.received=e.dataset.v;redrawSheet()},
+  qsCharge:()=>{const items=saleItems();if(!items.length)return;const total=saleTotal();
+    const crypto=SALE.method.startsWith('w:');const p=S.profile;const n=+p.nextSale||1;
+    const d=newDoc('invoice',{clientId:walkInId(),items,taxRate:+p.saleTax||0,dueDays:0,sale:true,number:'V-'+n,notes:'',payInstr:'',sent:true,includePhotos:false});delete d._new;d.updatedAt=Date.now();
+    if(!crypto){const lbl=SALE.method==='cash'?'Cash':SALE.method==='card'?'Card':'Other';d.payments=[{id:uid(),amount:total,date:todayISO(),method:lbl,ref:'',coin:'',txid:'',note:''}]}
+    S.docs[d.id]=d;p.nextSale=n+1;
+    if(crypto){payTab=SALE.method.slice(2);SALE=null;stack.pop();showSheet(docDetail(d.id));commit();return}
+    SALE.doneId=d.id;commit();redrawSheet()},
   pickPlace:e=>{const f=placeHits[+e.dataset.i];if(!f||!C)return;C.address=placeLine(f);const ta=$('#c-addr');if(ta)ta.value=C.address;if(isBiz(f)&&!C.name.trim()){C.name=f.properties.name;const n=$('#c-name');if(n)n.value=C.name}const b=$('#c-sugg');if(b)b.innerHTML='';const fi=$('#c-find');if(fi)fi.value='';toast(t('saved'))},
   fabMenu:()=>{const m=$('#fabMenu'),f=$('#fab');if(!m.hidden){closeFab();return}$('#fabItems').innerHTML=fabItems();m.classList.toggle('lift',f.classList.contains('lift'));m.hidden=false;f.classList.add('open');f.setAttribute('aria-expanded','true');const b=m.querySelector('.fmi');if(b)b.focus()},
   fabClose:()=>closeFab(),
@@ -1451,6 +1527,8 @@ document.addEventListener('input',e=>{
   if(D&&el.dataset.cap!==undefined){D.photos[+el.dataset.cap].caption=el.value;return}
   if(D&&NJ&&el.dataset.nj){NJ[el.dataset.nj]=el.value;return}
   if(D&&el.dataset.jaddr){const j=S.jobs[D.jobId];if(j){j.address=el.value;persist()}return}
+  if(SALE&&el.id==='qs-tax'){S.profile.saleTax=+el.value||0;persist();const tt=$('#qs-total');if(tt)tt.textContent=money(saleTotal());const cb=document.querySelector('[data-act=qsCharge]');if(cb)cb.textContent=t('qsCharge')+' '+money(saleTotal());return}
+  if(SALE&&el.id==='qs-rec'){SALE.received=el.value;const tot=saleTotal(),r=+el.value||0,c=$('#qs-chg');if(c)c.innerHTML=el.value===''?'':(r<tot?`<span class="red">${t('qsShort')}: ${money(tot-r)}</span>`:`<span class="small">${t('qsChange')}</span> <span class="change num">${money(r-tot)}</span>`);const b=document.querySelector('[data-act=qsCharge]');if(b)b.disabled=r<tot&&el.value!=='';return}
   if(el.id==='c-find'){findPlaces(el.value);return}
   if(C&&el.dataset.c){C[el.dataset.c]=el.value;return}
   if(C&&el.dataset.email!==undefined){C.emails[+el.dataset.email]=el.value;return}
