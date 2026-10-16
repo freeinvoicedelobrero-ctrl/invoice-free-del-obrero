@@ -149,12 +149,6 @@ textarea.in{min-height:84px;resize:vertical}
 .btn[disabled]{opacity:.5}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .btns .wide{grid-column:1/-1}
-.sigpad{width:100%;height:190px;background:#fff;border-radius:10px;touch-action:none;display:block}
-.sigrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.sigbox{display:flex;flex-direction:column;gap:4px}.sigbox img{width:100%;height:70px;object-fit:contain;background:#fff;border-radius:8px}
-.sigempty{height:70px;border:1px dashed var(--line,#333);border-radius:8px}
-.paper .psig{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
-.paper .psl{height:54px;border-bottom:1px solid #111;display:flex;align-items:flex-end}.paper .psl img{max-height:52px;max-width:100%}
 .row .plane{flex:none;width:40px;height:28px;align-self:center}
 .row .plane svg{width:100%;height:100%;overflow:visible}
 .row .plane .pl{fill:#fff;stroke:#fff;stroke-width:1;stroke-linejoin:round;opacity:.45}
@@ -212,6 +206,52 @@ textarea.in{min-height:84px;resize:vertical}
 .switch[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
 .switch[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
 @media (max-width:360px){.cards{grid-template-columns:1fr}}
+/* action tiles (home) */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.tile{position:relative;overflow:hidden;border:0;border-radius:18px;padding:16px;min-height:136px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;color:#fff}
+.tile::after{content:"";position:absolute;inset:auto -30% -60% auto;width:80%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none}
+.tile .ti{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.tile .ti svg{width:22px;height:22px}
+.tile b{font-family:var(--display);font-size:24px;line-height:1.05;font-weight:700;letter-spacing:.01em}
+.tile span.ts{font-size:13px;opacity:.85;margin-top:2px}
+.tile.t-inv{background:linear-gradient(135deg,#2F5BFF,#1A3FD6)}
+.tile.t-est{background:linear-gradient(135deg,#8A2BE2,#4B23C8)}
+.tile.t-exp{background:linear-gradient(135deg,#1F9D5C,#147346)}
+.tile.t-cli{background:var(--surface-2);color:var(--fg);border:1px solid var(--line)}
+.tile.t-cli .ti{background:var(--surface);color:var(--muted)}
+.tile.t-cli span.ts{color:var(--muted);opacity:1}
+.tile:active{transform:scale(.98)}
+@media (hover:hover){.tile{transition:filter .15s,transform .15s}.tile:hover{filter:brightness(1.08)}}
+@media (min-width:700px){.tiles{gap:16px}.tile{min-height:180px;padding:22px}.tile b{font-size:30px}.tile .ti{width:52px;height:52px}}
+
+/* + button menu */
+.fabmenu{position:fixed;inset:0;z-index:7;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.fabmenu .fm{position:absolute;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(156px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.fabmenu.lift .fm{bottom:calc(212px + env(safe-area-inset-bottom,0px))}
+.fmi{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;color:var(--fg)}
+.fmi .fl{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:600;font-size:15px}
+.fmi .fc{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.fmi .fc svg{width:24px;height:24px}
+.fc.c-cli{background:#3A3D44}.fc.c-inv{background:#2F5BFF}.fc.c-est{background:#7B2BE0}.fc.c-exp{background:#1F9D5C}
+.fab.open{z-index:8}.fab.open svg{transform:rotate(45deg)}
+.fab svg{transition:transform .15s}
+@media (prefers-reduced-motion:no-preference){.fabmenu:not([hidden]) .fmi{animation:fmIn .16s ease-out both}.fabmenu .fmi:nth-child(2){animation-delay:.03s}.fabmenu .fmi:nth-child(3){animation-delay:.06s}.fabmenu .fmi:nth-child(4){animation-delay:.09s}@keyframes fmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}}
+@media (min-width:900px){.fabmenu .fm{bottom:calc(96px + env(safe-area-inset-bottom,0px))}.fabmenu.lift .fm{bottom:calc(156px + env(safe-area-inset-bottom,0px))}}
+
+/* desktop: tabs become a left sidebar, like a desktop window */
+@media (min-width:900px){
+  #appShell{--side:104px}
+  .tabs{top:0;bottom:0;right:auto;width:var(--side);border-top:0;border-right:1px solid var(--line);padding:calc(16px + env(safe-area-inset-top,0px)) 0 16px}
+  .tabs .wrap{display:flex;flex-direction:column;gap:6px;padding:0 10px;max-width:none}
+  .tab{padding:12px 0;border-radius:14px;font-size:13px}
+  .tab[aria-current="page"]{background:var(--surface-2)}
+  .top,#main,.totalbar{margin-left:var(--side)}
+  .totalbar{bottom:0}
+  .fab{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+  .fab.lift{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .wrap{max-width:980px}
+}
+
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 </head>
@@ -222,6 +262,7 @@ textarea.in{min-height:84px;resize:vertical}
   <main id="main"><div class="wrap" id="view"></div></main>
   <div class="totalbar" id="totalbar" hidden><div class="wrap"><span id="totalLbl">Total</span><span class="num" id="totalVal"></span></div></div>
   <button class="fab" id="fab" data-act="newInvoice" aria-label="New invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <div class="fabmenu" id="fabMenu" hidden data-act="fabClose"><div class="fm" id="fabItems"></div></div>
   <nav class="tabs"><div class="wrap" id="tabs"></div></nav>
 </div>
 <div class="sheet" id="sheet" hidden></div>
@@ -246,7 +287,7 @@ textarea.in{min-height:84px;resize:vertical}
 
 /* ---------- i18n ---------- */
 const L={
-en:{secWorkflow:'Workflow',secCashflow:'Cashflow',secItems:'Items & expenses',secInsights:'Insights',secBusiness:'Business',secSupport:'Support',help:'Help',signatures:'Signatures',contractor:'Contractor',customer:'Customer',clientSigns:'Customer signs here',mySignature:'My signature',addMySig:'Add my signature',changeMySig:'Change my signature',mySigNote:'Your signature is added to every estimate and invoice as the contractor.',printedName:'Printed name',signHere:'Sign with your finger',clearSig:'Clear',iAgree:'I accept the work, price and terms above',saveSignature:'Save signature',signFirst:'Please sign first',signedOk:'Signed ✓',signedOn:'Signed',removeClientSig:'Remove customer signature',changedAfterSign:'⚠ This document was changed after it was signed. Ask the customer to sign again.',acceptText:c=>`By signing, the customer accepts the work, price and terms of this document and authorizes ${c||'the contractor'} to proceed.`,contractTerms:'Contract terms & conditions',contractTermsPh:'Scope, payment schedule, warranty, change orders, cancellation…',contractTermsNote:'Printed on every estimate/invoice above the signatures. You can change them per document.',useAppArt:'Use the app roofer ✈',lp_header:'Top',lp_watermark:'Background',lp_both:'Both',logo:'Logo',addLogo:'Add logo',changeLogo:'Change logo',removeLogo:'Remove logo',logoNote:'Appears at the top of your invoices and estimates. Square or round logos look best.',donate:'Support the project',donateSub:'Donations in Monero (XMR) and Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero is free and open source, with no ads and no fees. If it helps your business, you can support it with a private donation in Monero (XMR) or Pirate Chain (ARRR).',donateNote:'Thank you! Every donation helps keep the app free for every contractor.',openWallet:'Open in wallet',copyDetails:'Copy bank details',achHolder:'Account holder name',achBank:'Bank name',achRouting:'Routing number (9 digits)',achAccount:'Account number',achType:'Account type',achBadRouting:'Routing number is not valid. Check the 9 digits.',achSafety:'These details appear on your invoices so clients can pay you by ACH or wire. Use a business account. Anyone with these numbers can send you money; watch your account for unauthorized debits and ask your bank about ACH debit blocks.',shareApp:'Share the app',shareAppSub:'Free for every contractor',shareAppTitle:'Share Invoice Free del Obrero',shareAppText:'Free invoicing app for contractors. No sign-up, no fees, your data stays on your phone.',scanToOpen:'Scan with the camera to open the app',shareBtn:'Share link',copyLink:'Copy link',expenses:'Expenses',thisMonth:'This month',newExpense:'New expense',vendor:'Vendor / store',category:'Category',noExpenses:'No expenses yet',noExpensesSub:'Log materials, dump fees, fuel and crew pay to see your real profit per job.',profit:'Profit',spent:'Expenses',receipt:'Receipt photo',tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
+en:{secWorkflow:'Workflow',secCashflow:'Cashflow',secItems:'Items & expenses',secInsights:'Insights',secBusiness:'Business',secSupport:'Support',help:'Help',useAppArt:'Use the app roofer ✈',lp_header:'Top',lp_watermark:'Background',lp_both:'Both',logo:'Logo',addLogo:'Add logo',changeLogo:'Change logo',removeLogo:'Remove logo',logoNote:'Appears at the top of your invoices and estimates. Square or round logos look best.',donate:'Support the project',donateSub:'Donations in Monero (XMR) and Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero is free and open source, with no ads and no fees. If it helps your business, you can support it with a private donation in Monero (XMR) or Pirate Chain (ARRR).',donateNote:'Thank you! Every donation helps keep the app free for every contractor.',openWallet:'Open in wallet',copyDetails:'Copy bank details',achHolder:'Account holder name',achBank:'Bank name',achRouting:'Routing number (9 digits)',achAccount:'Account number',achType:'Account type',achBadRouting:'Routing number is not valid. Check the 9 digits.',achSafety:'These details appear on your invoices so clients can pay you by ACH or wire. Use a business account. Anyone with these numbers can send you money; watch your account for unauthorized debits and ask your bank about ACH debit blocks.',shareApp:'Share the app',shareAppSub:'Free for every contractor',shareAppTitle:'Share Invoice Free del Obrero',shareAppText:'Free invoicing app for contractors. No sign-up, no fees, your data stays on your phone.',scanToOpen:'Scan with the camera to open the app',shareBtn:'Share link',copyLink:'Copy link',expenses:'Expenses',thisMonth:'This month',newExpense:'New expense',vendor:'Vendor / store',category:'Category',noExpenses:'No expenses yet',noExpensesSub:'Log materials, dump fees, fuel and crew pay to see your real profit per job.',profit:'Profit',spent:'Expenses',receipt:'Receipt photo',tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Get started',install:'Install app',iosInstall:'On iPhone: tap Share → Add to Home Screen.',privacyLine:'Your data stays on this device. No accounts, no trackers.',
 unsentAlert:n=>`${n} unpaid invoice${n==1?'':'s'} not yet sent`,readySend:'Ready to send?',overview:'Overview',overdue:'Overdue',unpaid:'Unpaid',unsent:'Unsent',sent:'Sent',partial:'Partial',paid:'Paid',draft:'Draft',accepted:'Accepted',receivedMonth:'Received this month',owedTotal:'Total owed to you',recent:'Recent invoices',
 noInvoices:'No invoices yet',noInvoicesSub:'Tap + to make your first invoice.',newInvoice:'New invoice',newEstimate:'New estimate',invoice:'Invoice',estimate:'Estimate',save:'Save',cancel:'Cancel',billTo:'Bill to',chooseClient:'Choose client',addClient:'Add client',
@@ -269,8 +310,8 @@ walletHeader:'Built for the future of payments.',walletIntro:'Add where you get 
 payTitle:'Pay / Pagar',rateAsOf:'Rate as of',refresh:'Refresh',priceUnavailable:'Live price unavailable. Use the USD amount.',memoNote:n=>`Include Invoice #${n} in the memo if your wallet allows it.`,noSubs:'No Monero subaddresses left. Add more in My wallet.',copyAddress:'Copy address',copyAmount:'Copy amount',noMethods:'No payment methods yet. Add them in More → My wallet.',doubleCheck:'Check every address twice. Payments sent to a wrong address cannot be recovered.',taxNote:'Crypto payments are still business income for taxes.',payWith:'Pay with',
 backupReminder:'Your data lives only on this device. Download a backup regularly.',lastBackup:'Last backup',never:'never',storageFull:'Storage is full. Download a backup and remove old photos.',
 aboutText:'Invoice Free del Obrero is free and open source (MIT). There are no accounts, no ads and no trackers: everything you enter is saved only on this device. Use “Download full backup” to keep a copy or move to another phone.',
-continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent'},
-es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',signatures:'Firmas',contractor:'Contratista',customer:'Cliente',clientSigns:'Firma del cliente aquí',mySignature:'Mi firma',addMySig:'Agregar mi firma',changeMySig:'Cambiar mi firma',mySigNote:'Tu firma se agrega a cada presupuesto y factura como contratista.',printedName:'Nombre completo',signHere:'Firma con tu dedo',clearSig:'Borrar',iAgree:'Acepto el trabajo, el precio y los términos de arriba',saveSignature:'Guardar firma',signFirst:'Primero firma',signedOk:'Firmado ✓',signedOn:'Firmado',removeClientSig:'Quitar firma del cliente',changedAfterSign:'⚠ Este documento se cambió después de firmarse. Pide al cliente que firme otra vez.',acceptText:c=>`Al firmar, el cliente acepta el trabajo, el precio y los términos de este documento y autoriza a ${c||'el contratista'} a comenzar.`,contractTerms:'Términos y condiciones del contrato',contractTermsPh:'Alcance, calendario de pagos, garantía, cambios de obra, cancelación…',contractTermsNote:'Se imprimen en cada presupuesto/factura arriba de las firmas. Los puedes cambiar en cada documento.',useAppArt:'Usar el roofer de la app ✈',lp_header:'Arriba',lp_watermark:'De fondo',lp_both:'Los dos',logo:'Logo',addLogo:'Agregar logo',changeLogo:'Cambiar logo',removeLogo:'Quitar logo',logoNote:'Sale arriba en tus facturas y presupuestos. Los logos cuadrados o redondos se ven mejor.',donate:'Apoya el proyecto',donateSub:'Donaciones en Monero (XMR) y Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero es gratis y de código abierto, sin anuncios y sin cuotas. Si te ayuda en tu negocio, puedes apoyarlo con una donación privada en Monero (XMR) o Pirate Chain (ARRR).',donateNote:'¡Gracias! Cada donación ayuda a que la app siga gratis para todo contratista.',openWallet:'Abrir en wallet',copyDetails:'Copiar datos',achHolder:'Nombre del titular',achBank:'Nombre del banco',achRouting:'Número de ruta (9 dígitos)',achAccount:'Número de cuenta',achType:'Tipo de cuenta',achBadRouting:'El número de ruta no es válido. Revisa los 9 dígitos.',achSafety:'Estos datos salen en tus facturas para que te paguen por ACH o transferencia. Usa una cuenta de negocio. Vigila tu cuenta por cargos no autorizados y pregúntale a tu banco por el bloqueo de débitos ACH (ACH debit block).',shareApp:'Compartir la app',shareAppSub:'Gratis para todo contratista',shareAppTitle:'Comparte Invoice Free del Obrero',shareAppText:'App gratis para hacer facturas de contratista. Sin registro, sin cuotas, tus datos se quedan en tu teléfono.',scanToOpen:'Escanea con la cámara para abrir la app',shareBtn:'Compartir link',copyLink:'Copiar link',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
+continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent',create:'Create',fmClient:'New client',fmInvoice:'New invoice',fmEstimate:'New estimate',fmExpense:'New expense',tInv:'Invoice',tInvS:'Create and send',tEst:'Estimate',tEstS:'Quote a job',tExp:'Expense',tExpS:'Log a receipt',tCli:'Client',tCliS:'Add a client',tabPending:'PENDING',tabDone:'DONE',approvedOn:'Approved',allYears:'All years',totalYear:y=>`Total (${y})`},
+es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',useAppArt:'Usar el roofer de la app ✈',lp_header:'Arriba',lp_watermark:'De fondo',lp_both:'Los dos',logo:'Logo',addLogo:'Agregar logo',changeLogo:'Cambiar logo',removeLogo:'Quitar logo',logoNote:'Sale arriba en tus facturas y presupuestos. Los logos cuadrados o redondos se ven mejor.',donate:'Apoya el proyecto',donateSub:'Donaciones en Monero (XMR) y Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero es gratis y de código abierto, sin anuncios y sin cuotas. Si te ayuda en tu negocio, puedes apoyarlo con una donación privada en Monero (XMR) o Pirate Chain (ARRR).',donateNote:'¡Gracias! Cada donación ayuda a que la app siga gratis para todo contratista.',openWallet:'Abrir en wallet',copyDetails:'Copiar datos',achHolder:'Nombre del titular',achBank:'Nombre del banco',achRouting:'Número de ruta (9 dígitos)',achAccount:'Número de cuenta',achType:'Tipo de cuenta',achBadRouting:'El número de ruta no es válido. Revisa los 9 dígitos.',achSafety:'Estos datos salen en tus facturas para que te paguen por ACH o transferencia. Usa una cuenta de negocio. Vigila tu cuenta por cargos no autorizados y pregúntale a tu banco por el bloqueo de débitos ACH (ACH debit block).',shareApp:'Compartir la app',shareAppSub:'Gratis para todo contratista',shareAppTitle:'Comparte Invoice Free del Obrero',shareAppText:'App gratis para hacer facturas de contratista. Sin registro, sin cuotas, tus datos se quedan en tu teléfono.',scanToOpen:'Escanea con la cámara para abrir la app',shareBtn:'Compartir link',copyLink:'Copiar link',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Empezar',install:'Instalar app',iosInstall:'En iPhone: toca Compartir → Agregar a inicio.',privacyLine:'Tus datos se quedan en este dispositivo. Sin cuentas, sin rastreadores.',
 unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,readySend:'¿Listo para enviar?',overview:'Resumen',overdue:'Vencidas',unpaid:'Pendientes',unsent:'No enviada',sent:'Enviada',partial:'Parcial',paid:'Pagada',draft:'Borrador',accepted:'Aceptado',receivedMonth:'Cobrado este mes',owedTotal:'Total que te deben',recent:'Facturas recientes',
 noInvoices:'Aún no hay facturas',noInvoicesSub:'Toca + para crear tu primera factura.',newInvoice:'Nueva factura',newEstimate:'Nuevo presupuesto',invoice:'Factura',estimate:'Presupuesto',save:'Guardar',cancel:'Cancelar',billTo:'Facturar a',chooseClient:'Elegir cliente',addClient:'Agregar cliente',
@@ -293,7 +334,7 @@ walletHeader:'Diseñado para el futuro de los pagos.',walletIntro:'Agrega dónde
 payTitle:'Pagar / Pay',rateAsOf:'Precio de las',refresh:'Actualizar',priceUnavailable:'Precio en vivo no disponible. Usa el monto en USD.',memoNote:n=>`Incluye "Factura #${n}" en la nota si tu wallet lo permite.`,noSubs:'No quedan subdirecciones de Monero. Agrega más en Mi cartera.',copyAddress:'Copiar dirección',copyAmount:'Copiar monto',noMethods:'Aún no hay métodos de pago. Agrégalos en Más → Mi cartera.',doubleCheck:'Revisa cada dirección dos veces. Un pago a una dirección equivocada no se puede recuperar.',taxNote:'Los pagos en crypto siguen siendo ingreso del negocio para impuestos.',payWith:'Pagar con',
 backupReminder:'Tus datos viven solo en este dispositivo. Descarga un respaldo seguido.',lastBackup:'Último respaldo',never:'nunca',storageFull:'El almacenamiento está lleno. Descarga un respaldo y borra fotos viejas.',
 aboutText:'Invoice Free del Obrero es gratis y de código abierto (MIT). No hay cuentas, ni anuncios, ni rastreadores: todo lo que escribes se guarda solo en este dispositivo. Usa “Descargar respaldo completo” para guardar una copia o pasar a otro teléfono.',
-continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado'}
+continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado',create:'Crear',fmClient:'Cliente nuevo',fmInvoice:'Factura nueva',fmEstimate:'Presupuesto nuevo',fmExpense:'Gasto nuevo',tInv:'Factura',tInvS:'Crear y mandar',tEst:'Presupuesto',tEstS:'Cotizar un trabajo',tExp:'Gasto',tExpS:'Anotar un recibo',tCli:'Cliente',tCliS:'Agregar cliente',tabPending:'PENDIENTES',tabDone:'HECHOS',approvedOn:'Aprobado',allYears:'Todos los años',totalYear:y=>`Total (${y})`}
 };
 let lang='es';
 function t(k,...a){const v=(L[lang]&&L[lang][k])??L.en[k]??k;return typeof v==='function'?v(...a):v}
@@ -322,7 +363,9 @@ trash:'<path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/>',user:'<circle cx="12" cy=
 pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
 sort:'<path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4"/>',
 mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
-chat:'<path d="M4 5h16v11H9l-5 4z"/>'
+chat:'<path d="M4 5h16v11H9l-5 4z"/>',
+send:'<path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>',
+receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'
 };
 const ic=(n,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 function toast(msg){const el=$('#toast');el.textContent=msg;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2400)}
@@ -399,7 +442,7 @@ const jobOf=d=>d.jobId?S.jobs[d.jobId]:null;
 function dueText(d){const c=calc(d);if(d.kind==='estimate'||c.balance<=0.005)return '';const n=daysBetween(todayISO(),c.due);if(n>0)return t('dueIn',n);if(n===0)return t('dueToday');return `<span class="red">${t('overdueBy',-n)}</span>`}
 
 /* ---------- navigation ---------- */
-let tab='home',invTab='unpaid',filter='all',query='',clientFilter='all',clientQuery='',groupJob=false,payTab=null;
+let tab='home',invTab='unpaid',estTab='pending',estYear=String(new Date().getFullYear()),filter='all',query='',clientFilter='all',clientQuery='',groupJob=false,payTab=null;
 const stack=[];
 function showSheet(s){if(stack.length){stack[stack.length-1].scroll=$('#sheet').scrollTop}stack.push(s);redrawSheet(true)}
 function closeSheet(){stack.pop();redrawSheet('restore')}
@@ -446,11 +489,11 @@ function render(){
   $('#tabs').innerHTML=tabs.map(k=>`<button class="tab" data-act="tab" data-v="${k}" ${k===tab?'aria-current="page"':''}>${ic(k,1.9)}<span>${t(k)}</span></button>`).join('');
   $('#title').textContent=t(tab);
   const fab=$('#fab');fab.hidden=tab==='more';
-  fab.dataset.act=tab==='clients'?'newClient':tab==='estimates'?'newEstimate':'newInvoice';
-  fab.setAttribute('aria-label',t(fab.dataset.act));
-  fab.classList.toggle('lift',tab==='invoices');
-  $('#totalbar').hidden=tab!=='invoices';
-  $('#main').classList.toggle('withTotal',tab==='invoices');
+  fab.dataset.act='fabMenu';fab.classList.remove('open');$('#fabMenu').hidden=true;
+  fab.setAttribute('aria-label',t('create'));fab.setAttribute('aria-expanded','false');
+  fab.classList.toggle('lift',tab==='invoices'||tab==='estimates');
+  $('#totalbar').hidden=tab!=='invoices'&&tab!=='estimates';
+  $('#main').classList.toggle('withTotal',tab==='invoices'||tab==='estimates');
   const focusId=document.activeElement&&document.activeElement.id;const pos=document.activeElement&&document.activeElement.selectionStart;
   $('#view').innerHTML=({home:vHome,clients:vClients,invoices:vInvoices,estimates:vEstimates,more:vMore})[tab]();
   if(focusId==='q'){const q=$('#q');if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}}
@@ -468,7 +511,9 @@ function vHome(){
   const recent=invoicesAll().sort(byNumDesc).slice(0,6);
   const needSetup=!S.profile.company;
   const lb=S.profile.lastBackup?daysBetween(S.profile.lastBackup,todayISO()):999;
+  const tile=(cls,act,icon,h,sub)=>`<button class="tile ${cls}" data-act="${act}"><span class="ti">${ic(icon,2)}</span><span><b>${t(h)}</b><br><span class="ts">${t(sub)}</span></span></button>`;
   return `${rooferSVG('small')}<div class="company">${esc(S.profile.company||'')}</div>
+  <div class="tiles">${tile('t-inv','newInvoice','send','tInv','tInvS')}${tile('t-est','newEstimate','estimates','tEst','tEstS')}${tile('t-exp','newExpense','receipt','tExp','tExpS')}${tile('t-cli','newClient','clients','tCli','tCliS')}</div>
   ${window.cloudHomeBanner?window.cloudHomeBanner():''}
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
   ${unsentOpen.length?`<div class="banner">${ic('bell',2)}<div><p>${t('unsentAlert',unsentOpen.length)}</p><button class="textbtn" data-act="filterTo" data-v="unsent">${t('readySend')}</button></div></div>`:''}
@@ -490,10 +535,10 @@ function docRow(d,opts={}){
   const c=calc(d),s=status(d),j=jobOf(d);
   const pre=d.kind==='estimate'?'EST ':'#';
   const amt=d.kind==='estimate'||s==='paid'?c.total:c.balance;
-  const line2=[fdate(d.date),dueText(d)].filter(Boolean).join('. ');
+  const line2=[fdate(d.date),d.kind==='estimate'&&d.acceptedAt?t('approvedOn')+' '+fdate(d.acceptedAt)+' ✓':dueText(d)].filter(Boolean).join('. ');
   const jobLine=opts.showJob&&j?`<div class="t2">${esc(j.name)}${j.address?' · '+esc(j.address.split(',')[0]):''}</div>`:'';
   const flown=s!=='unsent'&&s!=='draft';
-  const plane=`<span class="plane ${flown?'on':''}" aria-hidden="true"><svg viewBox="0 0 48 32"><path class="trail" d="M2 28 C14 26 22 20 30 12"/><path class="pl" d="M27 9 L46 2 L37 21 L33 14 Z M33 14 L46 2"/></svg></span>`;
+  const plane=d.kind==='estimate'?'':`<span class="plane ${flown?'on':''}" aria-hidden="true"><svg viewBox="0 0 48 32"><path class="trail" d="M2 28 C14 26 22 20 30 12"/><path class="pl" d="M27 9 L46 2 L37 21 L33 14 Z M33 14 L46 2"/></svg></span>`;
   return `<button class="row" data-act="openDoc" data-id="${d.id}">${plane}<div class="main"><div class="t1">${pre}${esc(d.number)}: ${esc(clientName(d.clientId))}</div>${jobLine}<div class="t2">${line2}</div></div><div class="amt num"><div class="a1">${money(amt)}</div>${badge(s)}</div></button>`;
 }
 const SORTS={due:(a,b)=>calc(a).due.localeCompare(calc(b).due),date:(a,b)=>String(a.date).localeCompare(b.date),number:(a,b)=>(parseInt(a.number)||0)-(parseInt(b.number)||0),client:(a,b)=>clientName(a.clientId).localeCompare(clientName(b.clientId)),amount:(a,b)=>calc(a).balance-calc(b).balance};
@@ -514,7 +559,22 @@ function vInvoices(){
   ${list.length?`<div class="list">${list.map(d=>docRow(d)).join('')}</div>`:(invoicesAll().length?`<div class="empty">${t('noData')}</div>`:emptyBox(t('noInvoices'),t('noInvoicesSub'),'newInvoice',t('newInvoice')))}`;
 }
 function applyQuery(list,q){q=(q||'').trim().toLowerCase();if(!q)return list;return list.filter(d=>{const j=jobOf(d);return (clientName(d.clientId)+' '+d.number+' '+(j?j.name+' '+j.address:'')).toLowerCase().includes(q)})}
-function vEstimates(){const list=estimatesAll().sort(byNumDesc);return list.length?`<div class="list" style="margin-top:14px">${list.map(d=>docRow(d,{showJob:true})).join('')}</div>`:emptyBox(t('noEstimates'),t('noEstimatesSub'),'newEstimate',t('newEstimate'))}
+function vEstimates(){
+  const all=estimatesAll();
+  if(!all.length){$('#totalLbl').textContent=t('total');$('#totalVal').textContent=money(0);return emptyBox(t('noEstimates'),t('noEstimatesSub'),'newEstimate',t('newEstimate'))}
+  const isDone=d=>!!(d.convertedTo||d.accepted);
+  const years=[...new Set(all.map(d=>String(d.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  if(estYear!=='all'&&!years.includes(estYear))years.unshift(estYear);
+  let list=all.filter(d=>(estTab==='done')===isDone(d)&&(estYear==='all'||String(d.date||'').startsWith(estYear)));
+  list=applyQuery(list,query).sort((a,b)=>String(b.date).localeCompare(a.date)||byNumDesc(a,b));
+  const total=list.reduce((s,d)=>s+calc(d).total,0);
+  $('#totalLbl').textContent=estYear==='all'?t('total'):t('totalYear',estYear);$('#totalVal').textContent=money(total);
+  return `<div class="tabs2" role="tablist"><button role="tab" data-act="estTab" data-v="pending" aria-selected="${estTab==='pending'}">${t('tabPending')}</button><button role="tab" data-act="estTab" data-v="done" aria-selected="${estTab==='done'}">${t('tabDone')}</button></div>
+  <div class="sortbar"><select id="estYear" aria-label="Year"><option value="all" ${estYear==='all'?'selected':''}>${t('allYears')}</option>${years.map(y=>`<option value="${y}" ${y===estYear?'selected':''}>${y}</option>`).join('')}</select></div>
+  <input class="search" id="q" type="search" placeholder="${t('search')}" value="${esc(query)}">
+  <div style="height:10px"></div>
+  ${list.length?`<div class="list">${list.map(d=>docRow(d,{showJob:true})).join('')}</div>`:`<div class="empty">${t('noData')}</div>`}`;
+}
 function clientTotals(id){const ds=invoicesAll().filter(d=>d.clientId===id);let inv=0,paid=0,owed=0;ds.forEach(d=>{const c=calc(d);inv+=c.total;paid+=c.paid;owed+=Math.max(0,c.balance)});return {count:ds.length,inv,paid,owed}}
 function vClients(){
   const list=Object.values(S.clients).sort((a,b)=>a.name.localeCompare(b.name));
@@ -656,7 +716,7 @@ function methodEditor(m){M=JSON.parse(JSON.stringify(m||{id:uid(),type:'btc',nam
 }}}
 
 /* ---------- invoice / estimate detail ---------- */
-function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&d.sig){const k=d.id+':'+(d.updatedAt||0);if(SIGCHK[k]===undefined){SIGCHK[k]='?';docHash(d).then(h=>{SIGCHK[k]=h!==d.sig.hash;if(SIGCHK[k])redrawSheet()})}}},render(){
+function docDetail(id){return{live:true,pay:true,render(){
   const d=S.docs[id];if(!d)return sheetHead('')+`<div class="wrap"><div class="empty">${t('noData')}</div></div>`;
   const c=calc(d),s=status(d),cl=S.clients[d.clientId]||{},j=jobOf(d);
   const isEst=d.kind==='estimate';
@@ -689,13 +749,12 @@ function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&
   <button class="btn" data-act="duplicate" data-id="${id}">${t('duplicate')}</button>
   </div>
   ${!isEst&&c.balance>0.005?paySection(d):''}
-  ${sigBlock(d)}
   ${isEst?'':`<div class="group"><div class="gl">${t('payments')}</div>${(d.payments||[]).length?d.payments.map(p=>`<div class="kv"><span>${fdate(p.date)} · ${esc(p.method)}${p.ref?' · '+esc(p.ref):''}${p.coin?`<br><span class="small">${esc(p.coin)}</span>`:''}${p.txid?`<br><span class="small mono" style="padding:2px 4px">${esc(p.txid)}</span>`:''}${p.note?`<br><span class="small">${esc(p.note)}</span>`:''}</span><span class="num green">${money(p.amount)} <button class="iconbtn" style="padding:2px;vertical-align:middle" data-act="delPay" data-id="${id}" data-p="${p.id}" aria-label="${t('del')}">${ic('trash')}</button></span></div>`).join(''):`<p class="small">${t('noPayments')}</p>`}</div>`}
   ${d.payInstr?`<div class="group"><div class="gl">${t('payInstr')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.payInstr)}</p></div>`:''}
   ${d.notes?`<div class="group"><div class="gl">${t('notes')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.notes)}</p></div>`:''}
   <div id="delZone"><button class="btn bad" data-act="askDel" data-id="${id}">${t('del')}</button></div>
   </div>`;
-},after(){fetchPrices();this.chk&&this.chk()}}}
+},after(){fetchPrices()}}}
 
 /* ---------- editor ---------- */
 let D=null;
@@ -746,8 +805,7 @@ function editorSheet(){return{live:false,render(){
   <label class="check"><input type="checkbox" id="e-incph" data-act="incPhotos" ${D.includePhotos!==false?'checked':''}> ${t('includePhotos')}</label>
   <p class="small">${t('photosNote')}</p></div>
   <div class="group"><div class="field"><label for="e-pi">${t('payInstr')}</label><textarea class="in" id="e-pi" data-bind="payInstr" placeholder="Zelle / Check / Cheque…">${esc(D.payInstr)}</textarea></div>
-  <div class="field"><label for="e-notes">${t('notes')}</label><textarea class="in" id="e-notes" data-bind="notes">${esc(D.notes)}</textarea></div>
-  <div class="field"><label for="e-ct">${t('contractTerms')}</label><textarea class="in" id="e-ct" data-bind="contractTerms" style="min-height:110px" placeholder="${t('contractTermsPh')}">${esc(D.contractTerms!==undefined?D.contractTerms:(S.profile.contractTerms||''))}</textarea></div></div>
+  <div class="field"><label for="e-notes">${t('notes')}</label><textarea class="in" id="e-notes" data-bind="notes">${esc(D.notes)}</textarea></div></div>
   <button class="btn primary" data-act="saveDoc">${t('save')}</button></div>`;
 },after:updTotals}}
 const UNITS=['','ea','sq','LF','SF','hr','day','job','lot','gal','bundle'];
@@ -786,9 +844,6 @@ function previewHTML(d){
   ${isEst?'':`<div><span>Paid</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>Balance due</span><span>${money(c.balance)}</span></div>`}</div>
   ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
   ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d))}</p>`}).join('')}`:''}
-  ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">TERMS & CONDITIONS</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
-  <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CONTRACTOR</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
-  <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CUSTOMER</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>
   ${d.notes?`<div class="plbl">NOTES</div><p class="psm" style="white-space:pre-wrap">${esc(d.notes)}</p>`:''}
   ${(d.photos||[]).length&&d.includePhotos!==false?`<p class="psm">📷 ${t('photosInPdf',d.photos.length)}</p>`:''}
   </div></div>`;
@@ -858,58 +913,6 @@ function saveDocFromEditor(){
   const id=D.id;D=null;closeSheet();if(isNew)showSheet(docDetail(id));commit();toast(t('saved'));
 }
 
-
-/* ---------- signatures (contract acceptance) ---------- */
-async function docHash(d){const c=calc(d);const core=JSON.stringify({n:d.number,k:d.kind,cl:d.clientId,j:d.jobId,items:(d.items||[]).map(i=>[i.desc,+i.qty,i.unit||'',+i.rate]),disc:[d.discountType,+d.discountValue],tax:+d.taxRate,total:c.total.toFixed(2),notes:d.notes||'',terms:d.contractTerms||''});const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(core));return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
-const SIGCHK={};let SIG=null;/* {mode:'client'|'me', id} */
-function sigSheet(){return{live:false,render(){
-  const me=SIG.mode==='me',d=me?null:S.docs[SIG.id],cl=d?S.clients[d.clientId]||{}:{};
-  const terms=d?(d.contractTerms||S.profile.contractTerms||''):'';
-  return sheetHead(me?t('mySignature'):t('clientSigns'),{close:true})+`<div class="wrap sheet-b" style="display:flex;flex-direction:column;gap:10px">
-  ${d?`<div class="group" style="margin-top:12px"><div class="kv"><span>${d.kind==='estimate'?t('estimate')+' EST':t('invoice')+' #'}${esc(d.number)}</span><span class="num"><b>${money(calc(d).total)}</b></span></div>
-  ${terms?`<p class="small" style="white-space:pre-wrap;max-height:160px;overflow:auto;margin:6px 0 0">${esc(terms)}</p>`:''}</div>
-  <p class="small">${t('acceptText',esc(S.profile.company||''))}</p>`:`<p class="small" style="margin-top:12px">${t('mySigNote')}</p>`}
-  <div class="field"><label for="sig-name">${t('printedName')}</label><input class="in" id="sig-name" value="${esc(me?(S.profile.sigName||''):(cl.name||''))}" autocomplete="name"></div>
-  <label class="small">${t('signHere')}</label>
-  <canvas id="sigPad" class="sigpad"></canvas>
-  <button class="linkbtn" data-act="sigClear">${t('clearSig')}</button>
-  ${d?`<label class="check"><input type="checkbox" id="sig-ok"> ${t('iAgree')}</label>`:''}
-  <button class="btn primary" data-act="sigSave">${t('saveSignature')}</button></div>`;
-},after:initPad}}
-function initPad(){
-  const cv=$('#sigPad');if(!cv)return;const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
-  cv.width=r.width*dpr;cv.height=r.height*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);
-  x.fillStyle='#fff';x.fillRect(0,0,r.width,r.height);x.strokeStyle='#111';x.lineWidth=2.4;x.lineCap='round';x.lineJoin='round';
-  let down=false,last=null;cv.dataset.empty='1';
-  const pt=e=>{const b=cv.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top]};
-  cv.onpointerdown=e=>{down=true;last=pt(e);cv.setPointerCapture(e.pointerId);e.preventDefault()};
-  cv.onpointermove=e=>{if(!down)return;const p=pt(e);x.beginPath();x.moveTo(last[0],last[1]);x.lineTo(p[0],p[1]);x.stroke();last=p;cv.dataset.empty='0';e.preventDefault()};
-  cv.onpointerup=cv.onpointercancel=()=>{down=false};
-}
-async function saveSig(){
-  const cv=$('#sigPad');const name=($('#sig-name')||{}).value?.trim()||'';
-  if(!cv||cv.dataset.empty==='1'){toast(t('signFirst'));return}
-  if(!name){toast(t('printedName'));return}
-  const img=cv.toDataURL('image/png');
-  if(SIG.mode==='me'){S.profile.sig=img;S.profile.sigName=name;commit();closeSheet();toast(t('saved'));return}
-  if(!$('#sig-ok').checked){toast(t('iAgree'));return}
-  const d=S.docs[SIG.id];
-  d.sig={img,name,at:new Date().toISOString(),hash:await docHash(d),ua:navigator.userAgent.slice(0,120)};
-  if(d.kind==='estimate')d.accepted=true;
-  d.updatedAt=Date.now();commit();closeSheet();toast(t('signedOk'));
-}
-function sigBlock(d){
-  const p=S.profile,sg=d.sig;
-  const when=sg?new Date(sg.at).toLocaleString(lang==='es'?'es-MX':'en-US',{dateStyle:'medium',timeStyle:'short'}):'';
-  const changed=sg&&SIGCHK[d.id+':'+(d.updatedAt||0)]===true;
-  return `<div class="group"><div class="gl">${t('signatures')}</div>
-  <div class="sigrow"><div class="sigbox"><div class="small">${t('contractor')}</div>${p.sig?`<img src="${p.sig}" alt="">`:'<div class="sigempty"></div>'}<div class="small">${esc(p.sigName||p.company||'')}</div></div>
-  <div class="sigbox"><div class="small">${t('customer')}</div>${sg?`<img src="${sg.img}" alt="">`:'<div class="sigempty"></div>'}<div class="small">${sg?esc(sg.name)+' · '+esc(when):''}</div></div></div>
-  ${changed?`<p class="small red">${t('changedAfterSign')}</p>`:''}
-  ${sg?`<p class="small">✓ ${t('signedOn')} ${esc(when)} · ID ${esc(sg.hash.slice(0,12))}</p>`:''}
-  <div class="btns" style="margin:8px 0 0">${!sg?`<button class="btn primary wide" data-act="clientSign" data-id="${d.id}">✍ ${t('clientSigns')}</button>`:`<button class="btn wide" data-act="clearClientSig" data-id="${d.id}">${t('removeClientSig')}</button>`}
-  ${!p.sig?`<button class="btn wide" data-act="mySign">${t('addMySig')}</button>`:''}</div></div>`;
-}
 /* ---------- clients ---------- */
 let C=null,clientCb=null;
 const hasPicker=()=>'contacts' in navigator&&'select' in navigator.contacts;
@@ -1069,8 +1072,6 @@ function settingsSheet(){return{live:false,render(){
   ${f('defDue',t('defDue'),'number','inputmode="numeric"')}
   <div class="field"><label for="st-payInstr">${t('defInstr')}</label><textarea class="in" id="st-payInstr" data-s="payInstr" placeholder="Zelle: … / Checks payable to …">${esc(p.payInstr)}</textarea></div>
   <div class="field"><label for="st-terms">${t('defTerms')}</label><textarea class="in" id="st-terms" data-s="terms">${esc(p.terms)}</textarea></div>
-  <div class="field"><label for="st-contractTerms">${t('contractTerms')}</label><textarea class="in" id="st-contractTerms" data-s="contractTerms" style="min-height:140px" placeholder="${t('contractTermsPh')}">${esc(p.contractTerms||'')}</textarea><p class="small">${t('contractTermsNote')}</p></div>
-  <div class="field"><label>${t('mySignature')}</label>${p.sig?`<div class="sigbox" style="max-width:260px"><img src="${p.sig}" alt=""><div class="small">${esc(p.sigName||'')}</div></div>`:''}<button class="btn" data-act="mySign">${p.sig?t('changeMySig'):t('addMySig')}</button></div>
   <button class="btn primary" data-act="saveSettings">${t('save')}</button></div>`;
 }}}
 let fileMode='csv';
@@ -1207,15 +1208,6 @@ async function buildPDF(d){
     }
   }
   if(d.notes){const tl=doc.splitTextToSize(d.notes,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text('Notes',M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13}
-  {const ct=d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'');
-   if(ct){y+=10;doc.setFontSize(9);const tl=doc.splitTextToSize(ct,W-2*M);need(20+Math.min(tl.length,40)*11);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Terms & Conditions',M,y);y+=13;doc.setFont('helvetica','normal');doc.setFontSize(8.5);for(const ln of tl){need(11);doc.text(ln,M,y);y+=11}}
-   const sg=d.sig;y+=16;need(140);doc.setFontSize(9);doc.setFont('helvetica','normal');
-   doc.text(doc.splitTextToSize(`By signing below, the customer accepts the work, price and terms described in this ${isEst?'estimate':'invoice'} and authorizes ${p.company||'the contractor'} to proceed.`,W-2*M),M,y);y+=26;
-   const cw=(W-2*M-30)/2,boxH=60;
-   const col=(x,label,img,name,date)=>{if(img){try{doc.addImage(img,'PNG',x,y,Math.min(cw,180),boxH)}catch(e){}}doc.setDrawColor(0);doc.line(x,y+boxH+4,x+cw,y+boxH+4);doc.setFontSize(8);doc.setTextColor(110);doc.text(label,x,y+boxH+15);doc.setTextColor(0);doc.setFontSize(9.5);doc.text(name||'Printed name: ______________________',x,y+boxH+28);doc.text(date?('Date: '+date):'Date: ____________',x,y+boxH+41)};
-   col(M,'CONTRACTOR SIGNATURE',p.sig,p.sigName||p.company||'',p.sig&&sg?new Date(sg.at).toLocaleDateString('en-US'):'');
-   col(M+cw+30,'CUSTOMER SIGNATURE',sg&&sg.img,sg?sg.name:'',sg?new Date(sg.at).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'');
-   y+=boxH+52;if(sg){doc.setFontSize(7);doc.setTextColor(130);doc.text('Signed electronically on '+new Date(sg.at).toISOString()+' · Document ID '+sg.hash,M,y);doc.setTextColor(0);y+=12}}
   if(d.includePhotos!==false&&(d.photos||[]).length){
     doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('Job photos / Fotos del trabajo',M,M);
     const cw=(W-2*M-20)/3,ch=cw;let k=0;
@@ -1277,7 +1269,13 @@ async function restoreJSON(o){
 }
 
 /* ---------- actions ---------- */
+function fabItems(){const it=(act,cls,icon,lbl)=>`<button class="fmi" data-act="fabPick" data-v="${act}"><span class="fl">${t(lbl)}</span><span class="fc ${cls}">${ic(icon,2)}</span></button>`;
+  return it('newClient','c-cli','clients','fmClient')+it('newInvoice','c-inv','send','fmInvoice')+it('newEstimate','c-est','estimates','fmEstimate')+it('newExpense','c-exp','receipt','fmExpense')}
+function closeFab(){const f=$('#fab');f.classList.remove('open');f.setAttribute('aria-expanded','false');$('#fabMenu').hidden=true}
 const A={
+  fabMenu:()=>{const m=$('#fabMenu'),f=$('#fab');if(!m.hidden){closeFab();return}$('#fabItems').innerHTML=fabItems();m.classList.toggle('lift',f.classList.contains('lift'));m.hidden=false;f.classList.add('open');f.setAttribute('aria-expanded','true');const b=m.querySelector('.fmi');if(b)b.focus()},
+  fabClose:()=>closeFab(),
+  fabPick:e=>{closeFab();const f=A[e.dataset.v];if(f)f(e)},
   getStarted:()=>{S.profile.started=true;showWelcome=false;persist();render();if(!S.profile.company)showSheet(settingsSheet())},
   install:async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()},
   setLang:e=>{lang=e.dataset.v;S.profile.lang=lang;persist();render();redrawSheet()},
@@ -1340,12 +1338,8 @@ const A={
   savePay:e=>{const d=S.docs[e.dataset.id];const amt=r2(+$('#p-amt').value);if(!amt)return;d.payments=d.payments||[];d.payments.push({id:uid(),amount:amt,date:$('#p-date').value||todayISO(),method:$('#p-m').value,ref:$('#p-ref').value.trim(),coin:$('#p-coin').value.trim(),txid:$('#p-tx').value.trim(),note:$('#p-note').value.trim()});d.sent=true;d.updatedAt=Date.now();closeSheet();commit();toast(t('saved'))},
   delPay:e=>{const d=S.docs[e.dataset.id];d.payments=(d.payments||[]).filter(p=>p.id!==e.dataset.p);commit()},
   toggleSent:e=>{const d=S.docs[e.dataset.id];d.sent=!d.sent;commit()},
-  clientSign:e=>{SIG={mode:'client',id:e.dataset.id};showSheet(sigSheet())},
-  mySign:()=>{SIG={mode:'me'};showSheet(sigSheet())},
-  sigClear:()=>initPad(),
-  sigSave:()=>saveSig(),
-  clearClientSig:e=>{const d=S.docs[e.dataset.id];if(!confirm(t('removeClientSig')+'?'))return;delete d.sig;commit()},
-  accept:e=>{S.docs[e.dataset.id].accepted=true;commit()},
+  accept:e=>{const d=S.docs[e.dataset.id];d.accepted=true;d.acceptedAt=d.acceptedAt||todayISO();commit()},
+  estTab:e=>{estTab=e.dataset.v;render()},
   copyDoc:e=>copyText(docText(S.docs[e.dataset.id])),
   copy:e=>copyText(e.dataset.v),
   pdf:e=>downloadPDF(S.docs[e.dataset.id]),
@@ -1358,8 +1352,8 @@ const A={
   textDoc:e=>sendDoc(S.docs[e.dataset.id],'text'),
   payTab:e=>{payTab=e.dataset.v;redrawSheet()},
   refreshPrices:()=>fetchPrices(true),
-  duplicate:e=>{const s=S.docs[e.dataset.id];openEditor(newDoc(s.kind,{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,payInstr:s.payInstr,notes:s.notes,contractTerms:s.contractTerms}))},
-  convert:e=>{const s=S.docs[e.dataset.id];const inv=newDoc('invoice',{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,notes:s.notes,contractTerms:s.contractTerms,photos:JSON.parse(JSON.stringify(s.photos||[])),includePhotos:s.includePhotos,fromEstimate:s.id});delete inv._new;inv.updatedAt=Date.now();S.docs[inv.id]=inv;S.profile.nextInvoice=(parseInt(inv.number)||0)+1;s.convertedTo=inv.id;s.accepted=true;stack.pop();payTab=null;showSheet(docDetail(inv.id));commit();toast(t('saved'))},
+  duplicate:e=>{const s=S.docs[e.dataset.id];openEditor(newDoc(s.kind,{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,payInstr:s.payInstr,notes:s.notes}))},
+  convert:e=>{const s=S.docs[e.dataset.id];const inv=newDoc('invoice',{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,notes:s.notes,photos:JSON.parse(JSON.stringify(s.photos||[])),includePhotos:s.includePhotos,fromEstimate:s.id});delete inv._new;inv.updatedAt=Date.now();S.docs[inv.id]=inv;S.profile.nextInvoice=(parseInt(inv.number)||0)+1;s.convertedTo=inv.id;s.accepted=true;s.acceptedAt=s.acceptedAt||todayISO();stack.pop();payTab=null;showSheet(docDetail(inv.id));commit();toast(t('saved'))},
   askDel:e=>{$('#delZone').innerHTML=`<div class="confirm"><p style="margin:0 0 10px">${t('confirmDel')}</p><div class="btns" style="margin:0"><button class="btn" data-act="back0">${t('cancel')}</button><button class="btn bad" data-act="delDoc" data-id="${e.dataset.id}">${t('yesDel')}</button></div></div>`},
   delDoc:e=>{const d=S.docs[e.dataset.id];delete S.docs[e.dataset.id];(d.photos||[]).forEach(p=>{if(!Object.values(S.docs).some(x=>(x.photos||[]).some(q=>q.id===p.id)))idb.del(p.id).catch(()=>{})});closeSheet();commit()},
   jobs:()=>showSheet(jobsSheet()),
@@ -1407,11 +1401,13 @@ function photoViewer(doc,k,editable){return{live:false,doc,k,render(){
   ${editable?`<div id="delZone" style="width:100%"><button class="btn bad" data-act="askDelPhoto">${t('del')}</button></div>`:''}</div></div>`;
 }}}
 
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#fabMenu').hidden)closeFab()});
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(!f)return;if(el.type!=='checkbox')e.preventDefault();f(el)});
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='q'){query=el.value;render();return}
   if(el.id==='cq'){clientQuery=el.value;const pos=el.selectionStart;redrawSheet();const q=$('#cq');if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}return}
+  if(el.id==='estYear'){estYear=el.value;render();return}
   if(el.id==='sortSel'){S.profile.sortKey=el.value;persist();render();return}
   if(SM&&el.dataset.sm){SM[el.dataset.sm]=el.value;return}
   if(D&&el.dataset.bind){
@@ -1432,7 +1428,7 @@ document.addEventListener('input',e=>{
     const v=$('#m-valid');if(v){const ok=addrValid(M);v.textContent=ok?'':t('looksWrong');v.className='small '+(ok?'':'red')}
   }
 });
-document.addEventListener('change',e=>{const el=e.target;if(el.tagName==='SELECT'&&(el.dataset.bind||el.dataset.item!==undefined||el.dataset.m||el.id==='sortSel'))el.dispatchEvent(new Event('input',{bubbles:true}));if(el.type==='checkbox'&&el.dataset.pc!==undefined)el.dispatchEvent(new Event('input',{bubbles:true}))});
+document.addEventListener('change',e=>{const el=e.target;if(el.tagName==='SELECT'&&(el.dataset.bind||el.dataset.item!==undefined||el.dataset.m||(el.id==='sortSel'||el.id==='estYear')))el.dispatchEvent(new Event('input',{bubbles:true}));if(el.type==='checkbox'&&el.dataset.pc!==undefined)el.dispatchEvent(new Event('input',{bubbles:true}))});
 async function addPhotoFiles(files){
   if(!D)return;D.photos=D.photos||[];
   for(const f of files){if(D.photos.length>=9){toast(t('photoLimit'));break}
