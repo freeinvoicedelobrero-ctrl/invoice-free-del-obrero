@@ -149,6 +149,12 @@ textarea.in{min-height:84px;resize:vertical}
 .btn[disabled]{opacity:.5}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .btns .wide{grid-column:1/-1}
+.row .plane{flex:none;width:40px;height:28px;align-self:center}
+.row .plane svg{width:100%;height:100%;overflow:visible}
+.row .plane .pl{fill:#fff;stroke:#fff;stroke-width:1;stroke-linejoin:round;opacity:.45}
+.row .plane .trail{fill:none;stroke:#555;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:3 4}
+.row .plane.on .pl{opacity:1}
+.row .plane.on .trail{stroke:#22d3ee;stroke-dasharray:none;filter:drop-shadow(0 0 3px #22d3ee)}
 #langBtn{display:flex;gap:2px;padding:3px;border:1px solid var(--line,#333);border-radius:999px;font-size:13px;font-weight:700}#langBtn .lp{padding:4px 9px;border-radius:999px;color:var(--muted,#888)}#langBtn .lp.on{background:#fff;color:#000}
 .edtabs{margin-top:12px}
 .btns .btn{display:flex;align-items:center;justify-content:center;gap:8px}.btns .btn svg{width:20px;height:20px;flex:none}
@@ -480,7 +486,9 @@ function docRow(d,opts={}){
   const amt=d.kind==='estimate'||s==='paid'?c.total:c.balance;
   const line2=[fdate(d.date),dueText(d)].filter(Boolean).join('. ');
   const jobLine=opts.showJob&&j?`<div class="t2">${esc(j.name)}${j.address?' · '+esc(j.address.split(',')[0]):''}</div>`:'';
-  return `<button class="row" data-act="openDoc" data-id="${d.id}"><div class="main"><div class="t1">${pre}${esc(d.number)}: ${esc(clientName(d.clientId))}</div>${jobLine}<div class="t2">${line2}</div></div><div class="amt num"><div class="a1">${money(amt)}</div>${badge(s)}</div></button>`;
+  const flown=s!=='unsent'&&s!=='draft';
+  const plane=d.kind==='estimate'?'':`<span class="plane ${flown?'on':''}" aria-hidden="true"><svg viewBox="0 0 48 32"><path class="trail" d="M2 28 C14 26 22 20 30 12"/><path class="pl" d="M27 9 L46 2 L37 21 L33 14 Z M33 14 L46 2"/></svg></span>`;
+  return `<button class="row" data-act="openDoc" data-id="${d.id}">${plane}<div class="main"><div class="t1">${pre}${esc(d.number)}: ${esc(clientName(d.clientId))}</div>${jobLine}<div class="t2">${line2}</div></div><div class="amt num"><div class="a1">${money(amt)}</div>${badge(s)}</div></button>`;
 }
 const SORTS={due:(a,b)=>calc(a).due.localeCompare(calc(b).due),date:(a,b)=>String(a.date).localeCompare(b.date),number:(a,b)=>(parseInt(a.number)||0)-(parseInt(b.number)||0),client:(a,b)=>clientName(a.clientId).localeCompare(clientName(b.clientId)),amount:(a,b)=>calc(a).balance-calc(b).balance};
 const SORT_LBL={due:'sortDue',date:'sortDate',number:'sortNum',client:'sortClient',amount:'sortAmount'};
