@@ -27,7 +27,7 @@
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer}
+button{cursor:pointer;touch-action:manipulation}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
 .num{font-variant-numeric:tabular-nums}
@@ -97,7 +97,7 @@ svg:not([width]):not([class]){max-width:100%}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0;scrollbar-width:none}
 .chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;color:var(--muted)}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:600}
-.search{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px}
+.search{font-size:16px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px}
 .empty{text-align:center;color:var(--muted);padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:12px}
 .empty b{color:var(--fg);font-family:var(--display);font-size:22px}
 .tabs2{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
@@ -224,6 +224,22 @@ textarea.in{min-height:84px;resize:vertical}
 @media (hover:hover){.tile{transition:filter .15s,transform .15s}.tile:hover{filter:brightness(1.08)}}
 @media (min-width:700px){.tiles{gap:16px}.tile{min-height:180px;padding:22px}.tile b{font-size:30px}.tile .ti{width:52px;height:52px}}
 
+/* coin logos */
+.coin{display:inline-flex;width:18px;height:18px;vertical-align:-4px;margin-right:6px;flex:none}
+.coin svg{width:100%;height:100%}
+.coin.lg{width:24px;height:24px;margin:0}
+.chip .coin{margin-right:6px}
+.accepts{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);width:100%;text-align:left;color:var(--fg)}
+.accepts .logos{display:flex;flex:none}.accepts .logos .coin{width:30px;height:30px;margin:0}.accepts .logos .coin+.coin{margin-left:-8px;border-radius:50%;box-shadow:0 0 0 2px var(--surface)}
+.accepts b{display:block;font-size:15px}.accepts span.small{color:var(--muted);font-size:13px}
+/* place lookup */
+.sugg{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:6px;background:var(--surface)}
+.sugg:empty{display:none}
+.sugg button{background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;color:var(--fg)}
+.sugg button:last-child{border-bottom:0}
+.sugg button .small{color:var(--muted);font-size:13px;display:block}
+.sugg .src{padding:6px 12px;font-size:11px;color:var(--muted)}
+
 /* + button menu */
 .fabmenu{position:fixed;inset:0;z-index:7;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
 .fabmenu .fm{position:absolute;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(156px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:12px}
@@ -272,12 +288,13 @@ textarea.in{min-height:84px;resize:vertical}
 <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
 <input type="file" id="galIn" accept="image/*" multiple hidden>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
+/* Light start: big libraries load only when needed (PDF) or after the app is on screen (QR, cloud). */
+const LIB={pdf:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',pdfTable:'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',qr:'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',cloud:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'};
+const _libs={};
+function loadLib(u){return _libs[u]||(_libs[u]=new Promise((ok,bad)=>{const el=document.createElement('script');el.src=u;el.async=true;el.onload=ok;el.onerror=()=>{delete _libs[u];el.remove();bad(new Error('load '+u))};document.head.appendChild(el)}))}
+async function ensurePDFLibs(){await loadLib(LIB.pdf);await loadLib(LIB.pdfTable);try{await loadLib(LIB.qr)}catch(e){}}
 'use strict';
 /* =========================================================
    Invoice Free del Obrero — free, open-source (MIT)
@@ -310,7 +327,7 @@ walletHeader:'Built for the future of payments.',walletIntro:'Add where you get 
 payTitle:'Pay / Pagar',rateAsOf:'Rate as of',refresh:'Refresh',priceUnavailable:'Live price unavailable. Use the USD amount.',memoNote:n=>`Include Invoice #${n} in the memo if your wallet allows it.`,noSubs:'No Monero subaddresses left. Add more in My wallet.',copyAddress:'Copy address',copyAmount:'Copy amount',noMethods:'No payment methods yet. Add them in More → My wallet.',doubleCheck:'Check every address twice. Payments sent to a wrong address cannot be recovered.',taxNote:'Crypto payments are still business income for taxes.',payWith:'Pay with',
 backupReminder:'Your data lives only on this device. Download a backup regularly.',lastBackup:'Last backup',never:'never',storageFull:'Storage is full. Download a backup and remove old photos.',
 aboutText:'Invoice Free del Obrero is free and open source (MIT). There are no accounts, no ads and no trackers: everything you enter is saved only on this device. Use “Download full backup” to keep a copy or move to another phone.',
-continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent',create:'Create',fmClient:'New client',fmInvoice:'New invoice',fmEstimate:'New estimate',fmExpense:'New expense',tInv:'Invoice',tInvS:'Create and send',tEst:'Estimate',tEstS:'Quote a job',tExp:'Expense',tExpS:'Log a receipt',tCli:'Client',tCliS:'Add a client',tabPending:'PENDING',tabDone:'DONE',approvedOn:'Approved',allYears:'All years',totalYear:y=>`Total (${y})`},
+continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent',create:'Create',acceptsCrypto:'Get paid in Bitcoin and Monero',acceptsCryptoSub:'Add your wallets and a QR shows on every invoice',findPlace:'Look up address or business',findPlaceHint:'Type a business name or address',findNone:'No matches. Type the address by hand.',findErr:'Lookup is not available right now.',mapsOpen:'Open in Google Maps',mapsSrc:'Results from OpenStreetMap',fmClient:'New client',fmInvoice:'New invoice',fmEstimate:'New estimate',fmExpense:'New expense',tInv:'Invoice',tInvS:'Create and send',tEst:'Estimate',tEstS:'Quote a job',tExp:'Expense',tExpS:'Log a receipt',tCli:'Client',tCliS:'Add a client',tabPending:'PENDING',tabDone:'DONE',approvedOn:'Approved',allYears:'All years',totalYear:y=>`Total (${y})`},
 es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',useAppArt:'Usar el roofer de la app ✈',lp_header:'Arriba',lp_watermark:'De fondo',lp_both:'Los dos',logo:'Logo',addLogo:'Agregar logo',changeLogo:'Cambiar logo',removeLogo:'Quitar logo',logoNote:'Sale arriba en tus facturas y presupuestos. Los logos cuadrados o redondos se ven mejor.',donate:'Apoya el proyecto',donateSub:'Donaciones en Monero (XMR) y Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero es gratis y de código abierto, sin anuncios y sin cuotas. Si te ayuda en tu negocio, puedes apoyarlo con una donación privada en Monero (XMR) o Pirate Chain (ARRR).',donateNote:'¡Gracias! Cada donación ayuda a que la app siga gratis para todo contratista.',openWallet:'Abrir en wallet',copyDetails:'Copiar datos',achHolder:'Nombre del titular',achBank:'Nombre del banco',achRouting:'Número de ruta (9 dígitos)',achAccount:'Número de cuenta',achType:'Tipo de cuenta',achBadRouting:'El número de ruta no es válido. Revisa los 9 dígitos.',achSafety:'Estos datos salen en tus facturas para que te paguen por ACH o transferencia. Usa una cuenta de negocio. Vigila tu cuenta por cargos no autorizados y pregúntale a tu banco por el bloqueo de débitos ACH (ACH debit block).',shareApp:'Compartir la app',shareAppSub:'Gratis para todo contratista',shareAppTitle:'Comparte Invoice Free del Obrero',shareAppText:'App gratis para hacer facturas de contratista. Sin registro, sin cuotas, tus datos se quedan en tu teléfono.',scanToOpen:'Escanea con la cámara para abrir la app',shareBtn:'Compartir link',copyLink:'Copiar link',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Empezar',install:'Instalar app',iosInstall:'En iPhone: toca Compartir → Agregar a inicio.',privacyLine:'Tus datos se quedan en este dispositivo. Sin cuentas, sin rastreadores.',
 unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,readySend:'¿Listo para enviar?',overview:'Resumen',overdue:'Vencidas',unpaid:'Pendientes',unsent:'No enviada',sent:'Enviada',partial:'Parcial',paid:'Pagada',draft:'Borrador',accepted:'Aceptado',receivedMonth:'Cobrado este mes',owedTotal:'Total que te deben',recent:'Facturas recientes',
@@ -334,7 +351,7 @@ walletHeader:'Diseñado para el futuro de los pagos.',walletIntro:'Agrega dónde
 payTitle:'Pagar / Pay',rateAsOf:'Precio de las',refresh:'Actualizar',priceUnavailable:'Precio en vivo no disponible. Usa el monto en USD.',memoNote:n=>`Incluye "Factura #${n}" en la nota si tu wallet lo permite.`,noSubs:'No quedan subdirecciones de Monero. Agrega más en Mi cartera.',copyAddress:'Copiar dirección',copyAmount:'Copiar monto',noMethods:'Aún no hay métodos de pago. Agrégalos en Más → Mi cartera.',doubleCheck:'Revisa cada dirección dos veces. Un pago a una dirección equivocada no se puede recuperar.',taxNote:'Los pagos en crypto siguen siendo ingreso del negocio para impuestos.',payWith:'Pagar con',
 backupReminder:'Tus datos viven solo en este dispositivo. Descarga un respaldo seguido.',lastBackup:'Último respaldo',never:'nunca',storageFull:'El almacenamiento está lleno. Descarga un respaldo y borra fotos viejas.',
 aboutText:'Invoice Free del Obrero es gratis y de código abierto (MIT). No hay cuentas, ni anuncios, ni rastreadores: todo lo que escribes se guarda solo en este dispositivo. Usa “Descargar respaldo completo” para guardar una copia o pasar a otro teléfono.',
-continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado',create:'Crear',fmClient:'Cliente nuevo',fmInvoice:'Factura nueva',fmEstimate:'Presupuesto nuevo',fmExpense:'Gasto nuevo',tInv:'Factura',tInvS:'Crear y mandar',tEst:'Presupuesto',tEstS:'Cotizar un trabajo',tExp:'Gasto',tExpS:'Anotar un recibo',tCli:'Cliente',tCliS:'Agregar cliente',tabPending:'PENDIENTES',tabDone:'HECHOS',approvedOn:'Aprobado',allYears:'Todos los años',totalYear:y=>`Total (${y})`}
+continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado',create:'Crear',acceptsCrypto:'Cobra en Bitcoin y Monero',acceptsCryptoSub:'Agrega tus wallets y sale un QR en cada factura',findPlace:'Buscar dirección o negocio',findPlaceHint:'Escribe el nombre del negocio o la dirección',findNone:'Sin resultados. Escribe la dirección a mano.',findErr:'La búsqueda no está disponible ahorita.',mapsOpen:'Abrir en Google Maps',mapsSrc:'Resultados de OpenStreetMap',fmClient:'Cliente nuevo',fmInvoice:'Factura nueva',fmEstimate:'Presupuesto nuevo',fmExpense:'Gasto nuevo',tInv:'Factura',tInvS:'Crear y mandar',tEst:'Presupuesto',tEstS:'Cotizar un trabajo',tExp:'Gasto',tExpS:'Anotar un recibo',tCli:'Cliente',tCliS:'Agregar cliente',tabPending:'PENDIENTES',tabDone:'HECHOS',approvedOn:'Aprobado',allYears:'Todos los años',totalYear:y=>`Total (${y})`}
 };
 let lang='es';
 function t(k,...a){const v=(L[lang]&&L[lang][k])??L.en[k]??k;return typeof v==='function'?v(...a):v}
@@ -374,7 +391,7 @@ function downloadBlob(name,blob){const a=document.createElement('a');a.href=URL.
 
 /* Original line-art illustration: roofer installing shingles with a roofing hatchet */
 function rooferSVG(cls){
-  return `<img class="roofer ${cls||''}" src="roofer.png" width="640" height="640" alt="Roofer installing shingles">`;
+  return `<img class="roofer ${cls||''}" src="roofer.png" width="640" height="640" decoding="async" alt="Roofer installing shingles">`;
 }
 
 /* ---------- state & storage ---------- */
@@ -514,6 +531,7 @@ function vHome(){
   const tile=(cls,act,icon,h,sub)=>`<button class="tile ${cls}" data-act="${act}"><span class="ti">${ic(icon,2)}</span><span><b>${t(h)}</b><br><span class="ts">${t(sub)}</span></span></button>`;
   return `${rooferSVG('small')}<div class="company">${esc(S.profile.company||'')}</div>
   <div class="tiles">${tile('t-inv','newInvoice','send','tInv','tInvS')}${tile('t-est','newEstimate','estimates','tEst','tEstS')}${tile('t-exp','newExpense','receipt','tExp','tExpS')}${tile('t-cli','newClient','clients','tCli','tCliS')}</div>
+  <button class="accepts" data-act="walletOpen"><span class="logos">${coinLogo('btc')}${coinLogo('xmr')}</span><span><b>${t('acceptsCrypto')}</b><span class="small">${t('acceptsCryptoSub')}</span></span></button>
   ${window.cloudHomeBanner?window.cloudHomeBanner():''}
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
   ${unsentOpen.length?`<div class="banner">${ic('bell',2)}<div><p>${t('unsentAlert',unsentOpen.length)}</p><button class="textbtn" data-act="filterTo" data-v="unsent">${t('readySend')}</button></div></div>`:''}
@@ -600,6 +618,9 @@ function vMore(){
 }
 
 /* ---------- wallet ---------- */
+/* Coin logos: CC0-1.0, from the cryptocurrency-icons package (github.com/spothq/cryptocurrency-icons) */
+const COIN_LOGO={btc:'<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path fill="#FFF" fill-rule="nonzero" d="M23.189 14.02c.314-2.096-1.283-3.223-3.465-3.975l.708-2.84-1.728-.43-.69 2.765c-.454-.114-.92-.22-1.385-.326l.695-2.783L15.596 6l-.708 2.839c-.376-.086-.746-.17-1.104-.26l.002-.009-2.384-.595-.46 1.846s1.283.294 1.256.312c.7.175.826.638.805 1.006l-.806 3.235c.048.012.11.03.18.057l-.183-.045-1.13 4.532c-.086.212-.303.531-.793.41.018.025-1.256-.313-1.256-.313l-.858 1.978 2.25.561c.418.105.828.215 1.231.318l-.715 2.872 1.727.43.708-2.84c.472.127.93.245 1.378.357l-.706 2.828 1.728.43.715-2.866c2.948.558 5.164.333 6.097-2.333.752-2.146-.037-3.385-1.588-4.192 1.13-.26 1.98-1.003 2.207-2.538zm-3.95 5.538c-.533 2.147-4.148.986-5.32.695l.95-3.805c1.172.293 4.929.872 4.37 3.11zm.535-5.569c-.487 1.953-3.495.96-4.47.717l.86-3.45c.975.243 4.118.696 3.61 2.733z"/></g></svg>',xmr:'<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#F60"/><path fill="#FFF" fill-rule="nonzero" d="M15.97 5.235c5.985 0 10.825 4.84 10.825 10.824a11.07 11.07 0 01-.558 3.432h-3.226v-9.094l-7.04 7.04-7.04-7.04v9.094H5.704a11.07 11.07 0 01-.557-3.432c0-5.984 4.84-10.824 10.824-10.824zM14.358 19.02L16 20.635l1.613-1.614 3.051-3.08v5.72h4.547a10.806 10.806 0 01-9.24 5.192c-3.902 0-7.334-2.082-9.24-5.192h4.546v-5.72l3.08 3.08z"/></g></svg>'};COIN_LOGO.ln=COIN_LOGO.btc;
+const coinLogo=(type,cls)=>COIN_LOGO[type]?`<span class="coin ${cls||''}">${COIN_LOGO[type]}</span>`:'';
 const PRESETS={
   btc:{label:'Bitcoin',sym:'BTC',cg:'bitcoin',re:/^(bc1[ac-hj-np-z02-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/},
   ln:{label:'Bitcoin Lightning',sym:'BTC',re:/^[^\s@]+@[^\s@]+\.[^\s@]+$/,hint:'you@wallet.com'},
@@ -679,7 +700,7 @@ function paySection(d){
     ${!p.fiat?`<p class="small" style="margin:0">${t('memoNote',esc(d.number))}</p>`:''}`;
   }
   return `<div class="group"><div class="gl">${t('payTitle')}</div>
-  <div class="paytabs">${ms.map(x=>`<button class="chip" data-act="payTab" data-v="${x.id}" aria-pressed="${x.id===payTab}">${esc(x.name||PRESETS[x.type]?.label||x.type)}</button>`).join('')}</div>
+  <div class="paytabs">${ms.map(x=>`<button class="chip" data-act="payTab" data-v="${x.id}" aria-pressed="${x.id===payTab}">${coinLogo(x.type)}${esc(x.name||PRESETS[x.type]?.label||x.type)}</button>`).join('')}</div>
   <div class="paybox">${body}</div></div>`;
 }
 function walletSheet(){return{live:true,render(){
@@ -688,7 +709,7 @@ function walletSheet(){return{live:true,render(){
   <div class="hero"><div class="no" style="font-size:28px">${t('walletHeader')}</div></div>
   <p class="small">${t('walletIntro')}</p>
   <div class="note">${t('doubleCheck')}</div>
-  ${ms.length?ms.map(m=>{const p=PRESETS[m.type]||{};const ok=addrValid(m);return `<div class="wm"><button class="main" style="background:none;border:0;text-align:left;padding:0" data-act="editMethod" data-id="${m.id}"><div class="t1" style="font-weight:600">${esc(m.name||p.label)}</div><div class="t2 small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.label)}${m.network?' · '+esc(m.network):''} · ${esc(m.type==='xmr'?((m.subaddresses||[]).length+' sub'):m.address)}</div>${ok?'':`<div class="small red">${t('looksWrong')}</div>`}</button><button class="switch" role="switch" aria-checked="${!!m.enabled}" data-act="toggleMethod" data-id="${m.id}" aria-label="On/Off"></button></div>`}).join(''):`<div class="empty">${t('noMethods')}</div>`}
+  ${ms.length?ms.map(m=>{const p=PRESETS[m.type]||{};const ok=addrValid(m);return `<div class="wm"><button class="main" style="background:none;border:0;text-align:left;padding:0" data-act="editMethod" data-id="${m.id}"><div class="t1" style="font-weight:600;display:flex;align-items:center;gap:8px">${coinLogo(m.type,'lg')}${esc(m.name||p.label)}</div><div class="t2 small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.label)}${m.network?' · '+esc(m.network):''} · ${esc(m.type==='xmr'?((m.subaddresses||[]).length+' sub'):m.address)}</div>${ok?'':`<div class="small red">${t('looksWrong')}</div>`}</button><button class="switch" role="switch" aria-checked="${!!m.enabled}" data-act="toggleMethod" data-id="${m.id}" aria-label="On/Off"></button></div>`}).join(''):`<div class="empty">${t('noMethods')}</div>`}
   <button class="btn primary" style="margin-top:16px" data-act="newMethod">${t('addMethod')}</button>
   <p class="small" style="margin-top:14px">${t('taxNote')}</p></div>`;
 }}}
@@ -917,9 +938,19 @@ function saveDocFromEditor(){
 let C=null,clientCb=null;
 const hasPicker=()=>'contacts' in navigator&&'select' in navigator.contacts;
 function openClientEditor(c,cb){C=JSON.parse(JSON.stringify(c||{id:uid(),name:'',mobile:'',emails:[''],address:'',notes:'',_new:true}));if(!C.emails||!C.emails.length)C.emails=[''];clientCb=cb||null;showSheet(clientEditor())}
+/* Address / business lookup — OpenStreetMap data via Photon (free, no key). Only the typed text is sent. */
+let placeHits=[],placeTimer=null,placeSeq=0;
+function placeLine(p){const a=p.properties||{};const street=[a.housenumber,a.street].filter(Boolean).join(' ');const city=[a.city||a.town||a.village||a.county,[a.state,a.postcode].filter(Boolean).join(' ')].filter(Boolean).join(', ');return [street,city].filter(Boolean).join('\n')}
+function isBiz(p){const a=p.properties||{};return !!a.name&&!['place','highway','boundary','building'].includes(a.osm_key)}
+function findPlaces(q){clearTimeout(placeTimer);const box=$('#c-sugg');if(!box)return;q=q.trim();if(q.length<4){box.innerHTML='';return}
+  placeTimer=setTimeout(async()=>{const seq=++placeSeq;try{const r=await fetch('https://photon.komoot.io/api/?limit=5&q='+encodeURIComponent(q));if(!r.ok)throw 0;const j=await r.json();if(seq!==placeSeq)return;
+    placeHits=(j.features||[]).filter(f=>placeLine(f));
+    box.innerHTML=placeHits.length?placeHits.map((f,i)=>{const a=f.properties||{};const head=isBiz(f)?a.name:placeLine(f).split('\n')[0];return `<button type="button" role="option" data-act="pickPlace" data-i="${i}"><b>${esc(head)}</b><span class="small">${esc(placeLine(f).replace('\n',', '))}</span></button>`}).join('')+`<div class="src">${t('mapsSrc')}</div>`:`<div class="src">${t('findNone')}</div>`;
+  }catch(e){if(seq===placeSeq)box.innerHTML=`<div class="src">${t('findErr')}</div>`}},400)}
 function clientEditor(){return{live:false,render(){
   return sheetHead(C._new?t('addClient'):C.name,{close:true,right:`<button class="textbtn" data-act="saveClient">${t('save')}</button>`})+`<div class="wrap sheet-b"><div style="margin-top:14px"></div>
   ${C._new?(hasPicker()?`<button class="btn outline" data-act="pickContacts">${t('chooseContacts')}</button><button class="linkbtn" style="width:100%;justify-content:center" data-act="pickVcf">${t('importVcf')}</button>`:`<button class="btn outline" data-act="pickVcf">${t('importVcf')}</button>`)+`<p class="small" style="text-align:center">${t('contactsNote')}</p>`:''}
+  <div class="field"><label for="c-find">${t('findPlace')}</label><input class="in" id="c-find" type="search" autocomplete="off" placeholder="${t('findPlaceHint')}"><div class="sugg" id="c-sugg" role="listbox"></div></div>
   <div class="field"><label for="c-name">${t('billingName')}</label><input class="in" id="c-name" data-c="name" value="${esc(C.name)}" autocomplete="organization"></div>
   <div class="field"><label for="c-mob">${t('mobile')}</label><input class="in" id="c-mob" type="tel" data-c="mobile" value="${esc(C.mobile)}"></div>
   ${C.emails.map((e,k)=>`<div class="field"><label for="c-em${k}">${t('email')}</label><input class="in" id="c-em${k}" type="email" data-email="${k}" value="${esc(e)}"></div>`).join('')}
@@ -972,7 +1003,7 @@ function clientDetail(id){return{live:true,render(){
   const chips=[['all','all'],['unpaid','unpaid'],['overdue','overdue'],['paid','paid'],['est','estimates']];
   return sheetHead(c.name,{right:`<button class="textbtn" data-act="editClient" data-id="${id}">${t('edit')}</button>`})+`<div class="wrap sheet-b">
   <div class="cards" style="margin-top:14px"><div class="card"><span class="lbl">${t('invoiced')}</span><span class="val num">${money(tt.inv)}</span></div><div class="card good"><span class="lbl">${t('totalPaid')}</span><span class="val num">${money(tt.paid)}</span></div><div class="card ${tt.owed>0?'bad':''}"><span class="lbl">${t('owes')}</span><span class="val num">${money(tt.owed)}</span></div><div class="card"><span class="lbl">${t('openJobs')}</span><span class="val num">${jobsOpen}</span></div></div>
-  <div class="group">${c.mobile?`<div class="kv"><span>${t('mobile')}</span><span>${esc(c.mobile)}</span></div>`:''}${(c.emails||[]).filter(Boolean).map(e=>`<div class="kv"><span>${t('email')}</span><span>${esc(e)}</span></div>`).join('')}${c.address?`<div class="kv"><span>${t('address')}</span><span style="white-space:pre-wrap">${esc(c.address)}</span></div>`:''}</div>
+  <div class="group">${c.mobile?`<div class="kv"><span>${t('mobile')}</span><span>${esc(c.mobile)}</span></div>`:''}${(c.emails||[]).filter(Boolean).map(e=>`<div class="kv"><span>${t('email')}</span><span>${esc(e)}</span></div>`).join('')}${c.address?`<div class="kv"><span>${t('address')}</span><span style="white-space:pre-wrap">${esc(c.address)}</span></div><a class="textbtn" style="display:inline-block;padding:8px 0" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address.replace(/\n/g,', '))}">${t('mapsOpen')} ↗</a>`:''}</div>
   <div class="btns"><button class="btn primary" data-act="newInvoiceFor" data-id="${id}">${t('newInvoice')}</button><button class="btn" data-act="newEstimateFor" data-id="${id}">${t('newEstimate')}</button></div>
   <input class="search" id="cq" type="search" placeholder="${t('search')}" value="${esc(clientQuery)}">
   <div class="chips">${chips.map(([k,l])=>`<button class="chip" data-act="clientFilter" data-v="${k}" aria-pressed="${clientFilter===k}">${t(l)}</button>`).join('')}</div>
@@ -1162,6 +1193,7 @@ function docText(d){
 }
 function drawQR(doc,text,x,y,size){if(!window.qrcode||!text)return;try{const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=size/n;doc.setFillColor(0,0,0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))doc.rect(x+c*cell,y+r*cell,cell+0.15,cell+0.15,'F')}catch(e){}}
 async function buildPDF(d){
+  try{await ensurePDFLibs()}catch(e){}
   if(!window.jspdf){toast('PDF library did not load. Check your connection.');return null}
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
   const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate',j=jobOf(d);
@@ -1273,6 +1305,7 @@ function fabItems(){const it=(act,cls,icon,lbl)=>`<button class="fmi" data-act="
   return it('newClient','c-cli','clients','fmClient')+it('newInvoice','c-inv','send','fmInvoice')+it('newEstimate','c-est','estimates','fmEstimate')+it('newExpense','c-exp','receipt','fmExpense')}
 function closeFab(){const f=$('#fab');f.classList.remove('open');f.setAttribute('aria-expanded','false');$('#fabMenu').hidden=true}
 const A={
+  pickPlace:e=>{const f=placeHits[+e.dataset.i];if(!f||!C)return;C.address=placeLine(f);const ta=$('#c-addr');if(ta)ta.value=C.address;if(isBiz(f)&&!C.name.trim()){C.name=f.properties.name;const n=$('#c-name');if(n)n.value=C.name}const b=$('#c-sugg');if(b)b.innerHTML='';const fi=$('#c-find');if(fi)fi.value='';toast(t('saved'))},
   fabMenu:()=>{const m=$('#fabMenu'),f=$('#fab');if(!m.hidden){closeFab();return}$('#fabItems').innerHTML=fabItems();m.classList.toggle('lift',f.classList.contains('lift'));m.hidden=false;f.classList.add('open');f.setAttribute('aria-expanded','true');const b=m.querySelector('.fmi');if(b)b.focus()},
   fabClose:()=>closeFab(),
   fabPick:e=>{closeFab();const f=A[e.dataset.v];if(f)f(e)},
@@ -1418,6 +1451,7 @@ document.addEventListener('input',e=>{
   if(D&&el.dataset.cap!==undefined){D.photos[+el.dataset.cap].caption=el.value;return}
   if(D&&NJ&&el.dataset.nj){NJ[el.dataset.nj]=el.value;return}
   if(D&&el.dataset.jaddr){const j=S.jobs[D.jobId];if(j){j.address=el.value;persist()}return}
+  if(el.id==='c-find'){findPlaces(el.value);return}
   if(C&&el.dataset.c){C[el.dataset.c]=el.value;return}
   if(C&&el.dataset.email!==undefined){C.emails[+el.dataset.email]=el.value;return}
   if(el.dataset.pc!==undefined){pickedContacts[+el.dataset.pc].keep=el.checked;return}
@@ -1449,7 +1483,11 @@ showWelcome=!S.profile.started;
 render();
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
+(window.requestIdleCallback||(f=>setTimeout(f,300)))(()=>{
+  loadLib(LIB.qr).then(()=>{if(typeof stack!=='undefined'&&stack.length)redrawSheet()}).catch(()=>{});
+  const C=window.OBRERO_CONFIG||{};
+  (C.supabaseUrl&&C.supabaseAnonKey?loadLib(LIB.cloud).catch(()=>{}):Promise.resolve()).then(()=>loadLib('cloud.js')).catch(()=>{});
+});
 </script>
-<script src="cloud.js"></script>
 </body>
 </html>
