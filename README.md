@@ -7,6 +7,15 @@ Hecho gratis por Roofs by Hopkins, para el emprendedor.
 
 https://freeinvoicedelobrero-ctrl.github.io/invoice-free-del-obrero/
 
+### 🧡 Apoya el proyecto / Support the project
+Donaciones privadas / Private donations:
+
+**Monero (XMR)**
+`89KaatfVCdiSnuoh7cKFPWYSVLzR8TfKjhs4Z6jfhCsGJzaQA2u3RDXNgwxc4W9CqG3bV5g67PAsRVkxHebWA6fxLkWiWw5`
+
+**Pirate Chain (ARRR)**
+`pirate1hre8h85r46na4cwzgdaulxpek0x4l2s3q8mxku766y9lj94k575lgvfkkp3r5e94t5vew4xnyx7`
+
 Free, open-source invoicing app for roofers, siding, gutter crews and every trade.
 English / Español. Works on any phone, installs to the home screen, and works offline.
 
