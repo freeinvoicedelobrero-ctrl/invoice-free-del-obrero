@@ -1,5 +1,5 @@
 /* Invoice Free del Obrero — offline support. Bump VERSION when you change files. */
-const VERSION = 'obrero-v30';
+const VERSION = 'obrero-v25';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './roofer.png', './cloud.js', './config.js', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
@@ -18,7 +18,7 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.hostname === 'api.coingecko.com' || url.hostname.endsWith('supabase.co') || url.hostname === 'photon.komoot.io') return; // live prices: never cache
+  if (e.request.method !== 'GET' || url.hostname === 'api.coingecko.com' || url.hostname.endsWith('supabase.co')) return; // live prices: never cache
   // App files: network first (get updates), fall back to cache when offline
   if (url.origin === location.origin) {
     e.respondWith(fetch(e.request).then(r => { const copy = r.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match('./index.html'))));

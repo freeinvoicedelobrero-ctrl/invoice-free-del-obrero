@@ -27,7 +27,7 @@
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
 button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer;touch-action:manipulation}
+button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 [hidden]{display:none!important}
 .num{font-variant-numeric:tabular-nums}
@@ -97,10 +97,10 @@ svg:not([width]):not([class]){max-width:100%}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0;scrollbar-width:none}
 .chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;color:var(--muted)}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:600}
-.search{font-size:16px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px}
+.search{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px}
 .empty{text-align:center;color:var(--muted);padding:40px 16px;display:flex;flex-direction:column;align-items:center;gap:12px}
 .empty b{color:var(--fg);font-family:var(--display);font-size:22px}
-.tabs2{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line)}
+.tabs2{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--line)}
 .tabs2 button{background:none;border:0;padding:14px 0;font-weight:600;letter-spacing:.1em;color:var(--muted);border-bottom:3px solid transparent}
 .tabs2 button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
 .sortbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -149,6 +149,12 @@ textarea.in{min-height:84px;resize:vertical}
 .btn[disabled]{opacity:.5}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .btns .wide{grid-column:1/-1}
+.sigpad{width:100%;height:190px;background:#fff;border-radius:10px;touch-action:none;display:block}
+.sigrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sigbox{display:flex;flex-direction:column;gap:4px}.sigbox img{width:100%;height:70px;object-fit:contain;background:#fff;border-radius:8px}
+.sigempty{height:70px;border:1px dashed var(--line,#333);border-radius:8px}
+.paper .psig{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.paper .psl{height:54px;border-bottom:1px solid #111;display:flex;align-items:flex-end}.paper .psl img{max-height:52px;max-width:100%}
 .row .plane{flex:none;width:40px;height:28px;align-self:center}
 .row .plane svg{width:100%;height:100%;overflow:visible}
 .row .plane .pl{fill:#fff;stroke:#fff;stroke-width:1;stroke-linejoin:round;opacity:.45}
@@ -206,213 +212,16 @@ textarea.in{min-height:84px;resize:vertical}
 .switch[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
 .switch[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
 @media (max-width:360px){.cards{grid-template-columns:1fr}}
-/* action tiles (home) */
-.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
-.tile{position:relative;overflow:hidden;border:0;border-radius:18px;padding:16px;min-height:136px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;color:#fff}
-.tile::after{content:"";position:absolute;inset:auto -30% -60% auto;width:80%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none}
-.tile .ti{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
-.tile .ti svg{width:22px;height:22px}
-.tile b{font-family:var(--display);font-size:24px;line-height:1.05;font-weight:700;letter-spacing:.01em}
-.tile span.ts{font-size:13px;opacity:.85;margin-top:2px}
-.tile.t-inv{background:linear-gradient(135deg,#2F5BFF,#1A3FD6)}
-.tile.t-est{background:linear-gradient(135deg,#8A2BE2,#4B23C8)}
-.tile.t-exp{background:linear-gradient(135deg,#1F9D5C,#147346)}
-.tile.t-cli{background:var(--surface-2);color:var(--fg);border:1px solid var(--line)}
-.tile.t-cli .ti{background:var(--surface);color:var(--muted)}
-.tile.t-cli span.ts{color:var(--muted);opacity:1}
-.tile:active{transform:scale(.98)}
-@media (hover:hover){.tile{transition:filter .15s,transform .15s}.tile:hover{filter:brightness(1.08)}}
-@media (min-width:700px){.tiles{gap:16px}.tile{min-height:180px;padding:22px}.tile b{font-size:30px}.tile .ti{width:52px;height:52px}}
-
-/* coin logos */
-.coin{display:inline-flex;width:18px;height:18px;vertical-align:-4px;margin-right:6px;flex:none}
-.coin svg{width:100%;height:100%}
-.coin.lg{width:24px;height:24px;margin:0}
-.chip .coin{margin-right:6px}
-.accepts{display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);width:100%;text-align:left;color:var(--fg)}
-.accepts .logos{display:flex;flex:none}.accepts .logos .coin{width:30px;height:30px;margin:0}.accepts .logos .coin+.coin{margin-left:-8px;border-radius:50%;box-shadow:0 0 0 2px var(--surface)}
-.accepts b{display:block;font-size:15px}.accepts span.small{color:var(--muted);font-size:13px}
-/* place lookup */
-.sugg{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:6px;background:var(--surface)}
-.sugg:empty{display:none}
-.sugg button{background:none;border:0;border-bottom:1px solid var(--line);padding:10px 12px;text-align:left;color:var(--fg)}
-.sugg button:last-child{border-bottom:0}
-.sugg button .small{color:var(--muted);font-size:13px;display:block}
-.sugg .src{padding:6px 12px;font-size:11px;color:var(--muted)}
-
-/* quick sale (store mode) */
-.tile-wide{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;background:linear-gradient(135deg,#F07A1A,#C2550B)}
-.tile-wide .ti{flex:none}
-.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:12px}
-.prod{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 10px;min-height:84px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;color:var(--fg)}
-.prod b{font-size:15px;line-height:1.2;overflow-wrap:anywhere}
-.prod .pp{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
-.prod .q{position:absolute;top:-8px;right:-6px;min-width:26px;height:26px;border-radius:13px;background:#F07A1A;color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;padding:0 7px}
-.prod.add{border-style:dashed;color:var(--accent);align-items:center;justify-content:center;font-weight:600}
-.cart{margin-top:14px;border-top:1px solid var(--line)}
-.cl{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
-.cl .n{flex:1;min-width:0}.cl .n div{overflow-wrap:anywhere}
-.stepper{display:flex;align-items:center;gap:6px}
-.stepper button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);font-size:18px;line-height:1}
-.stepper span{min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
-.saletot{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;font-family:var(--display);font-weight:700;font-size:30px}
-.paym{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.paym button{border-radius:12px;padding:14px 10px;font-weight:600;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);display:flex;align-items:center;justify-content:center;gap:6px}
-.paym button[aria-pressed="true"]{border-color:#F07A1A;box-shadow:0 0 0 1px #F07A1A inset}
-.cashq{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.cashq button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 14px;font-variant-numeric:tabular-nums}
-.change{font-family:var(--display);font-size:26px;font-weight:700;color:var(--good)}
-.btn.sale{background:#F07A1A;border-color:#F07A1A;color:#fff;font-size:18px}
-.btn.sale:disabled{opacity:.45}
-.done{text-align:center;padding:30px 0 10px}
-.done .big{font-family:var(--display);font-size:44px;font-weight:700}
-
-/* mode bar: Contractor | Store */
-.modebar{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-block:0 10px}
-.modebar button{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:12px;padding:9px 8px;font-weight:600;font-size:14px}
-.modebar button svg{width:18px;height:18px}
-.modebar button[aria-selected="true"]{color:#fff;border-color:transparent;background:var(--accent)}
-.modebar button.store[aria-selected="true"]{background:#F07A1A}
-.periods{display:flex;gap:8px;overflow-x:auto;padding:12px 0;scrollbar-width:none}
-.periods button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:14px;color:var(--muted)}
-.periods button[aria-pressed="true"]{border-color:#F07A1A;color:var(--fg);box-shadow:0 0 0 1px #F07A1A inset}
-.card.profit .val{color:var(--good)}.card.cost .val{color:var(--warn)}
-.rank{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
-.rank .n{min-width:0;flex:1;overflow-wrap:anywhere}.rank .r{text-align:right;font-variant-numeric:tabular-nums}
-.prow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);width:100%;background:none;border-left:0;border-right:0;border-top:0;text-align:left;color:var(--fg)}
-.prow .n{flex:1;min-width:0}.prow .n b{display:block;overflow-wrap:anywhere}
-.margin{font-size:12px;border-radius:999px;padding:3px 8px;background:var(--surface-2);color:var(--good);font-weight:600;white-space:nowrap}
-.daysep{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:14px 0 4px}
-
-/* inventory + public menu */
-.prod.out{opacity:.45}
-.prod .stk{font-size:12px;color:var(--muted)}
-.prod .stk.low{color:var(--warn);font-weight:600}
-.stock{font-size:12px;border-radius:999px;padding:3px 8px;background:var(--surface-2);white-space:nowrap;font-weight:600}
-.stock.low{color:#000;background:var(--warn)}.stock.out{color:#fff;background:var(--bad)}
-.lowbar{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--warn);border-radius:12px;padding:10px 12px;margin-top:12px;font-size:14px}
-.restock{display:flex;gap:8px;align-items:flex-end}.restock .field{flex:1;margin:0}
-.menuqr{background:#fff;border-radius:16px;padding:14px;max-width:300px;margin:12px auto}
-.menuqr svg{display:block;width:100%;height:auto}
-.mpage{max-width:560px;margin:0 auto;padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mpage h1{font-family:var(--display);font-size:38px;margin:0;line-height:1.05;text-wrap:balance}
-.mpage .msub{color:var(--muted);margin:6px 0 18px}
-.mitem{display:flex;justify-content:space-between;gap:14px;align-items:baseline;padding:14px 0;border-bottom:1px dashed var(--line)}
-.mitem b{font-size:18px;overflow-wrap:anywhere}.mitem .mp{font-family:var(--display);font-size:22px;font-weight:700;white-space:nowrap}
-.mitem.out b,.mitem.out .mp{color:var(--muted);text-decoration:line-through}
-.mitem .tag{font-size:12px;color:var(--bad);font-weight:700;letter-spacing:.06em;margin-left:8px;text-decoration:none;display:inline-block}
-.mfoot{margin-top:26px;font-size:13px;color:var(--muted);text-align:center}.mfoot a{color:var(--accent)}
-
-/* product photos + live menu */
-.prod .ph{width:100%;aspect-ratio:4/3;border-radius:9px;object-fit:cover;background:var(--surface-2);margin-bottom:8px;display:block}
-.prow .thumb{width:52px;height:52px;border-radius:10px;object-fit:cover;background:var(--surface-2);flex:none}
-.pphoto{display:flex;gap:12px;align-items:center;margin:14px 0}
-.pphoto img,.pphoto .noimg{width:96px;height:96px;border-radius:14px;object-fit:cover;background:var(--surface-2);flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;text-align:center}
-.pphoto .acts{display:flex;flex-direction:column;gap:6px;flex:1}
-.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.mcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
-.mcard .mi{position:relative;aspect-ratio:1;background:var(--surface-2)}
-.mcard .mi img{width:100%;height:100%;object-fit:cover;display:block}
-.mcard .mi .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:48px;color:var(--muted)}
-.mcard .mi .so{position:absolute;inset:auto 8px 8px auto;background:var(--bad);color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:4px 10px}
-.mcard.out .mi img{filter:grayscale(1) brightness(.6)}
-.mcard .mt{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
-.mcard .mt b{font-size:16px;line-height:1.2;overflow-wrap:anywhere}
-.mcard .mt span{font-family:var(--display);font-size:22px;font-weight:700}
-.livepill{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--good);font-weight:600}
-.livepill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}
-
-/* customer ordering + store order inbox */
-.mcard.can{cursor:pointer}
-.mcard .qty{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px}
-.mcard .qty button{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);font-size:20px;line-height:1}
-.mcard .qty .addb{flex:1;width:auto;background:#F07A1A;border-color:#F07A1A;color:#fff;font-size:15px;font-weight:700}
-.mcard .qty span{min-width:24px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
-.cartbar{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--surface);border-top:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.cartbar .in2{max-width:560px;margin:0 auto}
-.cartbar button{width:100%;border:0;border-radius:14px;padding:16px;background:#F07A1A;color:#fff;font-weight:700;font-size:17px;display:flex;justify-content:space-between}
-.ovl{position:fixed;inset:0;z-index:10;background:rgba(0,0,0,.65);display:flex;align-items:flex-end;justify-content:center}
-.ovl .box{background:var(--bg);border-top:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:92%;overflow:auto;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.ovl h2{font-family:var(--display);font-size:28px;margin:0 0 10px}
-.paysel{display:flex;flex-direction:column;gap:8px}
-.paysel button{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:12px;padding:14px;font-weight:600;text-align:left}
-.paysel button[aria-pressed="true"]{border-color:#F07A1A;box-shadow:0 0 0 1px #F07A1A inset}
-.paysel small{color:var(--muted);font-weight:400}
-.ostat{display:flex;gap:6px;margin:14px 0}
-.ostat span{flex:1;text-align:center;font-size:12px;padding:8px 4px;border-radius:10px;background:var(--surface);color:var(--muted);border:1px solid var(--line)}
-.ostat span.on{background:var(--good);color:#000;border-color:var(--good);font-weight:700}
-.bignum{font-family:var(--display);font-size:64px;font-weight:700;line-height:1;text-align:center;margin:8px 0}
-.paylink{display:block;text-align:center;text-decoration:none;border-radius:14px;padding:16px;font-weight:700;font-size:17px;color:#fff;margin-top:10px}
-.paylink.cashapp{background:#00C244}.paylink.venmo{background:#008CFF}.paylink.paypal{background:#003087}
-.ordbtn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:12px;border:1px solid #F07A1A;background:rgba(240,122,26,.12);color:var(--fg);border-radius:14px;padding:14px;font-weight:700}
-.ordbtn .cnt{background:#F07A1A;color:#fff;border-radius:999px;min-width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;padding:0 8px}
-.ord{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;background:var(--surface)}
-.ord.new{border-color:#F07A1A}
-.ord .oh{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
-.ord .oh b{font-family:var(--display);font-size:24px}
-.ord ul{margin:8px 0;padding-left:18px}
-.ord .btns{margin:10px 0 0}
-
-/* single product link */
-.pbig{border-radius:16px;overflow:hidden;background:var(--surface-2);aspect-ratio:1;position:relative;margin-bottom:14px}
-.pbig img{width:100%;height:100%;object-fit:cover;display:block}
-.pbig .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:96px;color:var(--muted)}
-.pbig .so{position:absolute;right:12px;bottom:12px;background:var(--bad);color:#fff;font-weight:700;letter-spacing:.06em;border-radius:999px;padding:6px 14px}
-.pprice{font-family:var(--display);font-size:40px;font-weight:700;margin:2px 0 14px}
-.mcard .mi{cursor:pointer}
-
-/* business types, units, clock */
-.bizgrid{display:grid;gap:10px;margin-top:14px}
-.biz{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px;text-align:left;color:var(--fg)}
-.biz .bi{width:48px;height:48px;border-radius:14px;background:#F07A1A;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
-.biz .bi svg{width:26px;height:26px}
-.biz b{display:block;font-size:17px}.biz span.small{color:var(--muted)}
-.cl .qin{width:70px;text-align:center;padding:8px 6px}
-.timer{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;margin-top:12px;display:flex;flex-direction:column;gap:10px}
-.timer .tt{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.timer .clock{font-family:var(--display);font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
-.timer.on{border-color:var(--good)}
-.timer select{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--fg)}
-
-/* + button menu */
-.fabmenu{position:fixed;inset:0;z-index:7;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
-.fabmenu .fm{position:absolute;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(156px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:12px}
-.fabmenu.lift .fm{bottom:calc(212px + env(safe-area-inset-bottom,0px))}
-.fmi{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;color:var(--fg)}
-.fmi .fl{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:600;font-size:15px}
-.fmi .fc{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.4)}
-.fmi .fc svg{width:24px;height:24px}
-.fc.c-sale{background:#F07A1A}.fc.c-cli{background:#3A3D44}.fc.c-inv{background:#2F5BFF}.fc.c-est{background:#7B2BE0}.fc.c-exp{background:#1F9D5C}
-.fab.open{z-index:8}.fab.open svg{transform:rotate(45deg)}
-.fab svg{transition:transform .15s}
-@media (prefers-reduced-motion:no-preference){.fabmenu:not([hidden]) .fmi{animation:fmIn .16s ease-out both}.fabmenu .fmi:nth-child(2){animation-delay:.03s}.fabmenu .fmi:nth-child(3){animation-delay:.06s}.fabmenu .fmi:nth-child(4){animation-delay:.09s}@keyframes fmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}}
-@media (min-width:900px){.fabmenu .fm{bottom:calc(96px + env(safe-area-inset-bottom,0px))}.fabmenu.lift .fm{bottom:calc(156px + env(safe-area-inset-bottom,0px))}}
-
-/* desktop: tabs become a left sidebar, like a desktop window */
-@media (min-width:900px){
-  #appShell{--side:104px}
-  .tabs{top:0;bottom:0;right:auto;width:var(--side);border-top:0;border-right:1px solid var(--line);padding:calc(16px + env(safe-area-inset-top,0px)) 0 16px}
-  .tabs .wrap{display:flex;flex-direction:column;gap:6px;padding:0 10px;max-width:none}
-  .tab{padding:12px 0;border-radius:14px;font-size:13px}
-  .tab[aria-current="page"]{background:var(--surface-2)}
-  .top,#main,.totalbar{margin-left:var(--side)}
-  .totalbar{bottom:0}
-  .fab{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
-  .fab.lift{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-  .wrap{max-width:980px}
-}
-
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 </head>
 <body>
 <div id="welcome" hidden></div>
 <div id="appShell" hidden>
-  <header class="top"><div class="wrap"><h1 id="title">Home</h1><button class="iconbtn" data-act="lang" id="langBtn" aria-label="Language">EN</button></div><div class="wrap modebar" id="modeBar" role="tablist"></div></header>
+  <header class="top"><div class="wrap"><h1 id="title">Home</h1><button class="iconbtn" data-act="lang" id="langBtn" aria-label="Language">EN</button></div></header>
   <main id="main"><div class="wrap" id="view"></div></main>
   <div class="totalbar" id="totalbar" hidden><div class="wrap"><span id="totalLbl">Total</span><span class="num" id="totalVal"></span></div></div>
   <button class="fab" id="fab" data-act="newInvoice" aria-label="New invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-  <div class="fabmenu" id="fabMenu" hidden data-act="fabClose"><div class="fm" id="fabItems"></div></div>
   <nav class="tabs"><div class="wrap" id="tabs"></div></nav>
 </div>
 <div class="sheet" id="sheet" hidden></div>
@@ -422,13 +231,12 @@ textarea.in{min-height:84px;resize:vertical}
 <input type="file" id="camIn" accept="image/*" capture="environment" hidden>
 <input type="file" id="galIn" accept="image/*" multiple hidden>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
-/* Light start: big libraries load only when needed (PDF) or after the app is on screen (QR, cloud). */
-const LIB={pdf:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',pdfTable:'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',qr:'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',cloud:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'};
-const _libs={};
-function loadLib(u){return _libs[u]||(_libs[u]=new Promise((ok,bad)=>{const el=document.createElement('script');el.src=u;el.async=true;el.onload=ok;el.onerror=()=>{delete _libs[u];el.remove();bad(new Error('load '+u))};document.head.appendChild(el)}))}
-async function ensurePDFLibs(){await loadLib(LIB.pdf);await loadLib(LIB.pdfTable);try{await loadLib(LIB.qr)}catch(e){}}
 'use strict';
 /* =========================================================
    Invoice Free del Obrero — free, open-source (MIT)
@@ -438,7 +246,7 @@ async function ensurePDFLibs(){await loadLib(LIB.pdf);await loadLib(LIB.pdfTable
 
 /* ---------- i18n ---------- */
 const L={
-en:{secWorkflow:'Workflow',secCashflow:'Cashflow',secItems:'Items & expenses',secInsights:'Insights',secBusiness:'Business',secSupport:'Support',help:'Help',useAppArt:'Use the app roofer ✈',lp_header:'Top',lp_watermark:'Background',lp_both:'Both',logo:'Logo',addLogo:'Add logo',changeLogo:'Change logo',removeLogo:'Remove logo',logoNote:'Appears at the top of your invoices and estimates. Square or round logos look best.',donate:'Support the project',donateSub:'Donations in Monero (XMR) and Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero is free and open source, with no ads and no fees. If it helps your business, you can support it with a private donation in Monero (XMR) or Pirate Chain (ARRR).',donateNote:'Thank you! Every donation helps keep the app free for every contractor.',openWallet:'Open in wallet',copyDetails:'Copy bank details',achHolder:'Account holder name',achBank:'Bank name',achRouting:'Routing number (9 digits)',achAccount:'Account number',achType:'Account type',achBadRouting:'Routing number is not valid. Check the 9 digits.',achSafety:'These details appear on your invoices so clients can pay you by ACH or wire. Use a business account. Anyone with these numbers can send you money; watch your account for unauthorized debits and ask your bank about ACH debit blocks.',shareApp:'Share the app',shareAppSub:'Free for every contractor',shareAppTitle:'Share Invoice Free del Obrero',shareAppText:'Free invoicing app for contractors. No sign-up, no fees, your data stays on your phone.',scanToOpen:'Scan with the camera to open the app',shareBtn:'Share link',copyLink:'Copy link',expenses:'Expenses',thisMonth:'This month',newExpense:'New expense',vendor:'Vendor / store',category:'Category',noExpenses:'No expenses yet',noExpensesSub:'Log materials, dump fees, fuel and crew pay to see your real profit per job.',profit:'Profit',spent:'Expenses',receipt:'Receipt photo',tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
+en:{secWorkflow:'Workflow',secCashflow:'Cashflow',secItems:'Items & expenses',secInsights:'Insights',secBusiness:'Business',secSupport:'Support',help:'Help',signatures:'Signatures',contractor:'Contractor',customer:'Customer',clientSigns:'Customer signs here',mySignature:'My signature',addMySig:'Add my signature',changeMySig:'Change my signature',mySigNote:'Your signature is added to every estimate and invoice as the contractor.',printedName:'Printed name',signHere:'Sign with your finger',clearSig:'Clear',iAgree:'I accept the work, price and terms above',saveSignature:'Save signature',signFirst:'Please sign first',signedOk:'Signed ✓',signedOn:'Signed',removeClientSig:'Remove customer signature',changedAfterSign:'⚠ This document was changed after it was signed. Ask the customer to sign again.',acceptText:c=>`By signing, the customer accepts the work, price and terms of this document and authorizes ${c||'the contractor'} to proceed.`,contractTerms:'Contract terms & conditions',contractTermsPh:'Scope, payment schedule, warranty, change orders, cancellation…',contractTermsNote:'Printed on every estimate/invoice above the signatures. You can change them per document.',useAppArt:'Use the app roofer ✈',lp_header:'Top',lp_watermark:'Background',lp_both:'Both',logo:'Logo',addLogo:'Add logo',changeLogo:'Change logo',removeLogo:'Remove logo',logoNote:'Appears at the top of your invoices and estimates. Square or round logos look best.',donate:'Support the project',donateSub:'Donations in Monero (XMR) and Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero is free and open source, with no ads and no fees. If it helps your business, you can support it with a private donation in Monero (XMR) or Pirate Chain (ARRR).',donateNote:'Thank you! Every donation helps keep the app free for every contractor.',openWallet:'Open in wallet',copyDetails:'Copy bank details',achHolder:'Account holder name',achBank:'Bank name',achRouting:'Routing number (9 digits)',achAccount:'Account number',achType:'Account type',achBadRouting:'Routing number is not valid. Check the 9 digits.',achSafety:'These details appear on your invoices so clients can pay you by ACH or wire. Use a business account. Anyone with these numbers can send you money; watch your account for unauthorized debits and ask your bank about ACH debit blocks.',shareApp:'Share the app',shareAppSub:'Free for every contractor',shareAppTitle:'Share Invoice Free del Obrero',shareAppText:'Free invoicing app for contractors. No sign-up, no fees, your data stays on your phone.',scanToOpen:'Scan with the camera to open the app',shareBtn:'Share link',copyLink:'Copy link',expenses:'Expenses',thisMonth:'This month',newExpense:'New expense',vendor:'Vendor / store',category:'Category',noExpenses:'No expenses yet',noExpensesSub:'Log materials, dump fees, fuel and crew pay to see your real profit per job.',profit:'Profit',spent:'Expenses',receipt:'Receipt photo',tabAll:'ALL',tabUnpaid:'UNPAID',tabPaid:'PAID',home:'Home',clients:'Clients',invoices:'Invoices',estimates:'Estimates',more:'More',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Get started',install:'Install app',iosInstall:'On iPhone: tap Share → Add to Home Screen.',privacyLine:'Your data stays on this device. No accounts, no trackers.',
 unsentAlert:n=>`${n} unpaid invoice${n==1?'':'s'} not yet sent`,readySend:'Ready to send?',overview:'Overview',overdue:'Overdue',unpaid:'Unpaid',unsent:'Unsent',sent:'Sent',partial:'Partial',paid:'Paid',draft:'Draft',accepted:'Accepted',receivedMonth:'Received this month',owedTotal:'Total owed to you',recent:'Recent invoices',
 noInvoices:'No invoices yet',noInvoicesSub:'Tap + to make your first invoice.',newInvoice:'New invoice',newEstimate:'New estimate',invoice:'Invoice',estimate:'Estimate',save:'Save',cancel:'Cancel',billTo:'Bill to',chooseClient:'Choose client',addClient:'Add client',
@@ -461,8 +269,8 @@ walletHeader:'Built for the future of payments.',walletIntro:'Add where you get 
 payTitle:'Pay / Pagar',rateAsOf:'Rate as of',refresh:'Refresh',priceUnavailable:'Live price unavailable. Use the USD amount.',memoNote:n=>`Include Invoice #${n} in the memo if your wallet allows it.`,noSubs:'No Monero subaddresses left. Add more in My wallet.',copyAddress:'Copy address',copyAmount:'Copy amount',noMethods:'No payment methods yet. Add them in More → My wallet.',doubleCheck:'Check every address twice. Payments sent to a wrong address cannot be recovered.',taxNote:'Crypto payments are still business income for taxes.',payWith:'Pay with',
 backupReminder:'Your data lives only on this device. Download a backup regularly.',lastBackup:'Last backup',never:'never',storageFull:'Storage is full. Download a backup and remove old photos.',
 aboutText:'Invoice Free del Obrero is free and open source (MIT). There are no accounts, no ads and no trackers: everything you enter is saved only on this device. Use “Download full backup” to keep a copy or move to another phone.',
-continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent',create:'Create',qsQty:'Quantity',bizPick:'What do you do?',bizPickSub:'Pick the closest one. You can change it later in this screen.',biz_store:'Corner store',biz_storeS:'Products with stock',biz_food:'Food',biz_foodS:'Tacos, drinks, menu with photos',biz_service:'Mechanic / services',biz_serviceS:'Services, labor by the hour and parts',biz_piece:'Paid by the piece',biz_pieceS:'Boxes, buckets, pounds picked',biz_hourly:'Paid by the hour',biz_hourlyS:'Clock in and out, know what you are owed',bizChange:'Change business type',bizExamples:'We added a few examples. Tap one in the list to change its name and price, or delete it.',unitLbl:'Sold by',u_pza:'each',u_hora:'hour',u_lb:'lb',u_kg:'kg',u_caja:'box',u_bote:'bucket',u_servicio:'service',qsWho:'For who? (optional)',qsWhoPh:'Name, car, ranch…',qsPending:'They owe me',qsPendingS:'Get paid later',timerTitle:'Clock',timerStart:'Clock in',timerStop:'Clock out',timerRunning:'Working since',timerAdded:h=>`${h} h added`,list_store:'Products',list_food:'Menu',list_service:'Services & parts',list_piece:'Rates',list_hourly:'Rates',menu_store:'Catalog with QR',menu_food:'Menu with QR',menu_service:'Price list with QR',menu_piece:'Rates with QR',menu_hourly:'Rates with QR',shareProduct:'Share this product',shareProductNeedsMenu:'Turn on the live menu first (Products → Live menu) to share a product link.',seeMenu:'See full menu',linkCopied:'Link copied',yourOrder:'Your order',ordersOn:'Take orders from the menu',ordersOnSub:'Customers order from their phone and pay with Cash App, Venmo or PayPal, or at pickup.',ordersPayNeeded:'Tip: add Cash App, Venmo or PayPal in My wallet so customers can pay from their phone.',orders:'Orders',ordersNew:n=>`${n} new`,noOrders:'No orders yet.',oNew:'New',oAccepted:'Preparing',oReady:'Ready',oDone:'Delivered',oCancelled:'Cancelled',oAccept:'Start preparing',oReadyBtn:'Mark ready',oPaidCash:'Paid cash',oPaidCard:'Paid card',oPaidApp:m=>`Paid with ${m}`,oCancel:'Cancel order',payAtPickup:'Pay at pickup',payAtPickupSub:'Cash or card at the counter',orderBtn:'Review order',yourName:'Your name',orderNote:'Notes for the kitchen (optional)',orderNotePh:'No onion, extra salsa…',payWith:'How will you pay?',sendOrder:'Send order',sending:'Sending…',orderSent:'Order sent',orderNum:'Your order number',payNowWith:(a,m)=>`Pay ${a} with ${m}`,payNote:'Your payment app opens with the amount. Your saved cards work there.',showAtPickup:'Show this number when you pick up.',orderFail:'Could not send the order. Try again.',newOrderToast:n=>`New order #${n}`,orderBack:'Back to menu',ordersClosed:'This store is not taking orders right now.',nameNeeded:'Type your name',prodPhoto:'Photo',addPhoto:'Add photo',changePhoto:'Change photo',removePhoto:'Remove photo',noPhoto:'No photo',menuLive:'Live menu',menuLiveIntro:'Customers scan the QR and see your products with photos, prices and what is available. It updates by itself when you sell or change a product.',menuPublishing:'Publishing…',menuPublished:'Menu is live',menuPubFail:'Could not publish the menu. Check your internet and try again.',menuServerMissing:'The menu server is not set up yet. The app owner must run supabase-menus.sql in Supabase.',menuRetry:'Try again',menuOffline:'No internet: this is a copy of the menu without photos.',menuStop:'Turn off live menu',menuLoading:'Loading menu…',menuNotFound:'This menu is no longer available.',stockLbl:'In stock',stockHint:'Leave empty if you do not count this product.',lowAtLbl:'Warn me at',restockLbl:'Received (add to stock)',restockBtn:'Add',outOfStock:'Sold out',left:'left',lowStock:'Low stock',lowStockMsg:n=>`${n} product${n==1?'':'s'} running low or sold out.`,notEnough:'Not enough in stock',menuQR:'Menu with QR',menuTitle:'Your menu',menuIntro:'Customers scan this QR (or open the link) and see your products, prices and what is available. They cannot buy or change anything.',menuSnapshot:'The menu shows your products as they are right now. After you change prices or stock, open this screen again and share the new QR or link.',menuTooBig:'Too many products to fit in one QR. Share the link instead.',menuLink:'Menu link',copyLink2:'Copy link',openMenu:'Open menu',menuNote:'Message on the menu (optional)',menuUpdated:'Updated',menuMadeWith:'Made with',menuBroken:'This menu link is incomplete. Ask the store for a new one.',showSoldOut:'Show sold-out items',receiptT:'Receipt',modeWork:'Invoices',modeStore:'Quick sales',sell:'Charge',sales:'History',products:'Items',profit:'Profit',newProduct:'New product',prodCost:'Cost (what you pay)',prodCostHint:'Optional. Used to calculate your profit.',prodNoCost:'no cost',noProducts:'No products yet',noProductsSub:'Add what you sell with its price and cost.',noSales:'No sales in this period',pToday:'Today',pWeek:'7 days',pMonth:'This month',pYear:'This year',pAll:'All',revenue:'Sales',taxCollected:'Tax collected',cogs:'Cost of goods',grossProfit:'Profit',numSales:'Sales count',avgTicket:'Average sale',pendingCrypto:'Owed to you',topProducts:'Best sellers',byMethod:'By payment',exportCsv:'Export CSV',delProduct:'Delete product',marginLbl:'margin',unitsSold:'sold',lowFee:'fee ≈ $0',privateTag:'private',bsvOnly:'Send only BSV to this address. BTC or BCH sent here can be lost.',lowFeeTip:'Lowest fees: Bitcoin SV, Bitcoin Lightning, Nano and Pirate Chain cost a fraction of a cent per payment. Pirate Chain and Monero are also private.',qsTitle:'Quick sale',qsSub:'For a store: charge a walk-in customer for drinks or products',walkIn:'Walk-in customer',qsProducts:'Products',qsAddProd:'+ Add',qsNoProds:'Add your products once (name and price). Then each sale is a few taps.',qsProdName:'Product name',qsPrice:'Price',qsCart:'This ticket',qsEmpty:'Tap a product to add it.',qsTax:'Sales tax %',qsPayWith:'Pay with',qsCash:'Cash',qsCard:'Card',qsOther:'Other',qsReceived:'Cash received',qsChange:'Change',qsShort:'Not enough',qsCharge:'Charge',qsDone:'Sale saved',qsNew:'New sale',qsReceipt:'Receipt PDF',qsCryptoNote:'Show the QR to the customer. Mark it paid when it arrives.',qsNameNeeded:'Type a name and price',qsRemove:'Remove',acceptsCrypto:'Get paid in Bitcoin and Monero',acceptsCryptoSub:'Add your wallets and a QR shows on every invoice',findPlace:'Look up address or business',findPlaceHint:'Type a business name or address',findNone:'No matches. Type the address by hand.',findErr:'Lookup is not available right now.',mapsOpen:'Open in Google Maps',mapsSrc:'Results from OpenStreetMap',fmClient:'New client',fmInvoice:'New invoice',fmEstimate:'New estimate',fmExpense:'New expense',tInv:'Invoice',tInvS:'Create and send',tEst:'Estimate',tEstS:'Quote a job',tExp:'Expense',tExpS:'Log a receipt',tCli:'Client',tCliS:'Add a client',tabPending:'PENDING',tabDone:'DONE',approvedOn:'Approved',allYears:'All years',totalYear:y=>`Total (${y})`},
-es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',useAppArt:'Usar el roofer de la app ✈',lp_header:'Arriba',lp_watermark:'De fondo',lp_both:'Los dos',logo:'Logo',addLogo:'Agregar logo',changeLogo:'Cambiar logo',removeLogo:'Quitar logo',logoNote:'Sale arriba en tus facturas y presupuestos. Los logos cuadrados o redondos se ven mejor.',donate:'Apoya el proyecto',donateSub:'Donaciones en Monero (XMR) y Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero es gratis y de código abierto, sin anuncios y sin cuotas. Si te ayuda en tu negocio, puedes apoyarlo con una donación privada en Monero (XMR) o Pirate Chain (ARRR).',donateNote:'¡Gracias! Cada donación ayuda a que la app siga gratis para todo contratista.',openWallet:'Abrir en wallet',copyDetails:'Copiar datos',achHolder:'Nombre del titular',achBank:'Nombre del banco',achRouting:'Número de ruta (9 dígitos)',achAccount:'Número de cuenta',achType:'Tipo de cuenta',achBadRouting:'El número de ruta no es válido. Revisa los 9 dígitos.',achSafety:'Estos datos salen en tus facturas para que te paguen por ACH o transferencia. Usa una cuenta de negocio. Vigila tu cuenta por cargos no autorizados y pregúntale a tu banco por el bloqueo de débitos ACH (ACH debit block).',shareApp:'Compartir la app',shareAppSub:'Gratis para todo contratista',shareAppTitle:'Comparte Invoice Free del Obrero',shareAppText:'App gratis para hacer facturas de contratista. Sin registro, sin cuotas, tus datos se quedan en tu teléfono.',scanToOpen:'Escanea con la cámara para abrir la app',shareBtn:'Compartir link',copyLink:'Copiar link',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
+continueSetup:'Set up your business first',setupTitle:'Your business',start:'Start invoicing',welcomeBack:'Open app',estDraft:'Draft',estSent:'Sent'},
+es:{secWorkflow:'Flujo de trabajo',secCashflow:'Cobros',secItems:'Conceptos y gastos',secInsights:'Reportes',secBusiness:'Negocio',secSupport:'Ayuda',help:'Ayuda',signatures:'Firmas',contractor:'Contratista',customer:'Cliente',clientSigns:'Firma del cliente aquí',mySignature:'Mi firma',addMySig:'Agregar mi firma',changeMySig:'Cambiar mi firma',mySigNote:'Tu firma se agrega a cada presupuesto y factura como contratista.',printedName:'Nombre completo',signHere:'Firma con tu dedo',clearSig:'Borrar',iAgree:'Acepto el trabajo, el precio y los términos de arriba',saveSignature:'Guardar firma',signFirst:'Primero firma',signedOk:'Firmado ✓',signedOn:'Firmado',removeClientSig:'Quitar firma del cliente',changedAfterSign:'⚠ Este documento se cambió después de firmarse. Pide al cliente que firme otra vez.',acceptText:c=>`Al firmar, el cliente acepta el trabajo, el precio y los términos de este documento y autoriza a ${c||'el contratista'} a comenzar.`,contractTerms:'Términos y condiciones del contrato',contractTermsPh:'Alcance, calendario de pagos, garantía, cambios de obra, cancelación…',contractTermsNote:'Se imprimen en cada presupuesto/factura arriba de las firmas. Los puedes cambiar en cada documento.',useAppArt:'Usar el roofer de la app ✈',lp_header:'Arriba',lp_watermark:'De fondo',lp_both:'Los dos',logo:'Logo',addLogo:'Agregar logo',changeLogo:'Cambiar logo',removeLogo:'Quitar logo',logoNote:'Sale arriba en tus facturas y presupuestos. Los logos cuadrados o redondos se ven mejor.',donate:'Apoya el proyecto',donateSub:'Donaciones en Monero (XMR) y Pirate Chain (ARRR)',donateText:'Invoice Free del Obrero es gratis y de código abierto, sin anuncios y sin cuotas. Si te ayuda en tu negocio, puedes apoyarlo con una donación privada en Monero (XMR) o Pirate Chain (ARRR).',donateNote:'¡Gracias! Cada donación ayuda a que la app siga gratis para todo contratista.',openWallet:'Abrir en wallet',copyDetails:'Copiar datos',achHolder:'Nombre del titular',achBank:'Nombre del banco',achRouting:'Número de ruta (9 dígitos)',achAccount:'Número de cuenta',achType:'Tipo de cuenta',achBadRouting:'El número de ruta no es válido. Revisa los 9 dígitos.',achSafety:'Estos datos salen en tus facturas para que te paguen por ACH o transferencia. Usa una cuenta de negocio. Vigila tu cuenta por cargos no autorizados y pregúntale a tu banco por el bloqueo de débitos ACH (ACH debit block).',shareApp:'Compartir la app',shareAppSub:'Gratis para todo contratista',shareAppTitle:'Comparte Invoice Free del Obrero',shareAppText:'App gratis para hacer facturas de contratista. Sin registro, sin cuotas, tus datos se quedan en tu teléfono.',scanToOpen:'Escanea con la cámara para abrir la app',shareBtn:'Compartir link',copyLink:'Copiar link',expenses:'Gastos',thisMonth:'Este mes',newExpense:'Nuevo gasto',vendor:'Proveedor / tienda',category:'Categoría',noExpenses:'Aún no hay gastos',noExpensesSub:'Anota materiales, basura, gasolina y pago de cuadrilla para ver tu ganancia real por trabajo.',profit:'Ganancia',spent:'Gastos',receipt:'Foto del recibo',tabAll:'TODAS',tabUnpaid:'PENDIENTES',tabPaid:'PAGADAS',home:'Inicio',clients:'Clientes',invoices:'Facturas',estimates:'Presupuestos',more:'Más',
 tagline:'Invoices in your language. Hecho por un obrero.',credit:'Hecho gratis por Roofs by Hopkins, para el emprendedor.',getStarted:'Empezar',install:'Instalar app',iosInstall:'En iPhone: toca Compartir → Agregar a inicio.',privacyLine:'Tus datos se quedan en este dispositivo. Sin cuentas, sin rastreadores.',
 unsentAlert:n=>`${n} factura${n==1?'':'s'} sin pagar no enviada${n==1?'':'s'}`,readySend:'¿Listo para enviar?',overview:'Resumen',overdue:'Vencidas',unpaid:'Pendientes',unsent:'No enviada',sent:'Enviada',partial:'Parcial',paid:'Pagada',draft:'Borrador',accepted:'Aceptado',receivedMonth:'Cobrado este mes',owedTotal:'Total que te deben',recent:'Facturas recientes',
 noInvoices:'Aún no hay facturas',noInvoicesSub:'Toca + para crear tu primera factura.',newInvoice:'Nueva factura',newEstimate:'Nuevo presupuesto',invoice:'Factura',estimate:'Presupuesto',save:'Guardar',cancel:'Cancelar',billTo:'Facturar a',chooseClient:'Elegir cliente',addClient:'Agregar cliente',
@@ -485,7 +293,7 @@ walletHeader:'Diseñado para el futuro de los pagos.',walletIntro:'Agrega dónde
 payTitle:'Pagar / Pay',rateAsOf:'Precio de las',refresh:'Actualizar',priceUnavailable:'Precio en vivo no disponible. Usa el monto en USD.',memoNote:n=>`Incluye "Factura #${n}" en la nota si tu wallet lo permite.`,noSubs:'No quedan subdirecciones de Monero. Agrega más en Mi cartera.',copyAddress:'Copiar dirección',copyAmount:'Copiar monto',noMethods:'Aún no hay métodos de pago. Agrégalos en Más → Mi cartera.',doubleCheck:'Revisa cada dirección dos veces. Un pago a una dirección equivocada no se puede recuperar.',taxNote:'Los pagos en crypto siguen siendo ingreso del negocio para impuestos.',payWith:'Pagar con',
 backupReminder:'Tus datos viven solo en este dispositivo. Descarga un respaldo seguido.',lastBackup:'Último respaldo',never:'nunca',storageFull:'El almacenamiento está lleno. Descarga un respaldo y borra fotos viejas.',
 aboutText:'Invoice Free del Obrero es gratis y de código abierto (MIT). No hay cuentas, ni anuncios, ni rastreadores: todo lo que escribes se guarda solo en este dispositivo. Usa “Descargar respaldo completo” para guardar una copia o pasar a otro teléfono.',
-continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado',create:'Crear',qsQty:'Cantidad',bizPick:'¿A qué te dedicas?',bizPickSub:'Escoge lo más parecido. Lo puedes cambiar después aquí mismo.',biz_store:'Tienda de la esquina',biz_storeS:'Productos con inventario',biz_food:'Comida',biz_foodS:'Tacos, aguas, menú con fotos',biz_service:'Mecánico / servicios',biz_serviceS:'Servicios, mano de obra por hora y partes',biz_piece:'Pago por pieza',biz_pieceS:'Cajas, botes, libras de cosecha',biz_hourly:'Pago por hora',biz_hourlyS:'Marca entrada y salida, sabe cuánto te deben',bizChange:'Cambiar tipo de negocio',bizExamples:'Agregamos unos ejemplos. Tócalos en la Lista para cambiar nombre y precio, o bórralos.',unitLbl:'Se cobra por',u_pza:'pieza',u_hora:'hora',u_lb:'libra',u_kg:'kilo',u_caja:'caja',u_bote:'bote',u_servicio:'servicio',qsWho:'¿Para quién? (opcional)',qsWhoPh:'Nombre, carro, rancho…',qsPending:'Me deben',qsPendingS:'Cobrar después',timerTitle:'Reloj',timerStart:'Marcar entrada',timerStop:'Marcar salida',timerRunning:'Trabajando desde',timerAdded:h=>`${h} h agregadas`,list_store:'Productos',list_food:'Menú',list_service:'Servicios y partes',list_piece:'Tarifas',list_hourly:'Tarifas',menu_store:'Catálogo con QR',menu_food:'Menú con QR',menu_service:'Lista de precios con QR',menu_piece:'Tarifas con QR',menu_hourly:'Tarifas con QR',shareProduct:'Compartir este producto',shareProductNeedsMenu:'Primero prende el menú en vivo (Productos → Menú en vivo) para compartir un producto.',seeMenu:'Ver todo el menú',linkCopied:'Link copiado',yourOrder:'Tu orden',ordersOn:'Recibir órdenes desde el menú',ordersOnSub:'El cliente ordena desde su celular y paga con Cash App, Venmo o PayPal, o al recoger.',ordersPayNeeded:'Consejo: agrega Cash App, Venmo o PayPal en Mi cartera para que te paguen desde su celular.',orders:'Órdenes',ordersNew:n=>`${n} nueva${n==1?'':'s'}`,noOrders:'Aún no hay órdenes.',oNew:'Nueva',oAccepted:'Preparando',oReady:'Lista',oDone:'Entregada',oCancelled:'Cancelada',oAccept:'Empezar a preparar',oReadyBtn:'Marcar lista',oPaidCash:'Pagó efectivo',oPaidCard:'Pagó tarjeta',oPaidApp:m=>`Pagó con ${m}`,oCancel:'Cancelar orden',payAtPickup:'Pagar al recoger',payAtPickupSub:'Efectivo o tarjeta en el mostrador',orderBtn:'Ver mi orden',yourName:'Tu nombre',orderNote:'Notas para la cocina (opcional)',orderNotePh:'Sin cebolla, salsa extra…',payWith:'¿Cómo vas a pagar?',sendOrder:'Mandar orden',sending:'Mandando…',orderSent:'Orden enviada',orderNum:'Tu número de orden',payNowWith:(a,m)=>`Pagar ${a} con ${m}`,payNote:'Se abre tu app de pago con el monto. Ahí funcionan tus tarjetas guardadas.',showAtPickup:'Enseña este número al recoger.',orderFail:'No se pudo mandar la orden. Intenta otra vez.',newOrderToast:n=>`Orden nueva #${n}`,orderBack:'Volver al menú',ordersClosed:'Esta tienda no está tomando órdenes ahorita.',nameNeeded:'Escribe tu nombre',prodPhoto:'Foto',addPhoto:'Agregar foto',changePhoto:'Cambiar foto',removePhoto:'Quitar foto',noPhoto:'Sin foto',menuLive:'Menú en vivo',menuLiveIntro:'Tus clientes escanean el QR y ven tus productos con foto, precio y lo que hay disponible. Se actualiza solo cuando vendes o cambias un producto.',menuPublishing:'Publicando…',menuPublished:'El menú está en línea',menuPubFail:'No se pudo publicar el menú. Revisa tu internet e intenta otra vez.',menuServerMissing:'Falta preparar el servidor del menú. El dueño de la app debe correr supabase-menus.sql en Supabase.',menuRetry:'Intentar otra vez',menuOffline:'Sin internet: esta es una copia del menú sin fotos.',menuStop:'Apagar menú en vivo',menuLoading:'Cargando menú…',menuNotFound:'Este menú ya no está disponible.',stockLbl:'Cantidad disponible',stockHint:'Déjalo vacío si no cuentas este producto.',lowAtLbl:'Avísame cuando queden',restockLbl:'Llegó mercancía (sumar)',restockBtn:'Sumar',outOfStock:'Agotado',left:'quedan',lowStock:'Poco inventario',lowStockMsg:n=>`${n} producto${n==1?'':'s'} con poco inventario o agotado${n==1?'':'s'}.`,notEnough:'No hay suficiente inventario',menuQR:'Menú con QR',menuTitle:'Tu menú',menuIntro:'Tus clientes escanean este QR (o abren el link) y ven tus productos, precios y lo que hay disponible. No pueden comprar ni cambiar nada.',menuSnapshot:'El menú muestra tus productos como están ahorita. Cuando cambies precios o inventario, vuelve a abrir esta pantalla y comparte el QR o link nuevo.',menuTooBig:'Son demasiados productos para un solo QR. Comparte el link.',menuLink:'Link del menú',copyLink2:'Copiar link',openMenu:'Abrir menú',menuNote:'Mensaje en el menú (opcional)',menuUpdated:'Actualizado',menuMadeWith:'Hecho con',menuBroken:'Este link del menú está incompleto. Pídele uno nuevo a la tienda.',showSoldOut:'Mostrar productos agotados',receiptT:'Recibo',modeWork:'Facturas',modeStore:'Ventas rápidas',sell:'Cobrar',sales:'Historial',products:'Lista',profit:'Ganancias',newProduct:'Producto nuevo',prodCost:'Costo (lo que tú pagas)',prodCostHint:'Opcional. Sirve para calcular tu ganancia.',prodNoCost:'sin costo',noProducts:'Aún no hay productos',noProductsSub:'Agrega lo que vendes con su precio y su costo.',noSales:'No hay ventas en este periodo',pToday:'Hoy',pWeek:'7 días',pMonth:'Este mes',pYear:'Este año',pAll:'Todo',revenue:'Ventas',taxCollected:'Impuesto cobrado',cogs:'Costo de mercancía',grossProfit:'Ganancia',numSales:'Número de ventas',avgTicket:'Venta promedio',pendingCrypto:'Te deben',topProducts:'Lo más vendido',byMethod:'Por forma de pago',exportCsv:'Exportar CSV',delProduct:'Borrar producto',marginLbl:'margen',unitsSold:'vendidos',lowFee:'comisión ≈ $0',privateTag:'privada',bsvOnly:'Manda solo BSV a esta dirección. Si mandas BTC o BCH aquí se puede perder.',lowFeeTip:'Comisiones más bajas: Bitcoin SV, Bitcoin Lightning, Nano y Pirate Chain cuestan una fracción de centavo por pago. Pirate Chain y Monero además son privadas.',qsTitle:'Venta rápida',qsSub:'Para tienda: cóbrale a cualquier cliente bebidas o productos',walkIn:'Cliente general',qsProducts:'Productos',qsAddProd:'+ Agregar',qsNoProds:'Agrega tus productos una sola vez (nombre y precio). Luego cada venta son unos toques.',qsProdName:'Nombre del producto',qsPrice:'Precio',qsCart:'Esta cuenta',qsEmpty:'Toca un producto para agregarlo.',qsTax:'Impuesto %',qsPayWith:'Pago con',qsCash:'Efectivo',qsCard:'Tarjeta',qsOther:'Otro',qsReceived:'Efectivo recibido',qsChange:'Cambio',qsShort:'Falta dinero',qsCharge:'Cobrar',qsDone:'Venta guardada',qsNew:'Nueva venta',qsReceipt:'Recibo PDF',qsCryptoNote:'Enséñale el QR al cliente. Márcala pagada cuando llegue.',qsNameNeeded:'Escribe nombre y precio',qsRemove:'Quitar',acceptsCrypto:'Cobra en Bitcoin y Monero',acceptsCryptoSub:'Agrega tus wallets y sale un QR en cada factura',findPlace:'Buscar dirección o negocio',findPlaceHint:'Escribe el nombre del negocio o la dirección',findNone:'Sin resultados. Escribe la dirección a mano.',findErr:'La búsqueda no está disponible ahorita.',mapsOpen:'Abrir en Google Maps',mapsSrc:'Resultados de OpenStreetMap',fmClient:'Cliente nuevo',fmInvoice:'Factura nueva',fmEstimate:'Presupuesto nuevo',fmExpense:'Gasto nuevo',tInv:'Factura',tInvS:'Crear y mandar',tEst:'Presupuesto',tEstS:'Cotizar un trabajo',tExp:'Gasto',tExpS:'Anotar un recibo',tCli:'Cliente',tCliS:'Agregar cliente',tabPending:'PENDIENTES',tabDone:'HECHOS',approvedOn:'Aprobado',allYears:'Todos los años',totalYear:y=>`Total (${y})`}
+continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado'}
 };
 let lang='es';
 function t(k,...a){const v=(L[lang]&&L[lang][k])??L.en[k]??k;return typeof v==='function'?v(...a):v}
@@ -514,12 +322,7 @@ trash:'<path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13"/>',user:'<circle cx="12" cy=
 pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
 sort:'<path d="M8 4v16M8 4l-4 4M8 4l4 4M16 20V4M16 20l-4-4M16 20l4-4"/>',
 mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
-chat:'<path d="M4 5h16v11H9l-5 4z"/>',
-send:'<path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/>',
-wrench:'<path d="M14.5 6.5a4 4 0 0 0 5 5L21 13l-8 8-2-2 6-6-1.5-1.5a4 4 0 0 1-5-5L13 3z"/><path d="M3 21l6-6"/>',apple:'<path d="M12 7c-1-2-3-3-5-2-3 1-3 6-1 10 1 3 3 5 5 4 1 0 1 0 2 0 2 1 4-1 5-4 2-4 2-9-1-10-2-1-4 0-5 2z"/><path d="M12 7c0-2 1-3 3-4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',taco:'<path d="M3 16a9 9 0 0 1 18 0z"/><path d="M7 12c1-1 2 0 3-1M13 11c1-1 2 0 3 0"/>',
-box:'<path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5L12 12l9-4.5M12 12v9"/>',chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',hammer:'<path d="M14 6l4 4-9 9-4-4z"/><path d="M14 6l2-2 4 4-2 2M12 4l2 2"/>',shop:'<path d="M4 10v10h16V10"/><path d="M3 10l2-6h14l2 6zM9 20v-6h6v6"/>',
-cart:'<path d="M3 4h2l2.4 11h10.2L20 8H6.2"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
-receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'
+chat:'<path d="M4 5h16v11H9l-5 4z"/>'
 };
 const ic=(n,w)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w||1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 function toast(msg){const el=$('#toast');el.textContent=msg;el.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>el.hidden=true,2400)}
@@ -528,16 +331,16 @@ function downloadBlob(name,blob){const a=document.createElement('a');a.href=URL.
 
 /* Original line-art illustration: roofer installing shingles with a roofing hatchet */
 function rooferSVG(cls){
-  return `<img class="roofer ${cls||''}" src="roofer.png" width="640" height="640" decoding="async" alt="Roofer installing shingles">`;
+  return `<img class="roofer ${cls||''}" src="roofer.png" width="640" height="640" alt="Roofer installing shingles">`;
 }
 
 /* ---------- state & storage ---------- */
 const DEFAULT_PROFILE={company:'',address:'',phone:'',email:'',license:'',nextInvoice:1001,nextEstimate:1001,defDue:30,payInstr:'',terms:'Thank you for your business. / Gracias por su preferencia.',lang:'es',started:false,sortKey:'due',sortDir:'asc',lastBackup:''};
-const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},products:{},meta:{}};
+const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},meta:{}};
 const LKEY='invoice-free-del-obrero-v1';
 function load(){try{const r=localStorage.getItem(LKEY);if(r){const o=JSON.parse(r);for(const k of Object.keys(S)){if(o[k])S[k]=k==='profile'?{...DEFAULT_PROFILE,...o.profile}:o[k]}}}catch(e){}lang=S.profile.lang||'es'}
 let saveT;function persist(){if(!window.cloudApplying){S.meta=S.meta||{};S.meta.savedAt=Date.now();if(window.cloudSchedule)window.cloudSchedule()}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast(t('storageFull'))}},120)}
-function commit(){persist();if(typeof scheduleMenuPublish==='function')scheduleMenuPublish();render();const top=stack[stack.length-1];if(top&&top.live)redrawSheet()}
+function commit(){persist();render();const top=stack[stack.length-1];if(top&&top.live)redrawSheet()}
 
 const idb=(()=>{let dbp;
   function db(){return dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('obrero-photos',1);r.onupgradeneeded=()=>r.result.createObjectStore('photos');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))}
@@ -588,8 +391,7 @@ function status(d){
 }
 const BADGE={unsent:'unsent',sent:'sent',partial:'partial',overdue:'overdue',paid:'paid',accepted:'accepted',draft:'estDraft',estsent:'estSent'};
 const badge=s=>`<span class="badge b-${s}">${t(BADGE[s])}</span>`;
-const invoicesAll=()=>Object.values(S.docs).filter(d=>d.kind!=='estimate'&&!d.sale);
-const salesAll=()=>Object.values(S.docs).filter(d=>d.sale);
+const invoicesAll=()=>Object.values(S.docs).filter(d=>d.kind!=='estimate');
 const estimatesAll=()=>Object.values(S.docs).filter(d=>d.kind==='estimate');
 const byNumDesc=(a,b)=>(parseInt(b.number)||0)-(parseInt(a.number)||0)||String(b.date).localeCompare(a.date);
 const clientName=id=>S.clients[id]?.name||'—';
@@ -597,7 +399,7 @@ const jobOf=d=>d.jobId?S.jobs[d.jobId]:null;
 function dueText(d){const c=calc(d);if(d.kind==='estimate'||c.balance<=0.005)return '';const n=daysBetween(todayISO(),c.due);if(n>0)return t('dueIn',n);if(n===0)return t('dueToday');return `<span class="red">${t('overdueBy',-n)}</span>`}
 
 /* ---------- navigation ---------- */
-let tab='home',invTab='unpaid',estTab='pending',estYear=String(new Date().getFullYear()),filter='all',query='',clientFilter='all',clientQuery='',groupJob=false,payTab=null;
+let tab='home',invTab='unpaid',filter='all',query='',clientFilter='all',clientQuery='',groupJob=false,payTab=null;
 const stack=[];
 function showSheet(s){if(stack.length){stack[stack.length-1].scroll=$('#sheet').scrollTop}stack.push(s);redrawSheet(true)}
 function closeSheet(){stack.pop();redrawSheet('restore')}
@@ -640,26 +442,18 @@ function render(){
   if(showWelcome){w.hidden=false;shell.hidden=true;w.innerHTML=renderWelcome();return}
   w.hidden=true;shell.hidden=false;
   $('#langBtn').innerHTML=`<span class="lp${lang==='en'?' on':''}">EN</span><span class="lp${lang==='es'?' on':''}">ES</span>`;
-  const store=S.profile.mode==='store';
-  const tabs=store?['sell','sales','products','profit','more']:['home','clients','invoices','estimates','more'];
-  if(!tabs.includes(tab))tab=tabs[0];
-  $('#modeBar').innerHTML=`<button role="tab" data-act="setMode" data-v="work" aria-selected="${!store}">${ic('hammer',2)}${t('modeWork')}</button><button role="tab" class="store" data-act="setMode" data-v="store" aria-selected="${store}">${ic('shop',2)}${t('modeStore')}</button>`;
-  const TIC={sell:'cart',sales:'receipt',products:'box',profit:'chart'};
-  const TL=k=>store&&k==='products'?t('list_'+bizT()):t(k);
-  $('#tabs').innerHTML=tabs.map(k=>`<button class="tab" data-act="tab" data-v="${k}" ${k===tab?'aria-current="page"':''}>${ic(TIC[k]||k,1.9)}<span>${TL(k)}</span></button>`).join('');
-  $('#title').textContent=store&&tab==='products'?t('list_'+bizT()):t(tab);
-  const fab=$('#fab');fab.hidden=tab==='more'||(store&&tab!=='products');
-  fab.dataset.act=store?'newProduct':'fabMenu';fab.classList.remove('open');$('#fabMenu').hidden=true;
-  fab.setAttribute('aria-label',store?t('newProduct'):t('create'));fab.setAttribute('aria-expanded','false');
-  const withTot=['invoices','estimates','sales'].includes(tab);
-  fab.classList.toggle('lift',withTot);
-  $('#totalbar').hidden=!withTot;
-  $('#main').classList.toggle('withTotal',withTot);
+  const tabs=['home','clients','invoices','estimates','more'];
+  $('#tabs').innerHTML=tabs.map(k=>`<button class="tab" data-act="tab" data-v="${k}" ${k===tab?'aria-current="page"':''}>${ic(k,1.9)}<span>${t(k)}</span></button>`).join('');
+  $('#title').textContent=t(tab);
+  const fab=$('#fab');fab.hidden=tab==='more';
+  fab.dataset.act=tab==='clients'?'newClient':tab==='estimates'?'newEstimate':'newInvoice';
+  fab.setAttribute('aria-label',t(fab.dataset.act));
+  fab.classList.toggle('lift',tab==='invoices');
+  $('#totalbar').hidden=tab!=='invoices';
+  $('#main').classList.toggle('withTotal',tab==='invoices');
   const focusId=document.activeElement&&document.activeElement.id;const pos=document.activeElement&&document.activeElement.selectionStart;
-  $('#view').innerHTML=({home:vHome,clients:vClients,invoices:vInvoices,estimates:vEstimates,more:vMore,sell:vSell,sales:vSales,products:vProducts,profit:vProfit})[tab]();
+  $('#view').innerHTML=({home:vHome,clients:vClients,invoices:vInvoices,estimates:vEstimates,more:vMore})[tab]();
   if(focusId==='q'){const q=$('#q');if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}}
-  hydratePhotos();
-  if(store&&ordersOn()&&!ordPollT)pollOrders();
 }
 
 function vHome(){
@@ -674,10 +468,7 @@ function vHome(){
   const recent=invoicesAll().sort(byNumDesc).slice(0,6);
   const needSetup=!S.profile.company;
   const lb=S.profile.lastBackup?daysBetween(S.profile.lastBackup,todayISO()):999;
-  const tile=(cls,act,icon,h,sub)=>`<button class="tile ${cls}" data-act="${act}"><span class="ti">${ic(icon,2)}</span><span><b>${t(h)}</b><br><span class="ts">${t(sub)}</span></span></button>`;
   return `${rooferSVG('small')}<div class="company">${esc(S.profile.company||'')}</div>
-  <div class="tiles">${tile('t-inv','newInvoice','send','tInv','tInvS')}${tile('t-est','newEstimate','estimates','tEst','tEstS')}${tile('t-exp','newExpense','receipt','tExp','tExpS')}${tile('t-cli','newClient','clients','tCli','tCliS')}</div>
-  <button class="accepts" data-act="walletOpen"><span class="logos">${coinLogo('btc')}${coinLogo('xmr')}</span><span><b>${t('acceptsCrypto')}</b><span class="small">${t('acceptsCryptoSub')}</span></span></button>
   ${window.cloudHomeBanner?window.cloudHomeBanner():''}
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
   ${unsentOpen.length?`<div class="banner">${ic('bell',2)}<div><p>${t('unsentAlert',unsentOpen.length)}</p><button class="textbtn" data-act="filterTo" data-v="unsent">${t('readySend')}</button></div></div>`:''}
@@ -699,46 +490,31 @@ function docRow(d,opts={}){
   const c=calc(d),s=status(d),j=jobOf(d);
   const pre=d.kind==='estimate'?'EST ':'#';
   const amt=d.kind==='estimate'||s==='paid'?c.total:c.balance;
-  const line2=[fdate(d.date),d.kind==='estimate'&&d.acceptedAt?t('approvedOn')+' '+fdate(d.acceptedAt)+' ✓':dueText(d)].filter(Boolean).join('. ');
+  const line2=[fdate(d.date),dueText(d)].filter(Boolean).join('. ');
   const jobLine=opts.showJob&&j?`<div class="t2">${esc(j.name)}${j.address?' · '+esc(j.address.split(',')[0]):''}</div>`:'';
   const flown=s!=='unsent'&&s!=='draft';
-  const plane=d.kind==='estimate'?'':`<span class="plane ${flown?'on':''}" aria-hidden="true"><svg viewBox="0 0 48 32"><path class="trail" d="M2 28 C14 26 22 20 30 12"/><path class="pl" d="M27 9 L46 2 L37 21 L33 14 Z M33 14 L46 2"/></svg></span>`;
-  return `<button class="row" data-act="openDoc" data-id="${d.id}">${plane}<div class="main"><div class="t1">${pre}${esc(d.number)}: ${esc(d.sale&&d.saleName?d.saleName:clientName(d.clientId))}</div>${jobLine}<div class="t2">${line2}</div></div><div class="amt num"><div class="a1">${money(amt)}</div>${badge(s)}</div></button>`;
+  const plane=`<span class="plane ${flown?'on':''}" aria-hidden="true"><svg viewBox="0 0 48 32"><path class="trail" d="M2 28 C14 26 22 20 30 12"/><path class="pl" d="M27 9 L46 2 L37 21 L33 14 Z M33 14 L46 2"/></svg></span>`;
+  return `<button class="row" data-act="openDoc" data-id="${d.id}">${plane}<div class="main"><div class="t1">${pre}${esc(d.number)}: ${esc(clientName(d.clientId))}</div>${jobLine}<div class="t2">${line2}</div></div><div class="amt num"><div class="a1">${money(amt)}</div>${badge(s)}</div></button>`;
 }
 const SORTS={due:(a,b)=>calc(a).due.localeCompare(calc(b).due),date:(a,b)=>String(a.date).localeCompare(b.date),number:(a,b)=>(parseInt(a.number)||0)-(parseInt(b.number)||0),client:(a,b)=>clientName(a.clientId).localeCompare(clientName(b.clientId)),amount:(a,b)=>calc(a).balance-calc(b).balance};
 const SORT_LBL={due:'sortDue',date:'sortDate',number:'sortNum',client:'sortClient',amount:'sortAmount'};
 function vInvoices(){
-  let list=invoicesAll().filter(d=>{const s=status(d);return invTab==='paid'?s==='paid':s!=='paid'});
+  let list=invoicesAll().filter(d=>{const s=status(d);if(invTab==='all')return true;return invTab==='paid'?s==='paid':s!=='paid'});
   if(invTab==='unpaid'&&filter!=='all')list=list.filter(d=>{const s=status(d);if(filter==='unpaid')return s!=='unsent';return s===filter});
   list=applyQuery(list,query);
   const key=S.profile.sortKey||'due',dir=S.profile.sortDir==='desc'?-1:1;
   list.sort((a,b)=>(SORTS[key]||SORTS.due)(a,b)*dir||byNumDesc(a,b));
-  const total=list.reduce((s,d)=>{const c=calc(d);return s+(invTab==='paid'?c.total:c.balance)},0);
+  const total=list.reduce((s,d)=>{const c=calc(d);return s+(invTab==='unpaid'?c.balance:c.total)},0);
   $('#totalLbl').textContent=t('total');$('#totalVal').textContent=money(total);
   const chips=[['all','all'],['unpaid','sent'],['overdue','overdue'],['unsent','unsent'],['partial','partial']];
-  return `<div class="tabs2" role="tablist"><button role="tab" data-act="invTab" data-v="unpaid" aria-selected="${invTab==='unpaid'}">${t('tabUnpaid')}</button><button role="tab" data-act="invTab" data-v="paid" aria-selected="${invTab==='paid'}">${t('tabPaid')}</button></div>
+  return `<div class="tabs2" role="tablist"><button role="tab" data-act="invTab" data-v="all" aria-selected="${invTab==='all'}">${t('tabAll')}</button><button role="tab" data-act="invTab" data-v="unpaid" aria-selected="${invTab==='unpaid'}">${t('tabUnpaid')}</button><button role="tab" data-act="invTab" data-v="paid" aria-selected="${invTab==='paid'}">${t('tabPaid')}</button></div>
   <div class="sortbar"><select id="sortSel" aria-label="Sort">${Object.keys(SORTS).map(k=>`<option value="${k}" ${k===key?'selected':''}>${t(SORT_LBL[k])}</option>`).join('')}</select><button class="iconbtn" data-act="flipSort" aria-label="${t('flip')}" style="color:var(--accent)">${ic('sort',2)}</button></div>
   <input class="search" id="q" type="search" placeholder="${t('search')}" value="${esc(query)}">
   ${invTab==='unpaid'?`<div class="chips">${chips.map(([k,l])=>`<button class="chip" data-act="filter" data-v="${k}" aria-pressed="${filter===k}">${t(l)}</button>`).join('')}</div>`:'<div style="height:10px"></div>'}
   ${list.length?`<div class="list">${list.map(d=>docRow(d)).join('')}</div>`:(invoicesAll().length?`<div class="empty">${t('noData')}</div>`:emptyBox(t('noInvoices'),t('noInvoicesSub'),'newInvoice',t('newInvoice')))}`;
 }
 function applyQuery(list,q){q=(q||'').trim().toLowerCase();if(!q)return list;return list.filter(d=>{const j=jobOf(d);return (clientName(d.clientId)+' '+d.number+' '+(j?j.name+' '+j.address:'')).toLowerCase().includes(q)})}
-function vEstimates(){
-  const all=estimatesAll();
-  if(!all.length){$('#totalLbl').textContent=t('total');$('#totalVal').textContent=money(0);return emptyBox(t('noEstimates'),t('noEstimatesSub'),'newEstimate',t('newEstimate'))}
-  const isDone=d=>!!(d.convertedTo||d.accepted);
-  const years=[...new Set(all.map(d=>String(d.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
-  if(estYear!=='all'&&!years.includes(estYear))years.unshift(estYear);
-  let list=all.filter(d=>(estTab==='done')===isDone(d)&&(estYear==='all'||String(d.date||'').startsWith(estYear)));
-  list=applyQuery(list,query).sort((a,b)=>String(b.date).localeCompare(a.date)||byNumDesc(a,b));
-  const total=list.reduce((s,d)=>s+calc(d).total,0);
-  $('#totalLbl').textContent=estYear==='all'?t('total'):t('totalYear',estYear);$('#totalVal').textContent=money(total);
-  return `<div class="tabs2" role="tablist"><button role="tab" data-act="estTab" data-v="pending" aria-selected="${estTab==='pending'}">${t('tabPending')}</button><button role="tab" data-act="estTab" data-v="done" aria-selected="${estTab==='done'}">${t('tabDone')}</button></div>
-  <div class="sortbar"><select id="estYear" aria-label="Year"><option value="all" ${estYear==='all'?'selected':''}>${t('allYears')}</option>${years.map(y=>`<option value="${y}" ${y===estYear?'selected':''}>${y}</option>`).join('')}</select></div>
-  <input class="search" id="q" type="search" placeholder="${t('search')}" value="${esc(query)}">
-  <div style="height:10px"></div>
-  ${list.length?`<div class="list">${list.map(d=>docRow(d,{showJob:true})).join('')}</div>`:`<div class="empty">${t('noData')}</div>`}`;
-}
+function vEstimates(){const list=estimatesAll().sort(byNumDesc);return list.length?`<div class="list" style="margin-top:14px">${list.map(d=>docRow(d,{showJob:true})).join('')}</div>`:emptyBox(t('noEstimates'),t('noEstimatesSub'),'newEstimate',t('newEstimate'))}
 function clientTotals(id){const ds=invoicesAll().filter(d=>d.clientId===id);let inv=0,paid=0,owed=0;ds.forEach(d=>{const c=calc(d);inv+=c.total;paid+=c.paid;owed+=Math.max(0,c.balance)});return {count:ds.length,inv,paid,owed}}
 function vClients(){
   const list=Object.values(S.clients).sort((a,b)=>a.name.localeCompare(b.name));
@@ -764,21 +540,15 @@ function vMore(){
 }
 
 /* ---------- wallet ---------- */
-/* Coin logos: CC0-1.0, from the cryptocurrency-icons package (github.com/spothq/cryptocurrency-icons) */
-const COIN_LOGO={btc:'<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#F7931A"/><path fill="#FFF" fill-rule="nonzero" d="M23.189 14.02c.314-2.096-1.283-3.223-3.465-3.975l.708-2.84-1.728-.43-.69 2.765c-.454-.114-.92-.22-1.385-.326l.695-2.783L15.596 6l-.708 2.839c-.376-.086-.746-.17-1.104-.26l.002-.009-2.384-.595-.46 1.846s1.283.294 1.256.312c.7.175.826.638.805 1.006l-.806 3.235c.048.012.11.03.18.057l-.183-.045-1.13 4.532c-.086.212-.303.531-.793.41.018.025-1.256-.313-1.256-.313l-.858 1.978 2.25.561c.418.105.828.215 1.231.318l-.715 2.872 1.727.43.708-2.84c.472.127.93.245 1.378.357l-.706 2.828 1.728.43.715-2.866c2.948.558 5.164.333 6.097-2.333.752-2.146-.037-3.385-1.588-4.192 1.13-.26 1.98-1.003 2.207-2.538zm-3.95 5.538c-.533 2.147-4.148.986-5.32.695l.95-3.805c1.172.293 4.929.872 4.37 3.11zm.535-5.569c-.487 1.953-3.495.96-4.47.717l.86-3.45c.975.243 4.118.696 3.61 2.733z"/></g></svg>',xmr:'<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#F60"/><path fill="#FFF" fill-rule="nonzero" d="M15.97 5.235c5.985 0 10.825 4.84 10.825 10.824a11.07 11.07 0 01-.558 3.432h-3.226v-9.094l-7.04 7.04-7.04-7.04v9.094H5.704a11.07 11.07 0 01-.557-3.432c0-5.984 4.84-10.824 10.824-10.824zM14.358 19.02L16 20.635l1.613-1.614 3.051-3.08v5.72h4.547a10.806 10.806 0 01-9.24 5.192c-3.902 0-7.334-2.082-9.24-5.192h4.546v-5.72l3.08 3.08z"/></g></svg>'};COIN_LOGO.ln=COIN_LOGO.btc;COIN_LOGO.bsv='<svg aria-hidden="true" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><g fill="none"><circle cx="16" cy="16" r="16" fill="#EAB304"/><path d="M22.15 14.57l.07-.14c0-.07 0-.14.14-.09a.56.56 0 000-.19.4.4 0 000-.28 1.71 1.71 0 01-.07-1.09.3.3 0 000-.14l.07-.07a.33.33 0 01.07.09.3.3 0 010 .14v.07c0 .07.12-.07.17-.12a1 1 0 01.2-.12 1.36 1.36 0 00-.07-.54 1.67 1.67 0 01.07-1.14c0 .07.09.12.09.19.017.26.127.505.31.69.203.233.356.505.45.8 0 0 0 .09.07.09.288.083.55.237.76.45.242.218.472.448.69.69a.49.49 0 01.09.14h.07a6.23 6.23 0 000-.66c0-.19.09-.38.28-.35h.09a.39.39 0 01.3-.36.4.4 0 010 .4c.14.17.17.26 0 .45s-.09.21 0 .4a.86.86 0 01.12-.31c.05-.1.07-.26.19-.31a.18.18 0 01.12 0 .9.9 0 00.35 0 .35.35 0 01.35.21l-.33.16c.07.14 0 .19-.14.28a1.53 1.53 0 00-.19.21 3.42 3.42 0 00.38-.09.37.37 0 01.43.21.35.35 0 00.12.14.5.5 0 01.17.33.18.18 0 010 .09l-.19-.14a.13.13 0 00-.18 0 .18.18 0 01-.25 0 .44.44 0 00-.45 0 3.22 3.22 0 01-.33.19.85.85 0 01.63.43c.07.14.17.28.24.43a.25.25 0 01-.12.33h-.05v-.05c0-.12-.07-.14-.19-.12a.26.26 0 01-.33-.17 1.1 1.1 0 00-.55-.52l-.21-.09a.85.85 0 01-.09.26.63.63 0 01-.12.14c-.14.12-.14.14 0 .31.14.17.07.09.12.17a.49.49 0 01-.4-.17 1.77 1.77 0 01-.3-.47.39.39 0 01.14-.45.85.85 0 00.17-.24l-.71-.19a1.6 1.6 0 010 .33c.024.403.024.807 0 1.21a7.7 7.7 0 01-.28 1.77 6 6 0 01-.5 1.28 9.54 9.54 0 01-.61 1.06 6.8 6.8 0 01-.64.8 5.9 5.9 0 01-.78.76c-.31.26-.64.47-1 .69a6.21 6.21 0 01-1.56.71 9.81 9.81 0 01-1.13.26 5.94 5.94 0 01-.64.09.43.43 0 00-.28.28 1.19 1.19 0 01-.52.78c-.12.09-.26.17-.4.26l.07-.21a.27.27 0 00-.07-.26c-.07-.07-.17 0-.26 0s-.17.12-.19.26a.77.77 0 01-.45.59h-.12a1.45 1.45 0 00.07-.26c0-.07-.07-.14-.12-.21-.05-.07-.09 0-.14 0l-.43.21-.14.07.38.17a1 1 0 01.47.47.32.32 0 010 .38.11.11 0 000 .12.93.93 0 01-.09.71c0 .07-.12.14-.17.21l-.07-.48a.09.09 0 00-.09-.09.74.74 0 01-.69-.4l-.07-.09a.87.87 0 01-.52.35 1.07 1.07 0 00-.59.69 2 2 0 01-.17.5.45.45 0 01-.57.26v.38a.42.42 0 01-.3-.52.4.4 0 000-.17.62.62 0 01.21-.8 2.07 2.07 0 00.5-.52.12.12 0 000-.07l-.71-.09a.67.67 0 00-.52.07l-.14.18c-.21.24-.31.26-.59.12a1 1 0 00-.12.64.75.75 0 01-.21-.38.79.79 0 010-.24v-.14a.33.33 0 010-.21.83.83 0 01.43-.43 1.49 1.49 0 01.71-.24c.19-.012.38-.012.57 0h.14a.8.8 0 00-.47-.45l-.54-.21a.23.23 0 01-.26-.19.09.09 0 00-.09-.09.85.85 0 00-.47.14c.07-.21.17-.43.4-.47a1.34 1.34 0 01.31 0h.09c.14-.21.35-.17.54-.07.277.132.507.344.66.61a.54.54 0 00.35.28 1.36 1.36 0 00-.07-.54.38.38 0 00-.28-.35c-.24-.07-.31-.24-.19-.5a.6.6 0 00-.59-.12c.07-.19.35-.26.54-.24a1 1 0 00.57.14.43.43 0 01.31.24l.14.28c.12.21.21.45.31.66.14-.4.31-.83.47-1.28l-.24-.09-.69-.28a7.8 7.8 0 01-1.49-.85.85.85 0 00-.26-.09c-.07 0-.17.09-.12.17.05.08.12.09.17.17.05.08 0 .07.09.12h-.12a.8.8 0 01-.76-.5 2.56 2.56 0 01-.26-.95.09.09 0 000-.07l-.64-.71a.52.52 0 000 .38l.07.14v.17h-.19a1.46 1.46 0 01-.26-.4c-.09-.35-.14-.71-.21-1.06a3.59 3.59 0 00-.09-.52 5.32 5.32 0 00-.19-.59v.55c0 .05-.12 0-.14-.09a1.43 1.43 0 01-.19-.61 4.63 4.63 0 01.21-1.49 4.41 4.41 0 01.17-.52.71.71 0 01-.09.16l-.09.09v-.12a1.23 1.23 0 01.17-.64c.17-.38.38-.76.57-1.13a3.61 3.61 0 01.26-.38l-.17.18-.12.07v-.07a3.46 3.46 0 01.21-.31 3.72 3.72 0 01.78-.71.32.32 0 01.21 0l1 .21.35.09a1.44 1.44 0 00-.24.33.43.43 0 000 .39.15.15 0 010 .17 2.66 2.66 0 00-.57.69v.09s.33.33.5.52c.01.03.01.06 0 .09a.84.84 0 000 .85.34.34 0 00.43.24.83.83 0 00.17.54c.07.07.17.12.24.19a.24.24 0 01.09.12 1 1 0 00.8.69c.288.04.58-.02.83-.17.09 0 .12-.07.14 0 .056.349.168.686.33 1 .207.366.463.702.76 1 .267.255.594.44.95.54.44.099.9-.025 1.23-.33a3 3 0 00.52-.71l.43-.69a2.3 2.3 0 01.71-.64.39.39 0 01.33-.07l-.07.14a.54.54 0 000 .57c.07.09.12.09.17 0 .05-.09.14-.26.33-.24.19.02.19-.12.21-.24a3 3 0 01.45-1.47 1 1 0 01.17-.14v.38c.019.106.05.21.09.31l.06-.13a.21.21 0 01.19-.12.2.2 0 00.12-.07.61.61 0 00.12-.57 1.43 1.43 0 010-.45 1.1 1.1 0 01.14-.54.49.49 0 01.09-.14h.07v.33a.18.18 0 000 .09h.09l.18-.12a.72.72 0 00.09-.4.7.7 0 010-.24v-.82c0-.11 0-.12.07-.19l.11-.06v.44a.09.09 0 01.08-.05zM9.86 10.01l.59-.59a.41.41 0 01.12-.09c.07-.07 0-.14 0-.21 0-.07-.09 0-.17 0h-.09V9a.59.59 0 01.33-.37 1.18 1.18 0 01.8 0 .16.16 0 00.14 0l.57-.31c.09 0 .07-.09 0-.14-.07-.05-.17-.12-.26 0a.18.18 0 01-.09 0c0-.17.17-.31.33-.38.27-.083.56-.083.83 0H13c.07 0 .28.09.45 0l.35-.12c.09 0 .09-.07 0-.12-.09-.05-.12-.14-.21-.07s0 0-.09 0a.11.11 0 010-.15.83.83 0 01.61-.16 1 1 0 01.54.21h.07a.28.28 0 00.28.09.37.37 0 01.38 0h.07v-.09a.28.28 0 00-.28-.21h-.07a.86.86 0 01.85-.12c.206.084.386.222.52.4a.57.57 0 00.17.07 1 1 0 01.4.07c.12.07.07 0 .09.09a.27.27 0 00-.13-.36h-.2v-.15a.86.86 0 01.33 0c.316.037.6.208.78.47.07.12.128.247.17.38a.49.49 0 01.45.19h.07a.52.52 0 00.12-.04.38.38 0 00-.26-.35h-.07c.09 0 .17-.07.26 0 .15.014.295.055.43.12.356.145.622.449.72.82.17.09.28.19.4.26h.14v-.21a.47.47 0 00-.26-.33l-.09-.07a.64.64 0 01.61.19c.185.156.323.36.4.59a.24.24 0 00.14.17c.076.057.146.12.21.19.09-.26-.12-.4-.19-.59a.54.54 0 01.4.19c.14.146.266.303.38.47.072.122.152.239.24.35.072.134.119.28.14.43a2.81 2.81 0 01-.14 1 6 6 0 000 .66c.01.03.01.06 0 .09a.86.86 0 00-.31.59 2.86 2.86 0 000 .9v.07a1 1 0 00-.45.83v.52a.82.82 0 00-.62.56c-.07.14-.09.31-.17.45-.08.14-.09.09-.14.14v-.19a4.15 4.15 0 00.07-.95 3.37 3.37 0 00-.26-1.37v-.17a1 1 0 00.28-.59 6.65 6.65 0 000-1 .93.93 0 00-.24-.64.58.58 0 00-.64-.13.77.77 0 00-.47.71v.35a3.44 3.44 0 00-1.25-.8 4.72 4.72 0 00-.83-.21h-.61a3.72 3.72 0 00-1.16.19c-.21.07-.4.17-.61.24a.15.15 0 01-.14 0 5.52 5.52 0 00-1.44-.61 3.65 3.65 0 00-.73-.12c-.5-.1-1-.17-1.42-.3a3.46 3.46 0 01-1.06-.45.36.36 0 00-.12-.17zm9.45 4.7c0 .17-.31.21-.64.12v.35a.48.48 0 010 .12h-.14a2.83 2.83 0 01-.28-.26.42.42 0 00-.24.28c-.07.19-.17.21-.31 0a1.06 1.06 0 00-.17-.14 2.51 2.51 0 01-.21.26.2.2 0 01-.14.07.5.5 0 01-.09-.12.72.72 0 010-.21c-.12.31-.26.57-.61.64a.7.7 0 01.07-.38c.07-.12 0 0 0-.07a.85.85 0 00-.26.57c.016.433.128.857.33 1.24.14.35.31.69.45 1 .128.317.186.658.17 1a.9.9 0 01-1.44.8 2.16 2.16 0 01-.59-.54c-.14-.19-.28-.38-.4-.57a3.16 3.16 0 01-.17-.43v-.14a.26.26 0 01.26.17c.05.08.26.4.4.59.115.23.288.426.5.57a.58.58 0 00.76-.31v-.07a.94.94 0 00-.07-.76c-.17-.38-.38-.76-.57-1.13a4.11 4.11 0 01-.45-1.28 1.54 1.54 0 010-.33c-.15.012-.3.012-.45 0l-.45-.12-.21.14a.35.35 0 000-.14.5.5 0 00-.26-.45.19.19 0 00-.19.19.57.57 0 00.26.52l.4.28c.14.09.12.09.19 0a.34.34 0 000-.14c.19 0 .26.12.28.31.046.24.11.478.19.71a.38.38 0 01-.09.28 1.14 1.14 0 01-.47.35.65.65 0 01-.47 0 2.5 2.5 0 01.28-.24.35.35 0 00.09-.33.11.11 0 00-.09-.07 1.14 1.14 0 00-.28 0 .29.29 0 00-.19.09 4 4 0 01-.52.35.79.79 0 01-.92-.14.93.93 0 01-.19-.33l-.07-.14a.5.5 0 01-.12.09c-.05 0-.07-.12 0-.14.029-.13.07-.257.12-.38a.15.15 0 000-.14.82.82 0 00-.31-.26c-.09-.07-.17 0-.24 0h-.12a1 1 0 000-.12.56.56 0 01.4-.45h.12a2.11 2.11 0 01-.76-.5c-.07-.07-.09-.12 0-.19s.26-.23.4-.33a1.24 1.24 0 01.83 0c.247.082.473.218.66.4l.07.07a1.17 1.17 0 00-.73-.74 3.06 3.06 0 00-.95-.19.33.33 0 01.26-.24l.54-.1a1.2 1.2 0 00.52-.26 2 2 0 00-.31-.21c-.28-.12-.57-.26-.85-.35a2.83 2.83 0 00-.8-.22 5.6 5.6 0 01-1.13-.28 4.63 4.63 0 01-1.25-.55c-.4-.26-.74-.6-1-1a1.4 1.4 0 01-.14-.33v-.12h.12l.16.09c.26.21.5.47.76.66a3.15 3.15 0 001.06.5c.31.07.61.14.92.19.31.05.52 0 .78.07l.57.07c.217.015.432.055.64.12.33.12.64.26.95.38a.11.11 0 00.12 0c.13-.029.257-.07.38-.12v-.11a7.77 7.77 0 00-.71-.35 5 5 0 00-1.42-.33l-.66-.07a8.39 8.39 0 01-1.07-.25 3.42 3.42 0 01-1-.57 1.6 1.6 0 01-.54-.76v-.21a.22.22 0 01.17 0l.26.28c.14.14.28.28.45.43.396.31.852.535 1.34.66.28.07.57.12.85.17.45.07.92.14 1.37.24a3 3 0 011.44.69c.17.14.31.07.47 0a.4.4 0 01.43.21c.12.323.12.677 0 1a.3.3 0 00.14.31h.12a.85.85 0 01.85.12.21.21 0 00.26 0 5.33 5.33 0 00.57-.31c.19-.12.09-.17.14-.26a.73.73 0 01.76-.4c.215 0 .43.023.64.07a1 1 0 00.52 0 .51.51 0 00.44-.41v-.64c0-.07 0-.14.12-.14s.09.09.09.17c.072.33.072.67 0 1a.55.55 0 01-.61.47h-.85a.48.48 0 00-.5.38.3.3 0 000 .14c.07.14.12.26.33.24.112.01.2.098.21.21a.55.55 0 00.5.45l.22-.01zm-5.57-.69c.12.123.247.24.38.35a.39.39 0 00.47 0 3.61 3.61 0 00.38-.26v-.07a.32.32 0 00-.17-.21.51.51 0 00-.26 0l-.17.07a1 1 0 01-.52 0l-.11.12zm3.26.33a.35.35 0 00.14.07.79.79 0 01.45.26c.116.011.234.011.35 0 .07 0 .12-.07.19-.09a1.43 1.43 0 00-.19-.19 1.39 1.39 0 00-.94-.05zM4.54 17.43a1 1 0 001 .28.4.4 0 00.26-.24 1.62 1.62 0 01-1.11-.14 1.33 1.33 0 01-.64-.87 1.3 1.3 0 01.54-1.44 1.31 1.31 0 00.86 1.64h.14a1.37 1.37 0 001.51-.74 3.54 3.54 0 00-.3.26c-.437.3-1.013.3-1.45 0a.89.89 0 01-.05-1.45.56.56 0 00.28.4 1.6 1.6 0 00.47.17 1.18 1.18 0 001-.31 1.5 1.5 0 00.33-.52c.19-.45.33-.92.54-1.37a8.79 8.79 0 01.45-.8c0-.07.09 0 .14 0l.52.28.33.14-.14.12a5.32 5.32 0 00-.8 1.11c-.17.31-.33.59-.47.9-.14.31-.28.71-.4 1.06l-.28.8c-.07.21-.17.4-.26.61a1.48 1.48 0 01-.66.71 1.54 1.54 0 01-.55.15 2.28 2.28 0 01-.57 0 .76.76 0 01-.67-.54.37.37 0 00-.02-.21zm14.07-.8c.012.11.012.22 0 .33 0 .14-.09.14-.21.07l-.28-.14H18a.58.58 0 010 .52.24.24 0 01-.09.12h-.11l-.07-.21a.23.23 0 00-.3-.12.87.87 0 00-.26.12h-.14a3.11 3.11 0 01-.33-1.06l.1.12a.47.47 0 00.57 0 .39.39 0 000-.33c0-.07-.07-.12-.09-.19.14 0 .14-.12.5.31l.26-.14c.09 0 0-.14 0-.19v-.21l.17.07a.24.24 0 01.12.09 3 3 0 00.5.45.47.47 0 01.17.38v.09h-.07c-.25-.08-.25-.08-.32-.08zM6.8 15.04a1.05 1.05 0 00-.64-.14 1.14 1.14 0 01-.28 0 .38.38 0 01-.28-.54c.09 0 .17.12.26.17.09.05.12 0 .12-.07a.29.29 0 01.17-.28.45.45 0 01.45.09c.202.2.28.496.2.77z" fill="#FFF"/></g></svg>';COIN_LOGO.nano='<svg aria-hidden="true" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><g fill="none"><circle fill="#4A90E2" cx="16" cy="16" r="16"/><path d="M24.95 11c-.858 0-1.583.693-1.583 1.583 0 1.254-.198 1.583-1.584 1.583h-.132a1.548 1.548 0 00-1.418 1.55v.034c0 1.22-.23 1.517-1.583 1.517-.066 0-.132 0-.165.033-.792.099-1.418.758-1.418 1.55 0 .858.692 1.583 1.583 1.583.825 0 1.517-.66 1.55-1.451v-.132c0-1.121.363-1.55 1.55-1.583h.033c.825 0 1.518-.66 1.55-1.484v-.1c0-1.154.363-1.583 1.584-1.583.857 0 1.583-.692 1.583-1.583 0-.824-.693-1.517-1.55-1.517zm-9.302 3.166a1.597 1.597 0 011.452 1.518c0 .89-.693 1.583-1.584 1.583-.89 0-1.583-.726-1.583-1.583 0-1.122-.363-1.55-1.583-1.55s-1.583.428-1.583 1.583v.099c-.033.791-.726 1.45-1.55 1.45-.89 0-1.584-.725-1.584-1.582 0-.825.627-1.485 1.419-1.55h.132c1.385 0 1.583-.297 1.583-1.55a1.584 1.584 0 013.166 0c0 1.253.198 1.582 1.583 1.582h.132zm-9.565 6.267a1.583 1.583 0 110-3.166 1.583 1.583 0 010 3.166z" fill="#FFF"/></g></svg>';
-const coinLogo=(type,cls)=>COIN_LOGO[type]?`<span class="coin ${cls||''}">${COIN_LOGO[type]}</span>`:'';
 const PRESETS={
   btc:{label:'Bitcoin',sym:'BTC',cg:'bitcoin',re:/^(bc1[ac-hj-np-z02-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/},
-  ln:{label:'Bitcoin Lightning',sym:'BTC',low:true,re:/^[^\s@]+@[^\s@]+\.[^\s@]+$/,hint:'you@wallet.com'},
-  xmr:{label:'Monero (XMR)',sym:'XMR',cg:'monero',priv:true,re:/^[48][1-9A-HJ-NP-Za-km-z]{94}$/},
-  bsv:{label:'Bitcoin SV (BSV)',sym:'BSV',cg:'bitcoin-cash-sv',low:true,re:/^([1][a-km-zA-HJ-NP-Z1-9]{25,34}|[^\s@]+@[^\s@]+\.[^\s@]+)$/,hint:'1… / paymail'},
-  arrr:{label:'Pirate Chain (ARRR)',sym:'ARRR',cg:'pirate-chain',low:true,priv:true,re:/^(pirate1[02-9ac-hj-np-z]{60,90}|zs1[02-9ac-hj-np-z]{75})$/,hint:'pirate1…'},
-  nano:{label:'Nano (XNO)',sym:'XNO',cg:'nano',low:true,re:/^(nano|xrb)_[13][13456789abcdefghijkmnopqrstuwxyz]{59}$/,hint:'nano_…'},
+  ln:{label:'Bitcoin Lightning',sym:'BTC',re:/^[^\s@]+@[^\s@]+\.[^\s@]+$/,hint:'you@wallet.com'},
+  xmr:{label:'Monero (XMR)',sym:'XMR',cg:'monero',re:/^[48][1-9A-HJ-NP-Za-km-z]{94}$/},
   eth:{label:'Ethereum',sym:'ETH',cg:'ethereum',re:/^0x[a-fA-F0-9]{40}$/},
   usdc:{label:'USDC',sym:'USDC',stable:true,nets:['Ethereum','Base','Solana']},
   usdt:{label:'USDT',sym:'USDT',stable:true,nets:['Ethereum','Tron','Solana']},
   ltc:{label:'Litecoin',sym:'LTC',cg:'litecoin',re:/^(ltc1[ac-hj-np-z02-9]{11,71}|[LM3][a-km-zA-HJ-NP-Z1-9]{25,34})$/},
-  sol:{label:'Solana',sym:'SOL',cg:'solana',low:true,re:/^[1-9A-HJ-NP-Za-km-z]{32,44}$/},
+  sol:{label:'Solana',sym:'SOL',cg:'solana',re:/^[1-9A-HJ-NP-Za-km-z]{32,44}$/},
   custom:{label:'Custom coin / Otra moneda',sym:''},
   ach:{label:'ACH / Bank transfer',fiat:true,ach:true},
   zelle:{label:'Zelle',fiat:true,hint:'email / phone'},
@@ -802,7 +572,7 @@ async function fetchPrices(force){
   fetchPrices.busy=false;
   const top=stack[stack.length-1];if(top&&top.pay)redrawSheet();
 }
-function coinAmount(m,usd){const p=PRESETS[m.type];if(!p)return null;if(p.stable)return r2(usd).toFixed(2);if(!p.cg||!prices.data||!prices.data[p.cg])return null;const px=prices.data[p.cg].usd;if(!px)return null;const v=usd/px;return v.toFixed(p.sym==='BTC'||p.sym==='BSV'?8:p.sym==='ARRR'?4:p.sym==='XNO'?4:6)}
+function coinAmount(m,usd){const p=PRESETS[m.type];if(!p)return null;if(p.stable)return r2(usd).toFixed(2);if(!p.cg||!prices.data||!prices.data[p.cg])return null;const px=prices.data[p.cg].usd;if(!px)return null;const v=usd/px;return v.toFixed(p.sym==='BTC'?8:p.sym==='XMR'?6:6)}
 function ensureXmrSub(d,m){
   if(d.xmrSub&&d.xmrMethod===m.id)return d.xmrSub;
   const subs=(m.subaddresses||[]).map(s=>s.trim()).filter(Boolean);m.used=m.used||{};
@@ -818,9 +588,6 @@ function payURI(m,d,amt){
     case 'eth':return `ethereum:${a}`;
     case 'ltc':return `litecoin:${a}${amt?`?amount=${amt}`:''}`;
     case 'sol':return `solana:${a}${amt?`?amount=${amt}`:''}`;
-    case 'nano':return `nano:${a}`;
-    case 'bsv':return a;
-    case 'arrr':return a;
     case 'cashapp':{const tag=a.replace(/^\$/,'');return `https://cash.app/$${tag}${amt?'/'+amt:''}`}
     case 'venmo':return `https://venmo.com/u/${a.replace(/^@/,'')}`;
     case 'paypal':{const u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'');return `https://paypal.me/${u}${amt?'/'+amt+'USD':''}`}
@@ -846,14 +613,13 @@ function paySection(d){
     <div class="kv"><span>USD</span><span class="num">${money(usd)}</span></div>
     ${!p.fiat&&p.sym?`<div class="kv"><span>${esc(p.sym)}${m.network?' · '+esc(m.network):''}</span><span class="num">${amt?esc(amt):'—'}</span></div>`:''}
     ${p.stable?`<p class="note" style="margin:0">${t('sendOnly',esc(m.network))}</p>`:''}
-    ${m.type==='bsv'?`<p class="note" style="margin:0">${t('bsvOnly')}</p>`:''}
     <div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>
     <div class="btns" style="margin:0"><button class="btn" data-act="copy" data-v="${esc(addr)}">${p.ach?t('copyDetails'):t('copyAddress')}</button><button class="btn" data-act="copy" data-v="${esc(amt||usd.toFixed(2))}">${t('copyAmount')}</button></div>
     ${!p.fiat&&p.cg?`<p class="small" style="margin:0">${prices.data?`${t('rateAsOf')} ${new Date(prices.ts).toLocaleTimeString(lang==='es'?'es-MX':'en-US',{hour:'numeric',minute:'2-digit'})}`:(prices.failed?t('priceUnavailable'):'…')} · <button class="textbtn" style="padding:0" data-act="refreshPrices">${t('refresh')}</button></p>`:''}
     ${!p.fiat?`<p class="small" style="margin:0">${t('memoNote',esc(d.number))}</p>`:''}`;
   }
   return `<div class="group"><div class="gl">${t('payTitle')}</div>
-  <div class="paytabs">${ms.map(x=>`<button class="chip" data-act="payTab" data-v="${x.id}" aria-pressed="${x.id===payTab}">${coinLogo(x.type)}${esc(x.name||PRESETS[x.type]?.label||x.type)}</button>`).join('')}</div>
+  <div class="paytabs">${ms.map(x=>`<button class="chip" data-act="payTab" data-v="${x.id}" aria-pressed="${x.id===payTab}">${esc(x.name||PRESETS[x.type]?.label||x.type)}</button>`).join('')}</div>
   <div class="paybox">${body}</div></div>`;
 }
 function walletSheet(){return{live:true,render(){
@@ -861,9 +627,8 @@ function walletSheet(){return{live:true,render(){
   return sheetHead(t('wallet'),{right:`<button class="textbtn" data-act="newMethod">${t('addMethod').split(' ')[0]}</button>`})+`<div class="wrap sheet-b">
   <div class="hero"><div class="no" style="font-size:28px">${t('walletHeader')}</div></div>
   <p class="small">${t('walletIntro')}</p>
-  <p class="note" style="border-color:var(--good);color:var(--fg)">⚡ ${t('lowFeeTip')}</p>
   <div class="note">${t('doubleCheck')}</div>
-  ${ms.length?ms.map(m=>{const p=PRESETS[m.type]||{};const ok=addrValid(m);return `<div class="wm"><button class="main" style="background:none;border:0;text-align:left;padding:0" data-act="editMethod" data-id="${m.id}"><div class="t1" style="font-weight:600;display:flex;align-items:center;gap:8px">${coinLogo(m.type,'lg')}${esc(m.name||p.label)}</div><div class="t2 small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.label)}${m.network?' · '+esc(m.network):''} · ${esc(m.type==='xmr'?((m.subaddresses||[]).length+' sub'):m.address)}</div>${ok?'':`<div class="small red">${t('looksWrong')}</div>`}</button><button class="switch" role="switch" aria-checked="${!!m.enabled}" data-act="toggleMethod" data-id="${m.id}" aria-label="On/Off"></button></div>`}).join(''):`<div class="empty">${t('noMethods')}</div>`}
+  ${ms.length?ms.map(m=>{const p=PRESETS[m.type]||{};const ok=addrValid(m);return `<div class="wm"><button class="main" style="background:none;border:0;text-align:left;padding:0" data-act="editMethod" data-id="${m.id}"><div class="t1" style="font-weight:600">${esc(m.name||p.label)}</div><div class="t2 small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.label)}${m.network?' · '+esc(m.network):''} · ${esc(m.type==='xmr'?((m.subaddresses||[]).length+' sub'):m.address)}</div>${ok?'':`<div class="small red">${t('looksWrong')}</div>`}</button><button class="switch" role="switch" aria-checked="${!!m.enabled}" data-act="toggleMethod" data-id="${m.id}" aria-label="On/Off"></button></div>`}).join(''):`<div class="empty">${t('noMethods')}</div>`}
   <button class="btn primary" style="margin-top:16px" data-act="newMethod">${t('addMethod')}</button>
   <p class="small" style="margin-top:14px">${t('taxNote')}</p></div>`;
 }}}
@@ -871,7 +636,7 @@ let M=null;
 function methodEditor(m){M=JSON.parse(JSON.stringify(m||{id:uid(),type:'btc',name:'',network:'',address:'',subaddresses:[],enabled:true,order:Date.now()}));return{live:false,render(){
   const p=PRESETS[M.type]||{};const valid=addrValid(M);
   return sheetHead(t('addMethod'),{close:true,right:`<button class="textbtn" data-act="saveMethod">${t('save')}</button>`})+`<div class="wrap sheet-b"><div style="margin-top:14px"></div>
-  <div class="field"><label for="m-type">${t('methodType')}</label><select class="in" id="m-type" data-m="type">${Object.entries(PRESETS).map(([k,v])=>`<option value="${k}" ${k===M.type?'selected':''}>${esc(v.label)}${v.low?' · '+t('lowFee'):''}${v.priv?' · '+t('privateTag'):''}</option>`).join('')}</select></div>
+  <div class="field"><label for="m-type">${t('methodType')}</label><select class="in" id="m-type" data-m="type">${Object.entries(PRESETS).map(([k,v])=>`<option value="${k}" ${k===M.type?'selected':''}>${esc(v.label)}</option>`).join('')}</select></div>
   <div class="field"><label for="m-name">${t('methodName')}</label><input class="in" id="m-name" data-m="name" value="${esc(M.name)}" placeholder="${esc(p.label)}"></div>
   ${p.stable?`<div class="field"><label for="m-net">${t('network')}</label><select class="in" id="m-net" data-m="network">${p.nets.map(n=>`<option ${n===M.network?'selected':''}>${n}</option>`).join('')}</select></div>`:''}
   ${M.type==='custom'?`<div class="field"><label for="m-net2">${t('network')}</label><input class="in" id="m-net2" data-m="network" value="${esc(M.network)}"></div>`:''}
@@ -891,11 +656,11 @@ function methodEditor(m){M=JSON.parse(JSON.stringify(m||{id:uid(),type:'btc',nam
 }}}
 
 /* ---------- invoice / estimate detail ---------- */
-function docDetail(id){return{live:true,pay:true,render(){
+function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&d.sig){const k=d.id+':'+(d.updatedAt||0);if(SIGCHK[k]===undefined){SIGCHK[k]='?';docHash(d).then(h=>{SIGCHK[k]=h!==d.sig.hash;if(SIGCHK[k])redrawSheet()})}}},render(){
   const d=S.docs[id];if(!d)return sheetHead('')+`<div class="wrap"><div class="empty">${t('noData')}</div></div>`;
   const c=calc(d),s=status(d),cl=S.clients[d.clientId]||{},j=jobOf(d);
   const isEst=d.kind==='estimate';
-  const title=(isEst?t('estimate')+' EST ':d.sale?t('receiptT')+' #':t('invoice')+' #')+d.number;
+  const title=(isEst?t('estimate')+' EST ':t('invoice')+' #')+d.number;
   return sheetHead(title,{right:`<button class="textbtn" data-act="editDoc" data-id="${id}">${t('edit')}</button>`})+`<div class="wrap sheet-b">
   <div class="hero"><div class="no num">${money(isEst?c.total:c.balance)}</div><div class="due">${isEst?t('total'):t('balance')} ${badge(s)} ${dueText(d)}</div></div>
   <div class="group"><div class="kv"><span>${t('billTo')}</span><span>${esc(cl.name||'—')}</span></div>
@@ -924,12 +689,13 @@ function docDetail(id){return{live:true,pay:true,render(){
   <button class="btn" data-act="duplicate" data-id="${id}">${t('duplicate')}</button>
   </div>
   ${!isEst&&c.balance>0.005?paySection(d):''}
+  ${sigBlock(d)}
   ${isEst?'':`<div class="group"><div class="gl">${t('payments')}</div>${(d.payments||[]).length?d.payments.map(p=>`<div class="kv"><span>${fdate(p.date)} · ${esc(p.method)}${p.ref?' · '+esc(p.ref):''}${p.coin?`<br><span class="small">${esc(p.coin)}</span>`:''}${p.txid?`<br><span class="small mono" style="padding:2px 4px">${esc(p.txid)}</span>`:''}${p.note?`<br><span class="small">${esc(p.note)}</span>`:''}</span><span class="num green">${money(p.amount)} <button class="iconbtn" style="padding:2px;vertical-align:middle" data-act="delPay" data-id="${id}" data-p="${p.id}" aria-label="${t('del')}">${ic('trash')}</button></span></div>`).join(''):`<p class="small">${t('noPayments')}</p>`}</div>`}
   ${d.payInstr?`<div class="group"><div class="gl">${t('payInstr')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.payInstr)}</p></div>`:''}
   ${d.notes?`<div class="group"><div class="gl">${t('notes')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.notes)}</p></div>`:''}
   <div id="delZone"><button class="btn bad" data-act="askDel" data-id="${id}">${t('del')}</button></div>
   </div>`;
-},after(){fetchPrices()}}}
+},after(){fetchPrices();this.chk&&this.chk()}}}
 
 /* ---------- editor ---------- */
 let D=null;
@@ -980,7 +746,8 @@ function editorSheet(){return{live:false,render(){
   <label class="check"><input type="checkbox" id="e-incph" data-act="incPhotos" ${D.includePhotos!==false?'checked':''}> ${t('includePhotos')}</label>
   <p class="small">${t('photosNote')}</p></div>
   <div class="group"><div class="field"><label for="e-pi">${t('payInstr')}</label><textarea class="in" id="e-pi" data-bind="payInstr" placeholder="Zelle / Check / Cheque…">${esc(D.payInstr)}</textarea></div>
-  <div class="field"><label for="e-notes">${t('notes')}</label><textarea class="in" id="e-notes" data-bind="notes">${esc(D.notes)}</textarea></div></div>
+  <div class="field"><label for="e-notes">${t('notes')}</label><textarea class="in" id="e-notes" data-bind="notes">${esc(D.notes)}</textarea></div>
+  <div class="field"><label for="e-ct">${t('contractTerms')}</label><textarea class="in" id="e-ct" data-bind="contractTerms" style="min-height:110px" placeholder="${t('contractTermsPh')}">${esc(D.contractTerms!==undefined?D.contractTerms:(S.profile.contractTerms||''))}</textarea></div></div>
   <button class="btn primary" data-act="saveDoc">${t('save')}</button></div>`;
 },after:updTotals}}
 const UNITS=['','ea','sq','LF','SF','hr','day','job','lot','gal','bundle'];
@@ -1006,7 +773,7 @@ function previewHTML(d){
   const pm=Object.values(S.wallet||{});
   return `<div class="paper">
   <div class="ph"><div style="display:flex;gap:12px;align-items:center">${p.logo&&(p.logoPlace||'header')!=='watermark'?`<img src="${p.logo}" alt="" style="width:56px;height:56px;object-fit:contain;background:#fff;border-radius:6px;padding:3px">`:''}<div><div class="pco">${esc(p.company||t('yourCompany'))}</div><div class="psm">${lines([p.address,p.phone,p.email,p.license])}</div></div></div>
-  <div class="pr"><div class="pkind">${isEst?'ESTIMATE':d.sale?'RECEIPT':'INVOICE'}</div><div class="pno">${isEst?'EST ':'#'}${esc(d.number)}</div></div></div>
+  <div class="pr"><div class="pkind">${isEst?'ESTIMATE':'INVOICE'}</div><div class="pno">${isEst?'EST ':'#'}${esc(d.number)}</div></div></div>
   <div class="pb" style="position:relative">${p.logo&&(p.logoPlace||'header')!=='header'?`<img src="${p.logo}" alt="" style="position:absolute;inset:0;margin:auto;width:70%;max-height:80%;object-fit:contain;opacity:.07;pointer-events:none">`:''}<div class="pmeta"><div><div class="plbl">BILL TO</div><b>${esc(cl.name||'—')}</b><div class="psm">${lines([cl.address,cl.mobile,(cl.emails||[])[0]])}</div>
   ${j?`<div class="plbl" style="margin-top:8px">JOB SITE</div><div class="psm">${lines([j.name,j.address])}</div>`:''}</div>
   <div style="text-align:right"><div class="plbl">${isEst?'DATE':'DATE / DUE'}</div><div class="psm">${fdate(d.date)}${isEst?'':' / '+fdate(c.due)}</div></div></div>
@@ -1019,6 +786,9 @@ function previewHTML(d){
   ${isEst?'':`<div><span>Paid</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>Balance due</span><span>${money(c.balance)}</span></div>`}</div>
   ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
   ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d))}</p>`}).join('')}`:''}
+  ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">TERMS & CONDITIONS</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
+  <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CONTRACTOR</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
+  <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CUSTOMER</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>
   ${d.notes?`<div class="plbl">NOTES</div><p class="psm" style="white-space:pre-wrap">${esc(d.notes)}</p>`:''}
   ${(d.photos||[]).length&&d.includePhotos!==false?`<p class="psm">📷 ${t('photosInPdf',d.photos.length)}</p>`:''}
   </div></div>`;
@@ -1053,7 +823,7 @@ function sendPane(){
   <div class="field"><label for="sm-ph">${t('mobile')}</label><input class="in" id="sm-ph" type="tel" data-sm="phone" value="${esc(SM.phone)}"></div>
   <div class="field"><label for="sm-sub">${t('subject')}</label><input class="in" id="sm-sub" data-sm="subject" value="${esc(SM.subject)}"></div>
   <div class="field"><label for="sm-msg">${t('message')}</label><textarea class="in" id="sm-msg" data-sm="msg" style="min-height:170px">${esc(SM.msg)}</textarea></div></div>
-  <div class="btns"><button class="btn primary" data-act="smEmail">${ic('mail')} ${t('sendEmail')}</button><button class="btn primary" data-act="smText">${ic('chat')} ${t('sendText')}</button>
+  <div class="btns"><button class="btn primary" data-act="smEmail">${ic('mail')} ${t('sendEmail')}</button><button class="btn primary" data-act="smText">${ic('chat')} ${t('sendText')}</button><button class="btn primary" data-act="smWhatsapp" style="background:#25D366;border-color:#25D366;color:#06210f">${ic('chat')} WhatsApp</button>
   <button class="btn" data-act="smShare">${t('sharePdf')}</button><button class="btn" data-act="smPdf">${t('downloadPdf')}</button></div>
   <p class="small">${t('sendHow')}</p>`;
 }
@@ -1088,274 +858,65 @@ function saveDocFromEditor(){
   const id=D.id;D=null;closeSheet();if(isNew)showSheet(docDetail(id));commit();toast(t('saved'));
 }
 
+
+/* ---------- signatures (contract acceptance) ---------- */
+async function docHash(d){const c=calc(d);const core=JSON.stringify({n:d.number,k:d.kind,cl:d.clientId,j:d.jobId,items:(d.items||[]).map(i=>[i.desc,+i.qty,i.unit||'',+i.rate]),disc:[d.discountType,+d.discountValue],tax:+d.taxRate,total:c.total.toFixed(2),notes:d.notes||'',terms:d.contractTerms||''});const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(core));return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+const SIGCHK={};let SIG=null;/* {mode:'client'|'me', id} */
+function sigSheet(){return{live:false,render(){
+  const me=SIG.mode==='me',d=me?null:S.docs[SIG.id],cl=d?S.clients[d.clientId]||{}:{};
+  const terms=d?(d.contractTerms||S.profile.contractTerms||''):'';
+  return sheetHead(me?t('mySignature'):t('clientSigns'),{close:true})+`<div class="wrap sheet-b" style="display:flex;flex-direction:column;gap:10px">
+  ${d?`<div class="group" style="margin-top:12px"><div class="kv"><span>${d.kind==='estimate'?t('estimate')+' EST':t('invoice')+' #'}${esc(d.number)}</span><span class="num"><b>${money(calc(d).total)}</b></span></div>
+  ${terms?`<p class="small" style="white-space:pre-wrap;max-height:160px;overflow:auto;margin:6px 0 0">${esc(terms)}</p>`:''}</div>
+  <p class="small">${t('acceptText',esc(S.profile.company||''))}</p>`:`<p class="small" style="margin-top:12px">${t('mySigNote')}</p>`}
+  <div class="field"><label for="sig-name">${t('printedName')}</label><input class="in" id="sig-name" value="${esc(me?(S.profile.sigName||''):(cl.name||''))}" autocomplete="name"></div>
+  <label class="small">${t('signHere')}</label>
+  <canvas id="sigPad" class="sigpad"></canvas>
+  <button class="linkbtn" data-act="sigClear">${t('clearSig')}</button>
+  ${d?`<label class="check"><input type="checkbox" id="sig-ok"> ${t('iAgree')}</label>`:''}
+  <button class="btn primary" data-act="sigSave">${t('saveSignature')}</button></div>`;
+},after:initPad}}
+function initPad(){
+  const cv=$('#sigPad');if(!cv)return;const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  cv.width=r.width*dpr;cv.height=r.height*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);
+  x.fillStyle='#fff';x.fillRect(0,0,r.width,r.height);x.strokeStyle='#111';x.lineWidth=2.4;x.lineCap='round';x.lineJoin='round';
+  let down=false,last=null;cv.dataset.empty='1';
+  const pt=e=>{const b=cv.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top]};
+  cv.onpointerdown=e=>{down=true;last=pt(e);cv.setPointerCapture(e.pointerId);e.preventDefault()};
+  cv.onpointermove=e=>{if(!down)return;const p=pt(e);x.beginPath();x.moveTo(last[0],last[1]);x.lineTo(p[0],p[1]);x.stroke();last=p;cv.dataset.empty='0';e.preventDefault()};
+  cv.onpointerup=cv.onpointercancel=()=>{down=false};
+}
+async function saveSig(){
+  const cv=$('#sigPad');const name=($('#sig-name')||{}).value?.trim()||'';
+  if(!cv||cv.dataset.empty==='1'){toast(t('signFirst'));return}
+  if(!name){toast(t('printedName'));return}
+  const img=cv.toDataURL('image/png');
+  if(SIG.mode==='me'){S.profile.sig=img;S.profile.sigName=name;commit();closeSheet();toast(t('saved'));return}
+  if(!$('#sig-ok').checked){toast(t('iAgree'));return}
+  const d=S.docs[SIG.id];
+  d.sig={img,name,at:new Date().toISOString(),hash:await docHash(d),ua:navigator.userAgent.slice(0,120)};
+  if(d.kind==='estimate')d.accepted=true;
+  d.updatedAt=Date.now();commit();closeSheet();toast(t('signedOk'));
+}
+function sigBlock(d){
+  const p=S.profile,sg=d.sig;
+  const when=sg?new Date(sg.at).toLocaleString(lang==='es'?'es-MX':'en-US',{dateStyle:'medium',timeStyle:'short'}):'';
+  const changed=sg&&SIGCHK[d.id+':'+(d.updatedAt||0)]===true;
+  return `<div class="group"><div class="gl">${t('signatures')}</div>
+  <div class="sigrow"><div class="sigbox"><div class="small">${t('contractor')}</div>${p.sig?`<img src="${p.sig}" alt="">`:'<div class="sigempty"></div>'}<div class="small">${esc(p.sigName||p.company||'')}</div></div>
+  <div class="sigbox"><div class="small">${t('customer')}</div>${sg?`<img src="${sg.img}" alt="">`:'<div class="sigempty"></div>'}<div class="small">${sg?esc(sg.name)+' · '+esc(when):''}</div></div></div>
+  ${changed?`<p class="small red">${t('changedAfterSign')}</p>`:''}
+  ${sg?`<p class="small">✓ ${t('signedOn')} ${esc(when)} · ID ${esc(sg.hash.slice(0,12))}</p>`:''}
+  <div class="btns" style="margin:8px 0 0">${!sg?`<button class="btn primary wide" data-act="clientSign" data-id="${d.id}">✍ ${t('clientSigns')}</button>`:`<button class="btn wide" data-act="clearClientSig" data-id="${d.id}">${t('removeClientSig')}</button>`}
+  ${!p.sig?`<button class="btn wide" data-act="mySign">${t('addMySig')}</button>`:''}</div></div>`;
+}
 /* ---------- clients ---------- */
 let C=null,clientCb=null;
 const hasPicker=()=>'contacts' in navigator&&'select' in navigator.contacts;
 function openClientEditor(c,cb){C=JSON.parse(JSON.stringify(c||{id:uid(),name:'',mobile:'',emails:[''],address:'',notes:'',_new:true}));if(!C.emails||!C.emails.length)C.emails=[''];clientCb=cb||null;showSheet(clientEditor())}
-/* Address / business lookup — OpenStreetMap data via Photon (free, no key). Only the typed text is sent. */
-let placeHits=[],placeTimer=null,placeSeq=0;
-function placeLine(p){const a=p.properties||{};const street=[a.housenumber,a.street].filter(Boolean).join(' ');const city=[a.city||a.town||a.village||a.county,[a.state,a.postcode].filter(Boolean).join(' ')].filter(Boolean).join(', ');return [street,city].filter(Boolean).join('\n')}
-function isBiz(p){const a=p.properties||{};return !!a.name&&!['place','highway','boundary','building'].includes(a.osm_key)}
-function findPlaces(q){clearTimeout(placeTimer);const box=$('#c-sugg');if(!box)return;q=q.trim();if(q.length<4){box.innerHTML='';return}
-  placeTimer=setTimeout(async()=>{const seq=++placeSeq;try{const r=await fetch('https://photon.komoot.io/api/?limit=5&q='+encodeURIComponent(q));if(!r.ok)throw 0;const j=await r.json();if(seq!==placeSeq)return;
-    placeHits=(j.features||[]).filter(f=>placeLine(f));
-    box.innerHTML=placeHits.length?placeHits.map((f,i)=>{const a=f.properties||{};const head=isBiz(f)?a.name:placeLine(f).split('\n')[0];return `<button type="button" role="option" data-act="pickPlace" data-i="${i}"><b>${esc(head)}</b><span class="small">${esc(placeLine(f).replace('\n',', '))}</span></button>`}).join('')+`<div class="src">${t('mapsSrc')}</div>`:`<div class="src">${t('findNone')}</div>`;
-  }catch(e){if(seq===placeSeq)box.innerHTML=`<div class="src">${t('findErr')}</div>`}},400)}
-/* ---------- STORE MODE: sell · sales · products · profit ---------- */
-let SALE=null,period='today';
-function newSale(){SALE={cart:{},method:'cash',received:'',adding:false,doneId:null}}
-const prodList=()=>Object.values(S.products).sort((a,b)=>a.name.localeCompare(b.name));
-function saleLines(){return Object.entries(SALE.cart).filter(([id,q])=>q>0&&S.products[id]).map(([id,q])=>{const p=S.products[id];return {desc:p.name,qty:q,unit:'',rate:+p.price||0,cost:+p.cost||0,pid:id}})}
-function saleTotal(){const sub=r2(saleLines().reduce((s,i)=>s+i.qty*i.rate,0));const tx=+S.profile.saleTax||0;return r2(sub+r2(sub*tx/100))}
-function walkInId(){if(!S.clients.walkin)S.clients.walkin={id:'walkin',name:t('walkIn'),mobile:'',emails:[''],address:'',notes:''};return 'walkin'}
-const tracked=p=>p&&p.stock!==''&&p.stock!=null&&!isNaN(+p.stock);
-const stockOf=p=>tracked(p)?+p.stock:Infinity;
-const lowAt=p=>p.lowAt===''||p.lowAt==null?3:+p.lowAt;
-const isLow=p=>tracked(p)&&+p.stock<=lowAt(p);
-function stockBadge(p){if(!tracked(p))return '';const n=+p.stock;return n<=0?`<span class="stock out">${t('outOfStock')}</span>`:`<span class="stock ${isLow(p)?'low':''}">${n} ${t('left')}</span>`}
-function lowBanner(){const n=prodList().filter(isLow).length;return n?`<div class="lowbar">⚠️ <span>${t('lowStockMsg',n)}</span></div>`:''}
-let ORDERS=[],ordPollT=null,ordSeen=null;
-const ordersOn=()=>!!(S.profile.menuOrders&&S.profile.menuId&&menuServer());
-async function pollOrders(){clearTimeout(ordPollT);if(!ordersOn()||S.profile.mode!=='store'){return}
-  try{const sb=await menuClient();const {data,error}=await sb.rpc('orders_list',{p_menu:S.profile.menuId,p_secret:S.profile.menuSecret});if(error)throw error;
-    ORDERS=(data||[]).map(r=>{let d={};try{d=JSON.parse(r.data)}catch(e){}return {...r,d}});
-    const ids=new Set(ORDERS.filter(o=>o.status==='new').map(o=>o.id));
-    if(ordSeen){const fresh=ORDERS.filter(o=>o.status==='new'&&!ordSeen.has(o.id));if(fresh.length){toast(t('newOrderToast',fresh[0].num));ding();try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}}}
-    ordSeen=new Set([...(ordSeen||[]),...ids]);
-    if(tab==='sell'&&!stack.length)render();if(stack.length&&stack[stack.length-1]._orders)redrawSheet();
-  }catch(e){}
-  ordPollT=setTimeout(pollOrders,document.hidden?60000:15000)}
-function ding(){try{const C=window._ac||(window._ac=new (window.AudioContext||window.webkitAudioContext)());const o=C.createOscillator(),g=C.createGain();o.frequency.value=880;g.gain.setValueAtTime(.2,C.currentTime);g.gain.exponentialRampToValueAtTime(.001,C.currentTime+.6);o.connect(g).connect(C.destination);o.start();o.stop(C.currentTime+.6)}catch(e){}}
-const OST={new:'oNew',accepted:'oAccepted',ready:'oReady',done:'oDone',cancelled:'oCancelled'};
-function ordersSheet(){return{live:false,_orders:true,render(){
-  const open=ORDERS.filter(o=>!['done','cancelled'].includes(o.status)),closed=ORDERS.filter(o=>['done','cancelled'].includes(o.status)).slice(0,10);
-  const card=o=>{const d=o.d||{};const app=APP_NAMES[d.pay];const tm=new Date(o.created_at).toLocaleTimeString(lang==='es'?'es-MX':'en-US',{hour:'numeric',minute:'2-digit'});
-    return `<div class="ord ${o.status==='new'?'new':''}"><div class="oh"><b>#${o.num} · ${esc(d.name||'')}</b><span class="badge b-${o.status==='new'?'overdue':o.status==='ready'?'paid':'sent'}">${t(OST[o.status]||'oNew')}</span></div>
-    <div class="small">${tm} · ${app?t('oPaidApp',app).replace(/^(Pagó con|Paid with)/,lang==='es'?'Paga con':'Pays with'):t('payAtPickup')}</div>
-    <ul>${(d.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)}</li>`).join('')}</ul>${d.note?`<p class="note" style="margin:6px 0">${esc(d.note)}</p>`:''}
-    <div class="kv"><span>${t('total')}</span><span class="num">${money(d.total||0)}</span></div>
-    ${['done','cancelled'].includes(o.status)?'':`<div class="btns">${o.status==='new'?`<button class="btn primary" data-act="ordSet" data-id="${o.id}" data-v="accepted">${t('oAccept')}</button>`:''}${o.status==='accepted'?`<button class="btn primary" data-act="ordSet" data-id="${o.id}" data-v="ready">${t('oReadyBtn')}</button>`:''}
-      ${app?`<button class="btn sale" data-act="ordPaid" data-id="${o.id}" data-v="${d.pay}">${t('oPaidApp',app)}</button>`:`<button class="btn sale" data-act="ordPaid" data-id="${o.id}" data-v="cash">${t('oPaidCash')}</button><button class="btn sale" data-act="ordPaid" data-id="${o.id}" data-v="card">${t('oPaidCard')}</button>`}
-      <button class="linkbtn red" data-act="ordSet" data-id="${o.id}" data-v="cancelled">${t('oCancel')}</button></div>`}</div>`};
-  return sheetHead(t('orders'),{close:true})+`<div class="wrap sheet-b">${open.length?open.map(card).join(''):`<div class="empty">${t('noOrders')}</div>`}${closed.length?`<div class="sec-h"><h2>${t('oDone')}</h2></div>${closed.map(card).join('')}`:''}<div style="height:24px"></div></div>`}}}
-const BIZ={store:{ic:'shop',unit:'pza'},food:{ic:'taco',unit:'pza'},service:{ic:'wrench',unit:'servicio'},piece:{ic:'apple',unit:'caja'},hourly:{ic:'clock',unit:'hora'}};
-const SUNITS=['pza','hora','lb','kg','caja','bote','servicio'];const DEC_UNITS=['hora','lb','kg'];
-const bizT=()=>BIZ[S.profile.bizType]?S.profile.bizType:'store';
-const unitTxt=u=>u&&u!=='pza'?' / '+t('u_'+u):'';
-const EXAMPLES={store:[['Refresco',2.5,1.1,'pza',24],['Papitas',1.5,0.6,'pza',30]],food:[['Taco',3,1.1,'pza',''],['Agua fresca',4,0.8,'pza','']],
-  service:[['Cambio de aceite',45,20,'servicio',''],['Mano de obra',60,0,'hora',''],['Filtro de aceite',12,6,'pza',10]],piece:[['Caja de fresa',3,0,'caja',''],['Bote de manzana',25,0,'bote','']],hourly:[['Hora de trabajo',20,0,'hora',''],['Hora extra',30,0,'hora','']]};
-function bizChooser(){return `<div class="sec-h"><h2>${t('bizPick')}</h2></div><p class="small" style="margin-top:-4px">${t('bizPickSub')}</p><div class="bizgrid">${Object.keys(BIZ).map(k=>`<button class="biz" data-act="setBiz" data-v="${k}"><span class="bi">${ic(BIZ[k].ic,2)}</span><span><b>${t('biz_'+k)}</b><span class="small">${t('biz_'+k+'S')}</span></span></button>`).join('')}</div><div style="height:24px"></div>`}
-function fmtClock(ms){const m=Math.floor(ms/60000);return `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`}
-function timerCard(){const hourly=prodList().filter(p=>p.unit==='hora');if(!hourly.length)return '';const tm=S.profile.timer;
-  if(tm&&S.products[tm.pid])return `<div class="timer on"><div class="tt"><span class="small">${t('timerRunning')} ${new Date(tm.start).toLocaleTimeString(lang==='es'?'es-MX':'en-US',{hour:'numeric',minute:'2-digit'})} · ${esc(S.products[tm.pid].name)}</span><span class="clock" id="tclock">${fmtClock(Date.now()-tm.start)}</span></div><button class="btn sale" data-act="timerStop">${t('timerStop')}</button></div>`;
-  return `<div class="timer"><div class="tt"><b>⏱ ${t('timerTitle')}</b>${hourly.length>1?`<select id="tsel" aria-label="${t('timerTitle')}">${hourly.map(p=>`<option value="${p.id}">${esc(p.name)} · ${money(p.price)}</option>`).join('')}</select>`:`<span class="small">${esc(hourly[0].name)} · ${money(hourly[0].price)}${unitTxt('hora')}</span>`}</div><button class="btn" data-act="timerStart" data-id="${hourly[0].id}">${t('timerStart')}</button></div>`}
-setInterval(()=>{const c=document.getElementById('tclock');if(c&&S.profile.timer)c.textContent=fmtClock(Date.now()-S.profile.timer.start)},20000);
-let bizPicking=false;
-function vSell(){
-  if(bizPicking||(!S.profile.bizType&&!prodList().length))return bizChooser();
-  if(!SALE)newSale();
-  if(SALE.doneId){const d=S.docs[SALE.doneId];const c=d?calc(d):{total:0};const rec=+SALE.received||0;
-    return `<div class="done"><div style="color:var(--good);font-weight:600">${t('qsDone')} · #${esc(d?d.number:'')}</div><div class="big num">${money(c.total)}</div>
-    ${SALE.method==='cash'&&rec>c.total?`<div class="small" style="margin-top:6px">${t('qsChange')}</div><div class="change num">${money(rec-c.total)}</div>`:''}</div>
-    <div class="btns"><button class="btn" data-act="pdf" data-id="${SALE.doneId}">${t('qsReceipt')}</button><button class="btn sale" data-act="qsNew">${t('qsNew')}</button></div>`}
-  const prods=prodList(),items=saleLines(),total=saleTotal(),tx=+S.profile.saleTax||0;
-  const crypto=enabledMethods().filter(m=>!PRESETS[m.type]?.fiat);
-  const opts=[['cash',t('qsCash'),''],['card',t('qsCard'),''],...crypto.map(m=>['w:'+m.id,m.name||PRESETS[m.type]?.label||m.type,coinLogo(m.type)]),['pending',t('qsPending'),''],['other',t('qsOther'),'']];
-  const rec=+SALE.received||0,short=SALE.method==='cash'&&SALE.received!==''&&rec<total;
-  const quick=[...new Set([Math.ceil(total),Math.ceil(total/5)*5,Math.ceil(total/10)*10,Math.ceil(total/20)*20])].filter(v=>v>0).slice(0,4);
-  const nNew=ORDERS.filter(o=>o.status==='new').length,nOpen=ORDERS.filter(o=>!['done','cancelled'].includes(o.status)).length;
-  return `${ordersOn()?`<button class="ordbtn" data-act="ordersOpen"><span>${t('orders')}${nNew?' · '+t('ordersNew',nNew):''}</span><span class="cnt">${nOpen}</span></button>`:''}${lowBanner()}${prods.length?'':`<p class="small" style="margin-top:14px">${t('qsNoProds')}</p>`}
-  <div class="prods">${prods.map(p=>{const q=SALE.cart[p.id]||0;const left=stockOf(p)-q;const out=tracked(p)&&left<=0;return `<button class="prod ${out&&!q?'out':''}" data-act="qsAdd" data-id="${p.id}" ${out?'aria-disabled="true"':''}>${q?`<span class="q">${q}</span>`:''}${p.photo?`<img class="ph" data-photo="${p.photo}" alt="">`:''}<b>${esc(p.name)}</b><span class="pp">${money(p.price)}${unitTxt(p.unit)}${tracked(p)?` · <span class="stk ${left<=lowAt(p)?'low':''}">${left<=0?t('outOfStock'):left+' '+t('left')}</span>`:''}</span></button>`}).join('')}<button class="prod add" data-act="qsNewProd">${t('qsAddProd')}</button></div>
-  ${SALE.adding?`<div class="group"><div class="field"><label for="qs-n">${t('qsProdName')}</label><input class="in" id="qs-n" autocomplete="off"></div><div class="grid2"><div class="field"><label for="qs-p">${t('qsPrice')}</label><input class="in num" id="qs-p" type="number" step="0.01" inputmode="decimal"></div><div class="field"><label for="qs-c">${t('prodCost')}</label><input class="in num" id="qs-c" type="number" step="0.01" inputmode="decimal"></div></div><button class="btn primary" data-act="qsSaveProd">${t('save')}</button></div>`:''}
-  ${timerCard()}
-  <div class="sec-h"><h2>${t('qsCart')}</h2></div>
-  <div class="cart">${items.length?items.map(i=>{const u=S.products[i.pid]?.unit;return `<div class="cl"><div class="n"><div>${esc(i.desc)}</div><div class="small num">${money(i.rate)}${unitTxt(u)} × ${i.qty} = ${money(r2(i.qty*i.rate))}</div></div><div class="stepper"><button data-act="qsDec" data-id="${i.pid}" aria-label="−">−</button><input class="in num qin" type="number" inputmode="decimal" step="${DEC_UNITS.includes(u)?'0.25':'1'}" min="0" data-qid="${i.pid}" value="${i.qty}" aria-label="${t('qsQty')}"><button data-act="qsAdd" data-id="${i.pid}" aria-label="+">+</button></div></div>`}).join(''):`<p class="small" style="padding:10px 0">${t('qsEmpty')}</p>`}</div>
-  <div class="field" style="margin-top:12px"><label for="qs-who">${t('qsWho')}</label><input class="in" id="qs-who" value="${esc(SALE.who||'')}" placeholder="${t('qsWhoPh')}" autocomplete="off"></div>
-  <div class="grid2" style="margin-top:10px;align-items:end"><div class="field" style="margin:0"><label for="qs-tax">${t('qsTax')}</label><input class="in num" id="qs-tax" type="number" step="0.01" inputmode="decimal" value="${tx||''}" placeholder="0"></div><div></div></div>
-  <div class="saletot"><span>${t('total')}</span><span class="num" id="qs-total">${money(total)}</span></div>
-  <div class="field"><label>${t('qsPayWith')}</label><div class="paym">${opts.map(([k,l,lg])=>`<button data-act="qsMethod" data-v="${k}" aria-pressed="${SALE.method===k}">${lg}${esc(l)}</button>`).join('')}</div></div>
-  ${SALE.method==='cash'&&total>0?`<div class="field"><label for="qs-rec">${t('qsReceived')}</label><input class="in num" id="qs-rec" type="number" step="0.01" inputmode="decimal" value="${esc(SALE.received)}"><div class="cashq">${quick.map(v=>`<button data-act="qsRec" data-v="${v}">${money(v)}</button>`).join('')}</div>
-    <div style="margin-top:10px" id="qs-chg">${SALE.received!==''?(short?`<span class="red">${t('qsShort')}: ${money(total-rec)}</span>`:`<span class="small">${t('qsChange')}</span> <span class="change num">${money(rec-total)}</span>`):''}</div></div>`:''}
-  ${SALE.method.startsWith('w:')?`<p class="note">${t('qsCryptoNote')}</p>`:''}
-  <button class="btn sale" data-act="qsCharge" ${!items.length||short?'disabled':''}>${t('qsCharge')} ${money(total)}</button>
-  <div style="height:24px"></div>`}
-/* periods + numbers */
-function periodStart(k){if(k==='today')return todayISO();if(k==='week')return addDays(todayISO(),-6);if(k==='month')return todayISO().slice(0,7)+'-01';if(k==='year')return todayISO().slice(0,4)+'-01-01';return '0000'}
-function salesIn(k){const st=periodStart(k);return salesAll().filter(d=>(d.date||'')>=st).sort((a,b)=>String(b.date).localeCompare(a.date)||(b.updatedAt||0)-(a.updatedAt||0))}
-function periodChips(){return `<div class="periods">${[['today','pToday'],['week','pWeek'],['month','pMonth'],['year','pYear'],['all','pAll']].map(([k,l])=>`<button data-act="period" data-v="${k}" aria-pressed="${period===k}">${t(l)}</button>`).join('')}</div>`}
-function saleStats(list){let rev=0,tax=0,cost=0,pend=0,n=0;const prod={},meth={};
-  list.forEach(d=>{const c=calc(d);if(c.balance>0.005){pend+=c.balance;return}n++;rev+=c.sub-c.disc;tax+=c.tax;
-    (d.items||[]).forEach(i=>{const q=+i.qty||0,line=q*(+i.rate||0),lc=q*(+i.cost||0);cost+=lc;const k=i.desc||'—';prod[k]=prod[k]||{q:0,rev:0,profit:0};prod[k].q+=q;prod[k].rev+=line;prod[k].profit+=line-lc});
-    (d.payments||[]).forEach(p=>{const k=p.method||'Other';meth[k]=(meth[k]||0)+(+p.amount||0)})});
-  return {rev:r2(rev),tax:r2(tax),cost:r2(cost),profit:r2(rev-cost),pend:r2(pend),n,avg:n?r2((rev+tax)/n):0,prod,meth}}
-function vSales(){
-  const list=salesIn(period);const tot=list.reduce((s,d)=>s+calc(d).total,0);
-  $('#totalLbl').textContent=t('total');$('#totalVal').textContent=money(tot);
-  let html='',day='';
-  list.forEach(d=>{if(d.date!==day){day=d.date;html+=`<div class="daysep">${fdate(day)}</div>`}html+=docRow(d)});
-  return periodChips()+(list.length?`<div class="list">${html}</div><div style="margin-top:14px"><button class="btn" data-act="salesCsv">${t('exportCsv')}</button></div>`:`<div class="empty">${t('noSales')}</div>`);
-}
-function vProducts(){
-  const ps=prodList();
-  if(!ps.length)return emptyBox(t('noProducts'),t('noProductsSub'),'newProduct',t('newProduct'))+`<button class="linkbtn" style="width:100%;justify-content:center" data-act="bizReset">${t('bizChange')}</button>`;
-  return `<div style="margin-top:12px"><button class="btn" data-act="menuOpen">▦ ${t('menu_'+bizT())}</button></div>${S.profile.bizExamples?`<p class="note">${t('bizExamples')}</p>`:''}${lowBanner()}<div style="margin-top:8px">${ps.map(p=>{const m=+p.cost>0&&+p.price>0?Math.round((p.price-p.cost)/p.price*100):null;return `<button class="prow" data-act="editProduct" data-id="${p.id}">${p.photo?`<img class="thumb" data-photo="${p.photo}" alt="">`:''}<div class="n"><b>${esc(p.name)}</b><span class="small num">${money(p.price)}${unitTxt(p.unit)}${+p.cost>0?' · '+t('prodCost').split(' (')[0]+' '+money(p.cost):' · '+t('prodNoCost')}${m!==null?' · '+m+'% '+t('marginLbl'):''}</span></div>${stockBadge(p)}</button>`}).join('')}</div><button class="linkbtn" style="width:100%;justify-content:center;margin-top:10px" data-act="bizReset">${t('bizChange')}</button>`;
-}
-function vProfit(){
-  const st=saleStats(salesIn(period));
-  const top=Object.entries(st.prod).sort((a,b)=>b[1].rev-a[1].rev).slice(0,8);
-  const meth=Object.entries(st.meth).sort((a,b)=>b[1]-a[1]);
-  const ML={Cash:t('qsCash'),Card:t('qsCard'),Other:t('qsOther')};
-  return periodChips()+`<div class="cards">
-    <div class="card"><span class="lbl">${t('revenue')}</span><span class="val num">${money(st.rev)}</span></div>
-    <div class="card cost"><span class="lbl">${t('cogs')}</span><span class="val num">${money(st.cost)}</span></div>
-    <div class="card profit"><span class="lbl">${t('grossProfit')}</span><span class="val num">${money(st.profit)}</span></div>
-    <div class="card"><span class="lbl">${t('numSales')}</span><span class="val num">${st.n}</span></div>
-    <div class="card"><span class="lbl">${t('avgTicket')}</span><span class="val num">${money(st.avg)}</span></div>
-    <div class="card"><span class="lbl">${t('taxCollected')}</span><span class="val num">${money(st.tax)}</span></div></div>
-  ${st.pend>0?`<p class="note">${t('pendingCrypto')}: ${money(st.pend)}</p>`:''}
-  <div class="sec-h"><h2>${t('topProducts')}</h2></div>
-  ${top.length?top.map(([n,v])=>`<div class="rank"><div class="n"><b>${esc(n)}</b><div class="small">${v.q} ${t('unitsSold')}</div></div><div class="r">${money(v.rev)}<div class="small" style="color:var(--good)">+${money(v.profit)}</div></div></div>`).join(''):`<div class="empty">${t('noSales')}</div>`}
-  ${meth.length?`<div class="sec-h"><h2>${t('byMethod')}</h2></div>${meth.map(([k,v])=>`<div class="rank"><div class="n">${esc(ML[k]||k)}</div><div class="r">${money(v)}</div></div>`).join('')}`:''}
-  <div style="height:24px"></div>`;
-}
-let PE=null;
-function productEditor(){return{live:false,render(){
-  return sheetHead(PE._new?t('newProduct'):PE.name,{close:true,right:`<button class="textbtn" data-act="saveProduct">${t('save')}</button>`})+`<div class="wrap sheet-b">
-  <div class="pphoto">${PE.photo?`<img data-photo="${PE.photo}" alt="">`:`<div class="noimg">${t('noPhoto')}</div>`}<div class="acts"><button class="btn" data-act="prodPhoto">${PE.photo?t('changePhoto'):t('addPhoto')}</button>${PE.photo?`<button class="linkbtn red" data-act="prodPhotoRm">${t('removePhoto')}</button>`:''}</div></div>
-  <input type="file" id="prodPhotoIn" accept="image/*" hidden>
-  <div class="field"><label for="pe-n">${t('qsProdName')}</label><input class="in" id="pe-n" value="${esc(PE.name)}" autocomplete="off"></div>
-  <div class="grid2"><div class="field"><label for="pe-p">${t('qsPrice')}</label><input class="in num" id="pe-p" type="number" step="0.01" inputmode="decimal" value="${PE.price||''}"></div>
-  <div class="field"><label for="pe-c">${t('prodCost')}</label><input class="in num" id="pe-c" type="number" step="0.01" inputmode="decimal" value="${PE.cost||''}"></div></div>
-  <p class="small">${t('prodCostHint')}</p>
-  <div class="field"><label for="pe-u">${t('unitLbl')}</label><select class="in" id="pe-u">${SUNITS.map(u=>`<option value="${u}" ${(PE.unit||BIZ[bizT()].unit)===u?'selected':''}>${t('u_'+u)}</option>`).join('')}</select></div>
-  <div class="grid2"><div class="field"><label for="pe-s">${t('stockLbl')}</label><input class="in num" id="pe-s" type="number" step="1" inputmode="numeric" value="${PE.stock===''||PE.stock==null?'':esc(String(PE.stock))}"></div>
-  <div class="field"><label for="pe-l">${t('lowAtLbl')}</label><input class="in num" id="pe-l" type="number" step="1" inputmode="numeric" value="${PE.lowAt===''||PE.lowAt==null?3:PE.lowAt}"></div></div>
-  <p class="small">${t('stockHint')}</p>
-  ${PE._new?'':`<button class="btn" style="margin-bottom:12px" data-act="shareProduct" data-id="${PE.id}">↗ ${t('shareProduct')}</button><div class="restock"><div class="field"><label for="pe-r">${t('restockLbl')}</label><input class="in num" id="pe-r" type="number" step="1" inputmode="numeric" placeholder="+24"></div><button class="btn" style="width:auto" data-act="restock">${t('restockBtn')}</button></div>
-  <div style="height:12px"></div><button class="linkbtn red" data-act="delProduct" data-id="${PE.id}">${t('delProduct')}</button>`}</div>`}}}
-/* live menu with photos: stored in Supabase through two functions (see supabase-menus.sql).
-   No account needed: this phone keeps a random menu id + secret; anyone with the id can only read. */
-let MENU_ERR='',MENU_STATE='',menuPubT=null,lastMenuJSON='';const thumbCache={};
-const menuServer=()=>{const C=window.OBRERO_CONFIG||{};return !!(C.supabaseUrl&&C.supabaseAnonKey)};
-async function menuClient(){await loadLib(LIB.cloud);const C=window.OBRERO_CONFIG;return window._menuSb||(window._menuSb=window.supabase.createClient(C.supabaseUrl,C.supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}}))}
-async function shrinkPhoto(file,max,q){
-  let src;try{src=await createImageBitmap(file,{imageOrientation:'from-image'})}catch(e){src=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(file)})}
-  const sc=Math.min(1,max/Math.max(src.width,src.height));const c=document.createElement('canvas');c.width=Math.round(src.width*sc);c.height=Math.round(src.height*sc);
-  c.getContext('2d').drawImage(src,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,'image/jpeg',q));
-}
-async function menuThumb(key){if(thumbCache[key])return thumbCache[key];try{const b=await idb.get(key);if(!b)return '';const sm=await shrinkPhoto(b,320,0.62);return thumbCache[key]=await blobToDataURL(sm)}catch(e){return ''}}
-const ORDER_APPS=['cashapp','venmo','paypal'];
-function menuPayApps(){return enabledMethods().filter(m=>ORDER_APPS.includes(m.type)&&(m.address||'').trim()).map(m=>({t:m.type,h:m.address.trim()}))}
-async function buildLiveMenu(){const items=[];for(const p of prodList())items.push({id:p.id,n:p.name,p:+p.price,a:tracked(p)?(+p.stock>0?1:0):1,f:p.photo?await menuThumb(p.photo):''});
-  return {n:S.profile.company||'',m:S.profile.menuNote||'',c:'USD',o:!!S.profile.menuOrders,x:+S.profile.saleTax||0,pm:S.profile.menuOrders?menuPayApps():[],i:items}}
-const rid=(n,abc)=>{const a=crypto.getRandomValues(new Uint8Array(n));return Array.from(a,x=>abc[x%abc.length]).join('')};
-async function publishMenu(force){
-  if(!menuServer())return false;
-  const p=S.profile;if(!p.menuId){p.menuId=rid(12,'abcdefghijkmnopqrstuvwxyz23456789');p.menuSecret=rid(32,'0123456789abcdef');persist()}
-  MENU_URL=menuBase()+'#menu='+p.menuId;
-  const data=await buildLiveMenu();const js=JSON.stringify(data);if(!force&&js===lastMenuJSON)return true;
-  MENU_STATE='busy';if(!force)void 0;else redrawSheet();
-  try{const sb=await menuClient();const {error}=await sb.rpc('menu_put',{p_id:p.menuId,p_secret:p.menuSecret,p_data:js});if(error)throw error;lastMenuJSON=js;MENU_STATE='ok'}
-  catch(e){MENU_ERR=String(e&&(e.message||e.code||e)).slice(0,160);MENU_STATE=/could not find the function|schema cache|PGRST202|404/i.test(MENU_ERR+' '+(e&&e.code||''))?'nosrv':'fail'}
-  if(stack.length&&stack[stack.length-1]._menu)redrawSheet();return MENU_STATE==='ok';
-}
-function scheduleMenuPublish(){if(!S.profile.menuId||!menuServer())return;clearTimeout(menuPubT);menuPubT=setTimeout(()=>publishMenu(false),3000)}
-const APP_NAMES={cashapp:'Cash App',venmo:'Venmo',paypal:'PayPal'};
-function appPayURL(a,amt,note){const h=(a.h||'').trim();const n=encodeURIComponent(note);
-  if(a.t==='cashapp')return `https://cash.app/$${h.replace(/^\$/,'')}/${amt}`;
-  if(a.t==='venmo')return `https://venmo.com/${h.replace(/^@/,'')}?txn=pay&amount=${amt}&note=${n}`;
-  if(a.t==='paypal')return `https://paypal.me/${h.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'')}/${amt}USD`;return ''}
-let CM=null; /* customer menu state */
-async function renderLiveMenu(id,focus){
-  document.title='Menu';const w=$('#welcome');$('#appShell').hidden=true;w.hidden=false;
-  w.innerHTML=`<div class="mpage"><p class="small">${t('menuLoading')}</p></div>`;
-  let row;try{const sb=await menuClient();const {data,error}=await sb.rpc('menu_get',{p_id:id});if(error)throw error;row=Array.isArray(data)?data[0]:data}catch(e){w.innerHTML=`<div class="mpage"><p>${t('menuPubFail')}</p></div>`;return}
-  if(!row){w.innerHTML=`<div class="mpage"><p>${t('menuNotFound')}</p></div>`;return}
-  const m=JSON.parse(row.data);document.title=m.n||'Menu';
-  CM={id,m,at:row.updated_at,cart:{},view:focus&&(m.i||[]).some(x=>x.id===focus)?'product':'menu',focus,pay:'pickup',name:'',note:'',sending:false,order:null};
-  try{const saved=JSON.parse(localStorage.getItem('obrero-order-'+id)||'null');if(saved&&Date.now()-saved.ts<6*3600e3){CM.order=saved;CM.view='status'}}catch(e){}
-  drawCM();if(CM.order)pollOrder();
-}
-function cmTotal(){const it=CM.m.i||[];let sub=0;Object.entries(CM.cart).forEach(([k,q])=>{const x=it.find(y=>y.id===k);if(x)sub+=x.p*q});return r2(sub+r2(sub*(+CM.m.x||0)/100))}
-function drawCM(){
-  const w=$('#welcome'),m=CM.m,can=!!m.o;
-  const cnt=Object.values(CM.cart).reduce((a,b)=>a+b,0),total=cmTotal();
-  const ago=CM.at?new Date(CM.at):null;
-  let html=`<div class="mpage" style="${can&&cnt?'padding-bottom:110px':''}"><h1>${esc(m.n||'Menu')}</h1>${m.m?`<p class="msub">${esc(m.m)}</p>`:''}<p style="margin:0 0 16px"><span class="livepill">${t('menuLive')}</span></p>
-  <div class="mgrid">${(m.i||[]).map(x=>{const q=CM.cart[x.id]||0;return `<div class="mcard ${x.a?'':'out'}"><div class="mi" data-act="cmOpen" data-id="${x.id||''}">${x.f?`<img src="${x.f}" alt="${esc(x.n)}" loading="lazy">`:`<span class="ini">${esc((x.n||'?').trim().charAt(0).toUpperCase())}</span>`}${x.a?'':`<span class="so">${t('outOfStock').toUpperCase()}</span>`}</div><div class="mt"><b>${esc(x.n)}</b><span>${money(x.p)}</span>
-    ${can&&x.a&&x.id?(q?`<div class="qty"><button data-act="cmDec" data-id="${x.id}" aria-label="−">−</button><span>${q}</span><button data-act="cmInc" data-id="${x.id}" aria-label="+">+</button></div>`:`<div class="qty"><button class="addb" data-act="cmInc" data-id="${x.id}">+ ${lang==='es'?'Agregar':'Add'}</button></div>`):''}</div></div>`}).join('')}</div>
-  <p class="mfoot">${ago?t('menuUpdated')+' '+ago.toLocaleString(lang==='es'?'es-MX':'en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+' · ':''}${t('menuMadeWith')} <a href="${APP_URL}" target="_blank" rel="noopener">Invoice Free del Obrero</a></p></div>`;
-  if(can&&cnt&&CM.view==='menu')html+=`<div class="cartbar"><div class="in2"><button data-act="cmReview"><span>${t('orderBtn')} · ${cnt}</span><span>${money(total)}</span></button></div></div>`;
-  if(CM.view==='product'){const x=(m.i||[]).find(y=>y.id===CM.focus);if(x){const q=CM.cart[x.id]||0;
-    html+=`<div class="ovl" data-act="cmCloseOvl"><div class="box" data-stop="1"><div class="pbig">${x.f?`<img src="${x.f}" alt="${esc(x.n)}">`:`<span class="ini">${esc((x.n||'?').trim().charAt(0).toUpperCase())}</span>`}${x.a?'':`<span class="so">${t('outOfStock').toUpperCase()}</span>`}</div>
-    <h2>${esc(x.n)}</h2><div class="pprice">${money(x.p)}</div><p class="small" style="margin-top:-8px">${esc(m.n||'')}</p>
-    ${can&&x.a?(q?`<div class="mcard" style="border:0;background:none"><div class="qty"><button data-act="cmDec" data-id="${x.id}" aria-label="−">−</button><span>${q}</span><button data-act="cmInc" data-id="${x.id}" aria-label="+">+</button></div></div>${cnt?`<button class="btn sale" style="margin-top:12px" data-act="cmReview">${t('orderBtn')} · ${money(total)}</button>`:''}`:`<button class="btn sale" data-act="cmInc" data-id="${x.id}">+ ${lang==='es'?'Agregar':'Add'} · ${money(x.p)}</button>`):''}
-    <button class="btn" style="margin-top:10px" data-act="cmCloseOvl">${t('seeMenu')}</button></div></div>`}else CM.view='menu'}
-  if(CM.view==='review'){const it=m.i||[];const apps=m.pm||[];
-    html+=`<div class="ovl" data-act="cmCloseOvl"><div class="box" data-stop="1"><h2>${t('yourOrder')}</h2>
-    ${Object.entries(CM.cart).map(([k,q])=>{const x=it.find(y=>y.id===k);return x?`<div class="kv"><span>${q} × ${esc(x.n)}</span><span class="num">${money(q*x.p)}</span></div>`:''}).join('')}
-    ${+m.x?`<div class="kv"><span>${t('qsTax')}</span><span>${+m.x}%</span></div>`:''}
-    <div class="saletot"><span>${t('total')}</span><span class="num">${money(total)}</span></div>
-    <div class="field"><label for="cm-name">${t('yourName')}</label><input class="in" id="cm-name" autocomplete="given-name" value="${esc(CM.name)}"></div>
-    <div class="field"><label for="cm-note">${t('orderNote')}</label><input class="in" id="cm-note" value="${esc(CM.note)}" placeholder="${t('orderNotePh')}"></div>
-    <div class="field"><label>${t('payWith')}</label><div class="paysel">
-      ${apps.map(a=>`<button data-act="cmPay" data-v="${a.t}" aria-pressed="${CM.pay===a.t}"><span>${APP_NAMES[a.t]}</span><small>${esc(a.h)}</small></button>`).join('')}
-      <button data-act="cmPay" data-v="pickup" aria-pressed="${CM.pay==='pickup'}"><span>${t('payAtPickup')}</span><small>${t('payAtPickupSub')}</small></button></div></div>
-    <button class="btn sale" data-act="cmSend" ${CM.sending?'disabled':''}>${CM.sending?t('sending'):t('sendOrder')+' · '+money(total)}</button>
-    <button class="linkbtn" style="width:100%;justify-content:center" data-act="cmCloseOvl">${t('orderBack')}</button></div></div>`}
-  if(CM.view==='status'&&CM.order){const o=CM.order;const st=o.status||'new';const steps=[['new','oNew'],['accepted','oAccepted'],['ready','oReady'],['done','oDone']];const idx=steps.findIndex(x=>x[0]===st);
-    const a=(m.pm||[]).find(x=>x.t===o.pay);
-    html+=`<div class="ovl"><div class="box"><h2>${st==='cancelled'?t('oCancelled'):t('orderSent')}</h2><p class="small" style="text-align:center;margin:0">${t('orderNum')}</p><div class="bignum">#${o.num}</div>
-    ${st==='cancelled'?'':`<div class="ostat">${steps.map(([k,l],i)=>`<span class="${i<=idx?'on':''}">${t(l)}</span>`).join('')}</div>`}
-    <div class="kv"><span>${t('total')}</span><span class="num">${money(o.total)}</span></div>
-    ${a&&st!=='cancelled'&&st!=='done'?`<a class="paylink ${a.t}" href="${esc(appPayURL(a,o.total.toFixed(2),(m.n||'')+' #'+o.num))}" target="_blank" rel="noopener">${t('payNowWith',money(o.total),APP_NAMES[a.t])}</a><p class="small" style="text-align:center">${t('payNote')}</p>`:''}
-    <p class="small" style="text-align:center">${t('showAtPickup')}</p>
-    <button class="btn" data-act="cmNewOrder">${t('orderBack')}</button></div></div>`}
-  const fN=document.activeElement&&document.activeElement.id;w.innerHTML=html;if(fN){const e=document.getElementById(fN);if(e){e.focus();try{e.setSelectionRange(e.value.length,e.value.length)}catch(_){}}}
-}
-let pollT=null;
-async function pollOrder(){clearTimeout(pollT);if(!CM||!CM.order)return;try{const sb=await menuClient();const {data}=await sb.rpc('order_get',{p_menu:CM.id,p_id:CM.order.id,p_token:CM.order.token});const r=Array.isArray(data)?data[0]:data;if(r&&r.status!==CM.order.status){CM.order.status=r.status;try{localStorage.setItem('obrero-order-'+CM.id,JSON.stringify(CM.order))}catch(e){}if(CM.view==='status')drawCM()}}catch(e){}
-  if(CM.order&&!['done','cancelled'].includes(CM.order.status))pollT=setTimeout(pollOrder,10000)}
-/* fallback menu (no server): the menu travels inside the link, no photos */
-async function packMenu(){
-  const items=prodList().map(p=>[p.name,+p.price,tracked(p)?(+p.stock>0?1:0):1]);
-  const data=JSON.stringify({n:S.profile.company||'',m:S.profile.menuNote||'',c:'USD',u:todayISO(),i:items});
-  const bytes=new TextEncoder().encode(data);let out=bytes,tag='j';
-  if(window.CompressionStream){try{const cs=new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));out=new Uint8Array(await new Response(cs).arrayBuffer());tag='z'}catch(e){}}
-  let b='';out.forEach(x=>b+=String.fromCharCode(x));
-  return tag+'.'+btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
-async function unpackMenu(code){
-  const [tag,b64]=code.split('.');const bin=atob(b64.replace(/-/g,'+').replace(/_/g,'/'));const u=Uint8Array.from(bin,c=>c.charCodeAt(0));
-  let bytes=u;if(tag==='z'){const ds=new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'));bytes=new Uint8Array(await new Response(ds).arrayBuffer())}
-  return JSON.parse(new TextDecoder().decode(bytes));
-}
-const menuBase=()=>location.protocol==='https:'?location.origin+location.pathname:APP_URL;
-let MENU_URL='';
-function menuSheet(){return{live:false,_menu:true,render(){
-  let qr='';if(MENU_URL&&window.qrcode){try{const q=qrcode(0,'L');q.addData(MENU_URL);q.make();qr=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){qr=''}}
-  const live=menuServer();
-  const status=live?(MENU_STATE==='busy'||!MENU_URL?`<p class="small">${t('menuPublishing')}</p>`:MENU_STATE==='ok'?`<p style="margin:4px 0 0"><span class="livepill">${t('menuPublished')}</span></p>`:MENU_STATE==='nosrv'?`<p class="note">${t('menuServerMissing')}<br><small style="opacity:.7">${esc(MENU_ERR)}</small> <button class="textbtn" style="padding:0" data-act="menuRetry">${t('menuRetry')}</button></p>`:MENU_STATE==='fail'?`<p class="note">${t('menuPubFail')}<br><small style="opacity:.7">${esc(MENU_ERR)}</small> <button class="textbtn" style="padding:0" data-act="menuRetry">${t('menuRetry')}</button></p>`:''):'';
-  if(live&&MENU_STATE!=='ok')qr='';
-  return sheetHead(live?t('menuLive'):t('menuTitle'),{close:true})+`<div class="wrap sheet-b">
-  <p class="small" style="margin-top:14px">${live?t('menuLiveIntro'):t('menuIntro')}</p>${status}
-  ${qr?`<div class="menuqr">${qr}</div>`:(MENU_URL&&!live&&window.qrcode?`<p class="note">${t('menuTooBig')}</p>`:'')}
-  <div class="field"><label for="mn-note">${t('menuNote')}</label><input class="in" id="mn-note" value="${esc(S.profile.menuNote||'')}" placeholder="${lang==='es'?'Abierto de 7am a 9pm':'Open 7am to 9pm'}"></div>
-  ${live&&MENU_STATE!=='ok'?'':`<div class="btns"><button class="btn" data-act="copy" data-v="${esc(MENU_URL)}">${t('copyLink2')}</button><a class="btn" href="${esc(MENU_URL)}" target="_blank" rel="noopener">${t('openMenu')}</a></div>`}
-  ${live&&MENU_STATE==='ok'?`<div class="wm"><div class="main"><div class="t1" style="font-weight:600">${t('ordersOn')}</div><div class="small">${t('ordersOnSub')}</div></div><button class="switch" role="switch" aria-checked="${!!S.profile.menuOrders}" data-act="ordersToggle" aria-label="${t('ordersOn')}"></button></div>${S.profile.menuOrders&&!menuPayApps().length?`<p class="note">${t('ordersPayNeeded')}</p>`:''}`:''}
-  ${live?(S.profile.menuId?`<button class="linkbtn red" data-act="menuStop">${t('menuStop')}</button>`:''):`<p class="note">${t('menuSnapshot')}</p>`}</div>`}}}
-async function renderMenuPage(code){
-  document.title='Menu';const w=$('#welcome');$('#appShell').hidden=true;w.hidden=false;
-  let m;try{m=await unpackMenu(code)}catch(e){w.innerHTML=`<div class="mpage"><p>${t('menuBroken')}</p></div>`;return}
-  document.title=m.n||'Menu';
-  w.innerHTML=`<div class="mpage"><h1>${esc(m.n||'Menu')}</h1>${m.m?`<p class="msub">${esc(m.m)}</p>`:'<div style="height:14px"></div>'}
-  ${(m.i||[]).map(([n,pr,av])=>`<div class="mitem ${av?'':'out'}"><b>${esc(n)}${av?'':`<span class="tag">${t('outOfStock').toUpperCase()}</span>`}</b><span class="mp">${money(pr)}</span></div>`).join('')}
-  <p class="mfoot">${t('menuUpdated')} ${fdate(m.u)} · ${t('menuMadeWith')} <a href="${APP_URL}" target="_blank" rel="noopener">Invoice Free del Obrero</a></p></div>`;
-}
 function clientEditor(){return{live:false,render(){
   return sheetHead(C._new?t('addClient'):C.name,{close:true,right:`<button class="textbtn" data-act="saveClient">${t('save')}</button>`})+`<div class="wrap sheet-b"><div style="margin-top:14px"></div>
   ${C._new?(hasPicker()?`<button class="btn outline" data-act="pickContacts">${t('chooseContacts')}</button><button class="linkbtn" style="width:100%;justify-content:center" data-act="pickVcf">${t('importVcf')}</button>`:`<button class="btn outline" data-act="pickVcf">${t('importVcf')}</button>`)+`<p class="small" style="text-align:center">${t('contactsNote')}</p>`:''}
-  <div class="field"><label for="c-find">${t('findPlace')}</label><input class="in" id="c-find" type="search" autocomplete="off" placeholder="${t('findPlaceHint')}"><div class="sugg" id="c-sugg" role="listbox"></div></div>
   <div class="field"><label for="c-name">${t('billingName')}</label><input class="in" id="c-name" data-c="name" value="${esc(C.name)}" autocomplete="organization"></div>
   <div class="field"><label for="c-mob">${t('mobile')}</label><input class="in" id="c-mob" type="tel" data-c="mobile" value="${esc(C.mobile)}"></div>
   ${C.emails.map((e,k)=>`<div class="field"><label for="c-em${k}">${t('email')}</label><input class="in" id="c-em${k}" type="email" data-email="${k}" value="${esc(e)}"></div>`).join('')}
@@ -1408,7 +969,7 @@ function clientDetail(id){return{live:true,render(){
   const chips=[['all','all'],['unpaid','unpaid'],['overdue','overdue'],['paid','paid'],['est','estimates']];
   return sheetHead(c.name,{right:`<button class="textbtn" data-act="editClient" data-id="${id}">${t('edit')}</button>`})+`<div class="wrap sheet-b">
   <div class="cards" style="margin-top:14px"><div class="card"><span class="lbl">${t('invoiced')}</span><span class="val num">${money(tt.inv)}</span></div><div class="card good"><span class="lbl">${t('totalPaid')}</span><span class="val num">${money(tt.paid)}</span></div><div class="card ${tt.owed>0?'bad':''}"><span class="lbl">${t('owes')}</span><span class="val num">${money(tt.owed)}</span></div><div class="card"><span class="lbl">${t('openJobs')}</span><span class="val num">${jobsOpen}</span></div></div>
-  <div class="group">${c.mobile?`<div class="kv"><span>${t('mobile')}</span><span>${esc(c.mobile)}</span></div>`:''}${(c.emails||[]).filter(Boolean).map(e=>`<div class="kv"><span>${t('email')}</span><span>${esc(e)}</span></div>`).join('')}${c.address?`<div class="kv"><span>${t('address')}</span><span style="white-space:pre-wrap">${esc(c.address)}</span></div><a class="textbtn" style="display:inline-block;padding:8px 0" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address.replace(/\n/g,', '))}">${t('mapsOpen')} ↗</a>`:''}</div>
+  <div class="group">${c.mobile?`<div class="kv"><span>${t('mobile')}</span><span>${esc(c.mobile)}</span></div>`:''}${(c.emails||[]).filter(Boolean).map(e=>`<div class="kv"><span>${t('email')}</span><span>${esc(e)}</span></div>`).join('')}${c.address?`<div class="kv"><span>${t('address')}</span><span style="white-space:pre-wrap">${esc(c.address)}</span></div>`:''}</div>
   <div class="btns"><button class="btn primary" data-act="newInvoiceFor" data-id="${id}">${t('newInvoice')}</button><button class="btn" data-act="newEstimateFor" data-id="${id}">${t('newEstimate')}</button></div>
   <input class="search" id="cq" type="search" placeholder="${t('search')}" value="${esc(clientQuery)}">
   <div class="chips">${chips.map(([k,l])=>`<button class="chip" data-act="clientFilter" data-v="${k}" aria-pressed="${clientFilter===k}">${t(l)}</button>`).join('')}</div>
@@ -1508,6 +1069,8 @@ function settingsSheet(){return{live:false,render(){
   ${f('defDue',t('defDue'),'number','inputmode="numeric"')}
   <div class="field"><label for="st-payInstr">${t('defInstr')}</label><textarea class="in" id="st-payInstr" data-s="payInstr" placeholder="Zelle: … / Checks payable to …">${esc(p.payInstr)}</textarea></div>
   <div class="field"><label for="st-terms">${t('defTerms')}</label><textarea class="in" id="st-terms" data-s="terms">${esc(p.terms)}</textarea></div>
+  <div class="field"><label for="st-contractTerms">${t('contractTerms')}</label><textarea class="in" id="st-contractTerms" data-s="contractTerms" style="min-height:140px" placeholder="${t('contractTermsPh')}">${esc(p.contractTerms||'')}</textarea><p class="small">${t('contractTermsNote')}</p></div>
+  <div class="field"><label>${t('mySignature')}</label>${p.sig?`<div class="sigbox" style="max-width:260px"><img src="${p.sig}" alt=""><div class="small">${esc(p.sigName||'')}</div></div>`:''}<button class="btn" data-act="mySign">${p.sig?t('changeMySig'):t('addMySig')}</button></div>
   <button class="btn primary" data-act="saveSettings">${t('save')}</button></div>`;
 }}}
 let fileMode='csv';
@@ -1598,7 +1161,6 @@ function docText(d){
 }
 function drawQR(doc,text,x,y,size){if(!window.qrcode||!text)return;try{const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=size/n;doc.setFillColor(0,0,0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))doc.rect(x+c*cell,y+r*cell,cell+0.15,cell+0.15,'F')}catch(e){}}
 async function buildPDF(d){
-  try{await ensurePDFLibs()}catch(e){}
   if(!window.jspdf){toast('PDF library did not load. Check your connection.');return null}
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
   const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate',j=jobOf(d);
@@ -1613,7 +1175,7 @@ async function buildPDF(d){
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(p.company||'',tx,44);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
   if(hdr.length)doc.text(hdr,tx,60,{lineHeightFactor:1.2});
-  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(isEst?'ESTIMATE':d.sale?'RECEIPT':'INVOICE',W-M,44,{align:'right'});
+  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(isEst?'ESTIMATE':'INVOICE',W-M,44,{align:'right'});
   doc.setFontSize(11);doc.text((isEst?'EST ':'#')+d.number,W-M,62,{align:'right'});
   doc.setTextColor(0,0,0);let y=hH+34;
   doc.setFontSize(9);doc.setTextColor(110);doc.text('BILL TO',M,y);doc.text(isEst?'DATE':'DATE / DUE',W-M,y,{align:'right'});
@@ -1645,6 +1207,15 @@ async function buildPDF(d){
     }
   }
   if(d.notes){const tl=doc.splitTextToSize(d.notes,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text('Notes',M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13}
+  {const ct=d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'');
+   if(ct){y+=10;doc.setFontSize(9);const tl=doc.splitTextToSize(ct,W-2*M);need(20+Math.min(tl.length,40)*11);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Terms & Conditions',M,y);y+=13;doc.setFont('helvetica','normal');doc.setFontSize(8.5);for(const ln of tl){need(11);doc.text(ln,M,y);y+=11}}
+   const sg=d.sig;y+=16;need(140);doc.setFontSize(9);doc.setFont('helvetica','normal');
+   doc.text(doc.splitTextToSize(`By signing below, the customer accepts the work, price and terms described in this ${isEst?'estimate':'invoice'} and authorizes ${p.company||'the contractor'} to proceed.`,W-2*M),M,y);y+=26;
+   const cw=(W-2*M-30)/2,boxH=60;
+   const col=(x,label,img,name,date)=>{if(img){try{doc.addImage(img,'PNG',x,y,Math.min(cw,180),boxH)}catch(e){}}doc.setDrawColor(0);doc.line(x,y+boxH+4,x+cw,y+boxH+4);doc.setFontSize(8);doc.setTextColor(110);doc.text(label,x,y+boxH+15);doc.setTextColor(0);doc.setFontSize(9.5);doc.text(name||'Printed name: ______________________',x,y+boxH+28);doc.text(date?('Date: '+date):'Date: ____________',x,y+boxH+41)};
+   col(M,'CONTRACTOR SIGNATURE',p.sig,p.sigName||p.company||'',p.sig&&sg?new Date(sg.at).toLocaleDateString('en-US'):'');
+   col(M+cw+30,'CUSTOMER SIGNATURE',sg&&sg.img,sg?sg.name:'',sg?new Date(sg.at).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'');
+   y+=boxH+52;if(sg){doc.setFontSize(7);doc.setTextColor(130);doc.text('Signed electronically on '+new Date(sg.at).toISOString()+' · Document ID '+sg.hash,M,y);doc.setTextColor(0);y+=12}}
   if(d.includePhotos!==false&&(d.photos||[]).length){
     doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('Job photos / Fotos del trabajo',M,M);
     const cw=(W-2*M-20)/3,ch=cw;let k=0;
@@ -1664,7 +1235,7 @@ async function buildPDF(d){
   const pages=doc.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(140);doc.text('Made with Invoice Free del Obrero',W/2,H-20,{align:'center'})}
   return doc;
 }
-const pdfName=d=>(d.kind==='estimate'?'Estimate-':d.sale?'Receipt-':'Invoice-')+d.number+'.pdf';
+const pdfName=d=>(d.kind==='estimate'?'Estimate-':'Invoice-')+d.number+'.pdf';
 async function downloadPDF(d){const doc=await buildPDF(d);if(doc)doc.save(pdfName(d))}
 async function sharePDF(d){
   const doc=await buildPDF(d);if(!doc)return;
@@ -1684,6 +1255,16 @@ async function sendDoc(d,how,o){
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
   if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+  if(how==='whatsapp'){
+    /* WhatsApp: share the PDF + message through the phone's share sheet (pick WhatsApp and the client); otherwise open a WhatsApp chat with the message and the PDF downloaded to attach */
+    if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+    const digits=(to||'').replace(/\D/g,'');const full=digits.length===10?'1'+digits:digits;
+    doc.save(pdfName(d));
+    window.open('https://wa.me/'+full+'?text='+encodeURIComponent(body),'_blank');
+    setTimeout(()=>toast(t('attachNote')),600);
+    if(!d.sent){d.sent=true;commit()}
+    return;
+  }
   doc.save(pdfName(d));
   if(how==='email'){if(!to)toast(t('noEmail'));location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);setTimeout(()=>toast(t('attachNote')),600)}
   else{if(!to)toast(t('noPhone'));location.href='sms:'+to+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(o.body?body:subj+'\n'+body)}
@@ -1706,84 +1287,7 @@ async function restoreJSON(o){
 }
 
 /* ---------- actions ---------- */
-function fabItems(){const it=(act,cls,icon,lbl)=>`<button class="fmi" data-act="fabPick" data-v="${act}"><span class="fl">${t(lbl)}</span><span class="fc ${cls}">${ic(icon,2)}</span></button>`;
-  return it('newClient','c-cli','clients','fmClient')+it('newInvoice','c-inv','send','fmInvoice')+it('newEstimate','c-est','estimates','fmEstimate')+it('newExpense','c-exp','receipt','fmExpense')}
-function closeFab(){const f=$('#fab');f.classList.remove('open');f.setAttribute('aria-expanded','false');$('#fabMenu').hidden=true}
 const A={
-  cmInc:e=>{const id=e.dataset.id;CM.cart[id]=(CM.cart[id]||0)+1;drawCM()},
-  cmDec:e=>{const id=e.dataset.id;CM.cart[id]=Math.max(0,(CM.cart[id]||0)-1);if(!CM.cart[id])delete CM.cart[id];drawCM()},
-  cmReview:()=>{if(!(CM.m.pm||[]).some(a=>a.t===CM.pay))CM.pay=(CM.m.pm||[])[0]?.t||'pickup';CM.view='review';drawCM()},
-  cmCloseOvl:e=>{if(e.dataset.stop)return;CM.view='menu';drawCM()},
-  cmOpen:e=>{if(!e.dataset.id)return;CM.focus=e.dataset.id;CM.view='product';drawCM()},
-  cmPay:e=>{const n=$('#cm-name'),o=$('#cm-note');if(n)CM.name=n.value;if(o)CM.note=o.value;CM.pay=e.dataset.v;drawCM()},
-  cmNewOrder:()=>{CM.order=null;CM.cart={};CM.view='menu';try{localStorage.removeItem('obrero-order-'+CM.id)}catch(e){}clearTimeout(pollT);drawCM()},
-  cmSend:async()=>{if(CM.sending)return;CM.name=($('#cm-name').value||'').trim().slice(0,40);CM.note=($('#cm-note').value||'').trim().slice(0,200);if(!CM.name){toast(t('nameNeeded'));$('#cm-name').focus();return}
-    const it=CM.m.i||[];const lines=Object.entries(CM.cart).map(([k,q])=>{const x=it.find(y=>y.id===k);return x?{id:k,n:x.n,q,p:x.p}:null}).filter(Boolean);if(!lines.length)return;
-    const total=cmTotal();CM.sending=true;drawCM();
-    try{const sb=await menuClient();const {data,error}=await sb.rpc('order_put',{p_menu:CM.id,p_data:JSON.stringify({name:CM.name,note:CM.note,pay:CM.pay,items:lines,total})});if(error)throw error;const r=Array.isArray(data)?data[0]:data;
-      CM.order={id:r.order_id,num:r.order_num,token:r.order_token,status:'new',pay:CM.pay,total,ts:Date.now()};try{localStorage.setItem('obrero-order-'+CM.id,JSON.stringify(CM.order))}catch(e){}
-      CM.cart={};CM.view='status';CM.sending=false;drawCM();pollT=setTimeout(pollOrder,8000)}
-    catch(e){CM.sending=false;drawCM();toast(t('orderFail'))}},
-  quickSale:()=>{S.profile.mode='store';tab='sell';persist();render()},
-  setMode:e=>{S.profile.mode=e.dataset.v==='store'?'store':'work';tab=S.profile.mode==='store'?'sell':'home';persist();window.scrollTo(0,0);render()},
-  period:e=>{period=e.dataset.v;render()},
-  qsNew:()=>{newSale();render()},
-  qsAdd:e=>{if(!SALE)newSale();const id=e.dataset.id,p=S.products[id],q=SALE.cart[id]||0;if(p&&tracked(p)&&q>=+p.stock){toast(t('notEnough'));return}SALE.cart[id]=q+1;render()},
-  qsDec:e=>{const id=e.dataset.id;SALE.cart[id]=Math.max(0,(SALE.cart[id]||0)-1);if(!SALE.cart[id])delete SALE.cart[id];render()},
-  qsNewProd:()=>{A.newProduct();PE._fromSell=true},
-  qsSaveProd:()=>{const n=$('#qs-n').value.trim(),p=+$('#qs-p').value,c=+$('#qs-c').value||0;if(!n||!(p>0)){toast(t('qsNameNeeded'));return}const pr={id:uid(),name:n,price:r2(p),cost:r2(c),unit:BIZ[bizT()].unit,stock:''};S.products[pr.id]=pr;SALE.adding=false;SALE.cart[pr.id]=1;persist();render()},
-  qsMethod:e=>{SALE.method=e.dataset.v;render()},
-  qsRec:e=>{SALE.received=e.dataset.v;render()},
-  qsCharge:()=>{const items=saleLines().map(({pid,...i})=>i);if(!items.length)return;const total=saleTotal();
-    const crypto=SALE.method.startsWith('w:');const pending=SALE.method==='pending';const p=S.profile;const n=+p.nextSale||1;const who=(($('#qs-who')||{}).value||SALE.who||'').trim().slice(0,80);
-    const d=newDoc('invoice',{clientId:walkInId(),items,taxRate:+p.saleTax||0,dueDays:0,sale:true,saleName:who,number:'V-'+n,notes:who,payInstr:'',sent:true,includePhotos:false});delete d._new;d.updatedAt=Date.now();
-    if(!crypto&&!pending){const lbl=SALE.method==='cash'?'Cash':SALE.method==='card'?'Card':'Other';d.payments=[{id:uid(),amount:total,date:todayISO(),method:lbl,ref:'',coin:'',txid:'',note:''}]}
-    Object.entries(SALE.cart).forEach(([id,q])=>{const pr=S.products[id];if(pr&&tracked(pr))pr.stock=Math.max(0,r2(+pr.stock-q))});
-    S.docs[d.id]=d;p.nextSale=n+1;
-    if(crypto){payTab=SALE.method.slice(2);newSale();commit();showSheet(docDetail(d.id));return}
-    SALE.doneId=d.id;commit()},
-  prodPhoto:()=>{const keep=()=>{const g=id=>{const e=$(id);return e?e.value:undefined};const n=g('#pe-n');if(n!==undefined){PE.name=n;PE.price=g('#pe-p');PE.cost=g('#pe-c');PE.stock=g('#pe-s');PE.lowAt=g('#pe-l');PE.unit=g('#pe-u')}};
-    const el=$('#prodPhotoIn');el.value='';el.onchange=async()=>{const f=el.files[0];if(!f)return;keep();try{const b=await shrinkPhoto(f,640,0.78);const key='prod-'+PE.id+'-'+Date.now();await idb.put(key,b);PE.photo=key;redrawSheet()}catch(e){toast('Image error')}};el.click()},
-  prodPhotoRm:()=>{const g=id=>{const e=$(id);return e?e.value:''};PE.name=g('#pe-n');PE.price=g('#pe-p');PE.cost=g('#pe-c');PE.stock=g('#pe-s');PE.lowAt=g('#pe-l');PE.unit=g('#pe-u');PE.photo='';redrawSheet()},
-  ordersOpen:()=>{showSheet(ordersSheet());pollOrders()},
-  ordersToggle:()=>{S.profile.menuOrders=!S.profile.menuOrders;persist();publishMenu(true);if(S.profile.menuOrders)pollOrders();redrawSheet()},
-  ordSet:async e=>{const id=+e.dataset.id,v=e.dataset.v;try{const sb=await menuClient();const {error}=await sb.rpc('order_set',{p_menu:S.profile.menuId,p_secret:S.profile.menuSecret,p_id:id,p_status:v});if(error)throw error;const o=ORDERS.find(x=>x.id===id);if(o)o.status=v;redrawSheet();render()}catch(err){toast(t('menuPubFail'))}},
-  ordPaid:async e=>{const id=+e.dataset.id,how=e.dataset.v;const o=ORDERS.find(x=>x.id===id);if(!o)return;const d=o.d||{};
-    const items=(d.items||[]).map(i=>{const pr=S.products[i.id];return {desc:pr?pr.name:i.n,qty:+i.q||0,unit:'',rate:pr?+pr.price:+i.p||0,cost:pr?+pr.cost||0:0}}).filter(i=>i.qty>0);
-    const p=S.profile;const n=+p.nextSale||1;const lbl=how==='cash'?'Cash':how==='card'?'Card':(APP_NAMES[how]||'Other');
-    const doc=newDoc('invoice',{clientId:walkInId(),items,taxRate:+p.saleTax||0,dueDays:0,sale:true,number:'V-'+n,notes:(d.name?d.name+' · ':'')+'#'+o.num+(d.note?' · '+d.note:''),payInstr:'',sent:true,includePhotos:false});delete doc._new;doc.updatedAt=Date.now();
-    doc.payments=[{id:uid(),amount:calc(doc).total,date:todayISO(),method:lbl,ref:'#'+o.num,coin:'',txid:'',note:''}];
-    (d.items||[]).forEach(i=>{const pr=S.products[i.id];if(pr&&tracked(pr))pr.stock=Math.max(0,+pr.stock-(+i.q||0))});
-    S.docs[doc.id]=doc;p.nextSale=n+1;commit();
-    try{const sb=await menuClient();await sb.rpc('order_set',{p_menu:p.menuId,p_secret:p.menuSecret,p_id:id,p_status:'done'});o.status='done'}catch(err){}
-    redrawSheet();render();toast(t('saved'))},
-  shareProduct:async e=>{const pr=S.products[e.dataset.id];if(!pr)return;
-    if(!S.profile.menuId||!menuServer()){toast(t('shareProductNeedsMenu'));return}
-    await publishMenu(false);const url=menuBase()+'#menu='+S.profile.menuId+'-'+pr.id;
-    const text=`${pr.name} · ${money(pr.price)}${S.profile.company?' — '+S.profile.company:''}`;
-    try{if(navigator.share){let files;if(pr.photo){try{const b=await idb.get(pr.photo);if(b){const f=new File([b],(pr.name||'producto').replace(/[^\w-]+/g,'-')+'.jpg',{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[f]}))files=[f]}}catch(_){}}
-      await navigator.share(files?{files,title:pr.name,text:text+'\n'+url}:{title:pr.name,text,url});return}}catch(err){if(err&&err.name==='AbortError')return}
-    try{await navigator.clipboard.writeText(text+'\n'+url);toast(t('linkCopied'))}catch(_){copyText(text+'\n'+url)}},
-  setBiz:e=>{const k=e.dataset.v;bizPicking=false;S.profile.bizType=k;if(!prodList().length){(EXAMPLES[k]||[]).forEach(([n,pr,c,u,st])=>{const id=uid();S.products[id]={id,name:n,price:pr,cost:c,unit:u,stock:st,lowAt:3}});S.profile.bizExamples=true}commit()},
-  bizReset:()=>{bizPicking=true;tab='sell';window.scrollTo(0,0);render()},
-  timerStart:e=>{const sel=$('#tsel');const pid=sel?sel.value:e.dataset.id;S.profile.timer={pid,start:Date.now()};persist();render()},
-  timerStop:()=>{const tm=S.profile.timer;if(!tm)return;const h=Math.max(0.25,Math.round((Date.now()-tm.start)/36e5*4)/4);if(!SALE)newSale();SALE.cart[tm.pid]=r2((SALE.cart[tm.pid]||0)+h);delete S.profile.timer;persist();render();toast(t('timerAdded',h))},
-  menuStop:()=>{delete S.profile.menuId;delete S.profile.menuSecret;MENU_STATE='';persist();closeSheet();toast(t('saved'))},
-  menuRetry:()=>publishMenu(true),
-  menuOpen:async()=>{MENU_URL='';showSheet(menuSheet());try{await loadLib(LIB.qr)}catch(e){}if(menuServer()){await publishMenu(true)}else{MENU_URL=menuBase()+'#m.'+(await packMenu())}redrawSheet()},
-  restock:()=>{const n=parseInt($('#pe-r').value,10);if(!n)return;const p=S.products[PE.id];if(!p)return;p.stock=(tracked(p)?+p.stock:0)+n;PE.stock=p.stock;persist();redrawSheet();toast(t('saved'))},
-  newProduct:()=>{PE={id:uid(),name:'',price:'',cost:'',stock:'',lowAt:3,unit:BIZ[bizT()].unit,_new:true};showSheet(productEditor());setTimeout(()=>{const n=$('#pe-n');if(n)n.focus()},50)},
-  editProduct:e=>{PE={...S.products[e.dataset.id]};showSheet(productEditor())},
-  saveProduct:()=>{const n=$('#pe-n').value.trim(),p=+$('#pe-p').value,c=+$('#pe-c').value||0;if(!n||!(p>0)){toast(t('qsNameNeeded'));return}const sv=$('#pe-s').value.trim(),lv=$('#pe-l').value.trim();S.products[PE.id]={id:PE.id,name:n,price:r2(p),cost:r2(c),unit:($('#pe-u')||{}).value||'pza',photo:PE.photo||'',stock:sv===''?'':Math.max(0,+sv||0),lowAt:lv===''?3:Math.max(0,parseInt(lv,10)||0)};if(PE._fromSell&&PE._new){if(!SALE)newSale();SALE.cart[PE.id]=1}PE=null;S.profile.bizExamples=false;closeSheet();commit()},
-  delProduct:e=>{delete S.products[e.dataset.id];if(SALE)delete SALE.cart[e.dataset.id];PE=null;closeSheet();commit()},
-  salesCsv:()=>{const rows=[['date','number','item','qty','price','cost','line_total','line_profit','tax_rate','payment']];
-    salesIn(period).forEach(d=>{const pm=(d.payments||[]).map(x=>x.method).join('/')||'pending';(d.items||[]).forEach(i=>{const q=+i.qty||0;rows.push([d.date,d.number,i.desc,q,i.rate,i.cost||0,r2(q*i.rate),r2(q*(i.rate-(i.cost||0))),d.taxRate||0,pm])})});
-    const csv=rows.map(r=>r.map(v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(',')).join('\n');
-    downloadBlob('sales-'+period+'-'+todayISO()+'.csv',new Blob([csv],{type:'text/csv'}))},
-  pickPlace:e=>{const f=placeHits[+e.dataset.i];if(!f||!C)return;C.address=placeLine(f);const ta=$('#c-addr');if(ta)ta.value=C.address;if(isBiz(f)&&!C.name.trim()){C.name=f.properties.name;const n=$('#c-name');if(n)n.value=C.name}const b=$('#c-sugg');if(b)b.innerHTML='';const fi=$('#c-find');if(fi)fi.value='';toast(t('saved'))},
-  fabMenu:()=>{const m=$('#fabMenu'),f=$('#fab');if(!m.hidden){closeFab();return}$('#fabItems').innerHTML=fabItems();m.classList.toggle('lift',f.classList.contains('lift'));m.hidden=false;f.classList.add('open');f.setAttribute('aria-expanded','true');const b=m.querySelector('.fmi');if(b)b.focus()},
-  fabClose:()=>closeFab(),
-  fabPick:e=>{closeFab();const f=A[e.dataset.v];if(f)f(e)},
   getStarted:()=>{S.profile.started=true;showWelcome=false;persist();render();if(!S.profile.company)showSheet(settingsSheet())},
   install:async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()},
   setLang:e=>{lang=e.dataset.v;S.profile.lang=lang;persist();render();redrawSheet()},
@@ -1817,6 +1321,7 @@ const A={
   smEmail:()=>smSend('email'),
   smPay:()=>{const d=commitDraft();if(!d)return;D=null;closeSheet();showSheet(docDetail(d.id));A.pay({dataset:{id:d.id}})},
   smText:()=>smSend('text'),
+  smWhatsapp:()=>smSend('whatsapp'),
   smShare:()=>{const d=commitDraft();if(d)sharePDF(d)},
   smPdf:()=>{const d=commitDraft();if(d)downloadPDF(d)},
   takePhoto:()=>{if((D.photos||[]).length>=9){toast(t('photoLimit'));return}$('#camIn').value='';$('#camIn').click()},
@@ -1846,8 +1351,12 @@ const A={
   savePay:e=>{const d=S.docs[e.dataset.id];const amt=r2(+$('#p-amt').value);if(!amt)return;d.payments=d.payments||[];d.payments.push({id:uid(),amount:amt,date:$('#p-date').value||todayISO(),method:$('#p-m').value,ref:$('#p-ref').value.trim(),coin:$('#p-coin').value.trim(),txid:$('#p-tx').value.trim(),note:$('#p-note').value.trim()});d.sent=true;d.updatedAt=Date.now();closeSheet();commit();toast(t('saved'))},
   delPay:e=>{const d=S.docs[e.dataset.id];d.payments=(d.payments||[]).filter(p=>p.id!==e.dataset.p);commit()},
   toggleSent:e=>{const d=S.docs[e.dataset.id];d.sent=!d.sent;commit()},
-  accept:e=>{const d=S.docs[e.dataset.id];d.accepted=true;d.acceptedAt=d.acceptedAt||todayISO();commit()},
-  estTab:e=>{estTab=e.dataset.v;render()},
+  clientSign:e=>{SIG={mode:'client',id:e.dataset.id};showSheet(sigSheet())},
+  mySign:()=>{SIG={mode:'me'};showSheet(sigSheet())},
+  sigClear:()=>initPad(),
+  sigSave:()=>saveSig(),
+  clearClientSig:e=>{const d=S.docs[e.dataset.id];if(!confirm(t('removeClientSig')+'?'))return;delete d.sig;commit()},
+  accept:e=>{S.docs[e.dataset.id].accepted=true;commit()},
   copyDoc:e=>copyText(docText(S.docs[e.dataset.id])),
   copy:e=>copyText(e.dataset.v),
   pdf:e=>downloadPDF(S.docs[e.dataset.id]),
@@ -1858,10 +1367,11 @@ const A={
   openReminder:e=>openEditor(S.docs[e.dataset.id],'send','reminder'),
   smMode:e=>{smMode=e.dataset.v;SM=null;redrawSheet()},
   textDoc:e=>sendDoc(S.docs[e.dataset.id],'text'),
+  whatsappDoc:e=>sendDoc(S.docs[e.dataset.id],'whatsapp'),
   payTab:e=>{payTab=e.dataset.v;redrawSheet()},
   refreshPrices:()=>fetchPrices(true),
-  duplicate:e=>{const s=S.docs[e.dataset.id];openEditor(newDoc(s.kind,{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,payInstr:s.payInstr,notes:s.notes}))},
-  convert:e=>{const s=S.docs[e.dataset.id];const inv=newDoc('invoice',{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,notes:s.notes,photos:JSON.parse(JSON.stringify(s.photos||[])),includePhotos:s.includePhotos,fromEstimate:s.id});delete inv._new;inv.updatedAt=Date.now();S.docs[inv.id]=inv;S.profile.nextInvoice=(parseInt(inv.number)||0)+1;s.convertedTo=inv.id;s.accepted=true;s.acceptedAt=s.acceptedAt||todayISO();stack.pop();payTab=null;showSheet(docDetail(inv.id));commit();toast(t('saved'))},
+  duplicate:e=>{const s=S.docs[e.dataset.id];openEditor(newDoc(s.kind,{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,payInstr:s.payInstr,notes:s.notes,contractTerms:s.contractTerms}))},
+  convert:e=>{const s=S.docs[e.dataset.id];const inv=newDoc('invoice',{clientId:s.clientId,jobId:s.jobId,items:JSON.parse(JSON.stringify(s.items||[])),discountType:s.discountType,discountValue:s.discountValue,taxRate:s.taxRate,notes:s.notes,contractTerms:s.contractTerms,photos:JSON.parse(JSON.stringify(s.photos||[])),includePhotos:s.includePhotos,fromEstimate:s.id});delete inv._new;inv.updatedAt=Date.now();S.docs[inv.id]=inv;S.profile.nextInvoice=(parseInt(inv.number)||0)+1;s.convertedTo=inv.id;s.accepted=true;stack.pop();payTab=null;showSheet(docDetail(inv.id));commit();toast(t('saved'))},
   askDel:e=>{$('#delZone').innerHTML=`<div class="confirm"><p style="margin:0 0 10px">${t('confirmDel')}</p><div class="btns" style="margin:0"><button class="btn" data-act="back0">${t('cancel')}</button><button class="btn bad" data-act="delDoc" data-id="${e.dataset.id}">${t('yesDel')}</button></div></div>`},
   delDoc:e=>{const d=S.docs[e.dataset.id];delete S.docs[e.dataset.id];(d.photos||[]).forEach(p=>{if(!Object.values(S.docs).some(x=>(x.photos||[]).some(q=>q.id===p.id)))idb.del(p.id).catch(()=>{})});closeSheet();commit()},
   jobs:()=>showSheet(jobsSheet()),
@@ -1909,13 +1419,11 @@ function photoViewer(doc,k,editable){return{live:false,doc,k,render(){
   ${editable?`<div id="delZone" style="width:100%"><button class="btn bad" data-act="askDelPhoto">${t('del')}</button></div>`:''}</div></div>`;
 }}}
 
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#fabMenu').hidden)closeFab()});
-document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;if(el.dataset.act==='cmCloseOvl'&&el.classList.contains('ovl')&&e.target!==el)return;const f=A[el.dataset.act];if(!f)return;if(el.type!=='checkbox')e.preventDefault();f(el)});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(!f)return;if(el.type!=='checkbox')e.preventDefault();f(el)});
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='q'){query=el.value;render();return}
   if(el.id==='cq'){clientQuery=el.value;const pos=el.selectionStart;redrawSheet();const q=$('#cq');if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}return}
-  if(el.id==='estYear'){estYear=el.value;render();return}
   if(el.id==='sortSel'){S.profile.sortKey=el.value;persist();render();return}
   if(SM&&el.dataset.sm){SM[el.dataset.sm]=el.value;return}
   if(D&&el.dataset.bind){
@@ -1926,12 +1434,6 @@ document.addEventListener('input',e=>{
   if(D&&el.dataset.cap!==undefined){D.photos[+el.dataset.cap].caption=el.value;return}
   if(D&&NJ&&el.dataset.nj){NJ[el.dataset.nj]=el.value;return}
   if(D&&el.dataset.jaddr){const j=S.jobs[D.jobId];if(j){j.address=el.value;persist()}return}
-  if(el.id==='mn-note'){S.profile.menuNote=el.value.slice(0,120);persist();clearTimeout(window._mnT);window._mnT=setTimeout(async()=>{if(menuServer()){scheduleMenuPublish();return}MENU_URL=menuBase()+'#m.'+(await packMenu());const a=document.querySelector('#sheet a.btn[target]');if(a)a.href=MENU_URL;const c=document.querySelector('#sheet [data-act=copy]');if(c)c.dataset.v=MENU_URL},500);return}
-  if(SALE&&el.dataset.qid){const v=Math.max(0,+el.value||0);SALE.cart[el.dataset.qid]=v;const tt=$('#qs-total');if(tt)tt.textContent=money(saleTotal());const cb=document.querySelector('[data-act=qsCharge]');if(cb)cb.textContent=t('qsCharge')+' '+money(saleTotal());return}
-  if(SALE&&el.id==='qs-who'){SALE.who=el.value;return}
-  if(el.id==='qs-tax'&&SALE){S.profile.saleTax=+el.value||0;persist();const tt=$('#qs-total');if(tt)tt.textContent=money(saleTotal());const cb=document.querySelector('[data-act=qsCharge]');if(cb)cb.textContent=t('qsCharge')+' '+money(saleTotal());return}
-  if(SALE&&el.id==='qs-rec'){SALE.received=el.value;const tot=saleTotal(),r=+el.value||0,c=$('#qs-chg');if(c)c.innerHTML=el.value===''?'':(r<tot?`<span class="red">${t('qsShort')}: ${money(tot-r)}</span>`:`<span class="small">${t('qsChange')}</span> <span class="change num">${money(r-tot)}</span>`);const b=document.querySelector('[data-act=qsCharge]');if(b)b.disabled=r<tot&&el.value!=='';return}
-  if(el.id==='c-find'){findPlaces(el.value);return}
   if(C&&el.dataset.c){C[el.dataset.c]=el.value;return}
   if(C&&el.dataset.email!==undefined){C.emails[+el.dataset.email]=el.value;return}
   if(el.dataset.pc!==undefined){pickedContacts[+el.dataset.pc].keep=el.checked;return}
@@ -1942,7 +1444,7 @@ document.addEventListener('input',e=>{
     const v=$('#m-valid');if(v){const ok=addrValid(M);v.textContent=ok?'':t('looksWrong');v.className='small '+(ok?'':'red')}
   }
 });
-document.addEventListener('change',e=>{const el=e.target;if(SALE&&el.dataset&&el.dataset.qid){if(!(+el.value>0))delete SALE.cart[el.dataset.qid];render();return}if(el.tagName==='SELECT'&&(el.dataset.bind||el.dataset.item!==undefined||el.dataset.m||(el.id==='sortSel'||el.id==='estYear')))el.dispatchEvent(new Event('input',{bubbles:true}));if(el.type==='checkbox'&&el.dataset.pc!==undefined)el.dispatchEvent(new Event('input',{bubbles:true}))});
+document.addEventListener('change',e=>{const el=e.target;if(el.tagName==='SELECT'&&(el.dataset.bind||el.dataset.item!==undefined||el.dataset.m||el.id==='sortSel'))el.dispatchEvent(new Event('input',{bubbles:true}));if(el.type==='checkbox'&&el.dataset.pc!==undefined)el.dispatchEvent(new Event('input',{bubbles:true}))});
 async function addPhotoFiles(files){
   if(!D)return;D.photos=D.photos||[];
   for(const f of files){if(D.photos.length>=9){toast(t('photoLimit'));break}
@@ -1959,18 +1461,11 @@ $('#fileIn').addEventListener('change',async e=>{
 
 /* ---------- boot ---------- */
 load();
-const MENU_CODE=location.hash.startsWith('#m.')?location.hash.slice(3):location.hash.startsWith('#menu=')?location.hash:'';
-if(MENU_CODE){if(!S.profile.started)lang=(navigator.language||'').toLowerCase().startsWith('es')?'es':'en';if(MENU_CODE.startsWith('#menu=')){const [mid,pid]=MENU_CODE.slice(6).split('-');renderLiveMenu((mid||'').replace(/[^a-z0-9]/g,''),(pid||'').replace(/[^a-z0-9]/g,''))}else renderMenuPage(MENU_CODE)}else{
 showWelcome=!S.profile.started;
 render();
-}
-if(!MENU_CODE&&'serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
-if(!MENU_CODE)(window.requestIdleCallback||(f=>setTimeout(f,300)))(()=>{
-  loadLib(LIB.qr).then(()=>{if(typeof stack!=='undefined'&&stack.length)redrawSheet()}).catch(()=>{});
-  const C=window.OBRERO_CONFIG||{};
-  (C.supabaseUrl&&C.supabaseAnonKey?loadLib(LIB.cloud).catch(()=>{}):Promise.resolve()).then(()=>loadLib('cloud.js')).catch(()=>{});
-});
 </script>
+<script src="cloud.js"></script>
 </body>
 </html>
