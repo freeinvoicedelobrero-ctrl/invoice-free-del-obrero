@@ -1244,6 +1244,9 @@ async function sharePDF(d){
   doc.save(pdfName(d));
 }
 
+/* save right now: the mail / SMS / WhatsApp app takes over the screen, so the normal delayed save could be lost */
+function flushSave(){clearTimeout(saveT);try{S.meta=S.meta||{};S.meta.savedAt=Date.now();localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){}}
+
 /* send by email / text: share the PDF where the phone allows it, otherwise download it and open the mail or SMS app with the message ready */
 async function sendDoc(d,how,o){
   o=o||{};const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
@@ -1261,12 +1264,14 @@ async function sendDoc(d,how,o){
     if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
     const digits=(to||'').replace(/\D/g,'');const full=digits.length===10?'1'+digits:digits;
     doc.save(pdfName(d));
+    if(!d.sent){d.sent=true;flushSave()}
     window.open('https://wa.me/'+full+'?text='+encodeURIComponent(body),'_blank');
     setTimeout(()=>toast(t('attachNote')),600);
     if(!d.sent){d.sent=true;commit()}
     return;
   }
   doc.save(pdfName(d));
+  if(!d.sent){d.sent=true;flushSave()}
   if(how==='email'){if(!to)toast(t('noEmail'));location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);setTimeout(()=>toast(t('attachNote')),600)}
   else{if(!to)toast(t('noPhone'));location.href='sms:'+to+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(o.body?body:subj+'\n'+body)}
   if(!d.sent){d.sent=true;commit()}
