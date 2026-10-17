@@ -1254,7 +1254,8 @@ async function sendDoc(d,how,o){
   const doc=await buildPDF(d);if(!doc)return;
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
-  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+  /* email: the phone share sheet can't pass the address, so the mail app opens with the client's email in To and the PDF downloads to attach */
+  if(mobile&&how!=='email'){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
   if(how==='whatsapp'){
     /* WhatsApp: share the PDF + message through the phone's share sheet (pick WhatsApp and the client); otherwise open a WhatsApp chat with the message and the PDF downloaded to attach */
     if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
