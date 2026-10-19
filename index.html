@@ -1298,7 +1298,19 @@ async function restoreJSON(o){
 /* ---------- actions ---------- */
 const FAB_OPTS=[['fabInvoice','newInvoice'],['fabEstimate','newEstimate'],['fabClient','newClient'],['fabExpense','newExpense'],['fabItem','newSaved']];
 const fabOn=a=>!S.profile.fabOptions||S.profile.fabOptions.includes(a);
-function fabMenuSheet(){const rows=FAB_OPTS.filter(([l,a])=>fabOn(a));return{live:false,render(){return sheetHead('',{close:true})+`<div class="wrap sheet-b"><div class="list">${rows.map(([l,a])=>`<button class="row" data-act="fabPick" data-v="${a}"><div class="main"><div class="t1">${t(l)}</div></div></button>`).join('')}</div></div>`}}}
+const FAB_CSS=`#fabPop{position:fixed;inset:0;z-index:20}#fabPop .pop{position:fixed;width:230px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}#fabPop .ph{background:var(--accent);color:var(--accent-ink);font-weight:600;padding:11px 14px;display:flex;justify-content:space-between;align-items:center}#fabPop button.pi{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:13px 14px;font:inherit;color:inherit}#fabPop button.pi:active{background:var(--line)}`;
+function openFabMenu(){
+  closeFabMenu();
+  if(!document.getElementById('fabCss')){const st=document.createElement('style');st.id='fabCss';st.textContent=FAB_CSS;document.head.appendChild(st)}
+  const r=$('#fab').getBoundingClientRect();
+  const w=document.createElement('div');w.id='fabPop';
+  const rows=FAB_OPTS.filter(([l,a])=>fabOn(a));
+  const hasBox=r.width>0;const right=hasBox?Math.max(8,innerWidth-r.right):18;const bottom=hasBox?innerHeight-r.top+10:(154+($('#fab').classList.contains('lift')?56:0));
+  w.innerHTML=`<div class="pop" style="right:${right}px;bottom:${bottom}px"><div class="ph"><span>${lang==='es'?'Crear nuevo':'Create new'}</span><span>+</span></div>${rows.map(([l,a])=>`<button class="pi" data-fabv="${a}">${t(l)}</button>`).join('')}</div>`;
+  w.addEventListener('click',e=>{const b=e.target.closest('[data-fabv]');if(b){const a=b.dataset.fabv;closeFabMenu();if(A[a])A[a]({dataset:{}})}else if(e.target===w)closeFabMenu()});
+  document.body.appendChild(w);
+}
+function closeFabMenu(){const w=document.getElementById('fabPop');if(w)w.remove()}
 const A={
   getStarted:()=>{S.profile.started=true;showWelcome=false;persist();render();if(!S.profile.company)showSheet(settingsSheet())},
   install:async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()},
@@ -1312,8 +1324,7 @@ const A={
   back:()=>closeSheet(),
   newInvoice:()=>openEditor(newDoc('invoice')),
   newEstimate:()=>openEditor(newDoc('estimate')),
-  fab:()=>showSheet(fabMenuSheet()),
-  fabPick:e=>{const f=A[e.dataset.v];closeSheet();if(f)f(e)},
+  fab:()=>openFabMenu(),
   newClient:()=>openClientEditor(),
   newInvoiceFor:e=>openEditor(newDoc('invoice',{clientId:e.dataset.id})),
   newEstimateFor:e=>openEditor(newDoc('estimate',{clientId:e.dataset.id})),
