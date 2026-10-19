@@ -1072,6 +1072,7 @@ function settingsSheet(){return{live:false,render(){
   <div class="field"><label for="st-terms">${t('defTerms')}</label><textarea class="in" id="st-terms" data-s="terms">${esc(p.terms)}</textarea></div>
   <div class="field"><label for="st-contractTerms">${t('contractTerms')}</label><textarea class="in" id="st-contractTerms" data-s="contractTerms" style="min-height:140px" placeholder="${t('contractTermsPh')}">${esc(p.contractTerms||'')}</textarea><p class="small">${t('contractTermsNote')}</p></div>
   <div class="field"><label>${t('mySignature')}</label>${p.sig?`<div class="sigbox" style="max-width:260px"><img src="${p.sig}" alt=""><div class="small">${esc(p.sigName||'')}</div></div>`:''}<button class="btn" data-act="mySign">${p.sig?t('changeMySig'):t('addMySig')}</button></div>
+  <div class="field"><label>${lang==='es'?'Correo al enviar desde la computadora':'Email on computer'}</label><select class="in" data-mailapp><option value="mailto" ${p.mailApp!=='gmail'?'selected':''}>${lang==='es'?'App de correo del equipo':'Computer mail app'}</option><option value="gmail" ${p.mailApp==='gmail'?'selected':''}>Gmail (navegador)</option></select></div>
   <div class="field"><label>${lang==='es'?'Opciones del botón ➕':'Options for the ➕ button'}</label>
   ${FAB_OPTS.map(([k,a])=>`<label style="display:flex;gap:10px;align-items:center;margin:8px 0"><input type="checkbox" data-fab="${a}" ${fabOn(a)?'checked':''}>${t(k)}</label>`).join('')}</div>
   <button class="btn primary" data-act="saveSettings">${t('save')}</button></div>`;
@@ -1275,7 +1276,13 @@ async function sendDoc(d,how,o){
   }
   doc.save(pdfName(d));
   if(!d.sent){d.sent=true;flushSave()}
-  if(how==='email'){if(!to)toast(t('noEmail'));location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);setTimeout(()=>toast(t('attachNote')),600)}
+  if(how==='email'){
+    /* computer: copy the client's address, then open the chosen mail app with To / subject / message ready. The PDF is downloaded; attach it there. */
+    if(!to)toast(t('noEmail'));
+    try{if(to)navigator.clipboard.writeText(to)}catch(e){}
+    if(S.profile.mailApp==='gmail'){window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(to)+'&su='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body),'_blank')}
+    else{location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body)}
+    setTimeout(()=>toast(t('attachNote')),600)}
   else{if(!to)toast(t('noPhone'));location.href='sms:'+to+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(o.body?body:subj+'\n'+body)}
   if(!d.sent){d.sent=true;commit()}
 }
@@ -1429,7 +1436,7 @@ const A={
   logoPlace:e=>{S.profile.logoPlace=e.dataset.v;commit();redrawSheet()},
   useAppArt:async()=>{try{const r=await fetch('roofer.png');const b=await r.blob();S.profile.logo=await logoDataURL(new File([b],'roofer.png',{type:'image/png'}));commit();redrawSheet();toast(t('saved'))}catch(e){toast('Error')}},
   rmLogo:()=>{delete S.profile.logo;commit();redrawSheet()},
-  saveSettings:()=>{document.querySelectorAll('[data-s]').forEach(el=>{S.profile[el.dataset.s]=['nextInvoice','nextEstimate','defDue'].includes(el.dataset.s)?(+el.value||0):el.value});const fo=[...document.querySelectorAll('[data-fab]')].filter(c=>c.checked).map(c=>c.dataset.fab);if(fo.length)S.profile.fabOptions=fo;closeSheet();commit();toast(t('saved'))},
+  saveSettings:()=>{document.querySelectorAll('[data-s]').forEach(el=>{S.profile[el.dataset.s]=['nextInvoice','nextEstimate','defDue'].includes(el.dataset.s)?(+el.value||0):el.value});const ma=document.querySelector('[data-mailapp]');if(ma)S.profile.mailApp=ma.value;const fo=[...document.querySelectorAll('[data-fab]')].filter(c=>c.checked).map(c=>c.dataset.fab);if(fo.length)S.profile.fabOptions=fo;closeSheet();commit();toast(t('saved'))},
   importExport:()=>showSheet(ieSheet()),
   aboutOpen:()=>showSheet(aboutSheet()),
   pickFile:e=>{fileMode=e.dataset.v;$('#fileIn').value='';$('#fileIn').click()},
