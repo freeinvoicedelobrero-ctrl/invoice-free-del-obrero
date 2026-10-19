@@ -1263,8 +1263,7 @@ async function sendDoc(d,how,o){
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
     /* on phones the PDF must travel with the message: share it (the mail app attaches it). The client's address goes in the text so it can be pasted into To. */
-  if(mobile&&how==='email'){doc.save(pdfName(d));if(!d.sent){d.sent=true;flushSave()}if(!to)toast(t('noEmail'));location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);setTimeout(()=>toast(t('attachNote')),800);return}
-  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
   if(how==='whatsapp'){
     /* WhatsApp: share the PDF + message through the phone's share sheet (pick WhatsApp and the client); otherwise open a WhatsApp chat with the message and the PDF downloaded to attach */
     if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
