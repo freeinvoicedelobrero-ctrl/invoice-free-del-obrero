@@ -221,7 +221,7 @@ textarea.in{min-height:84px;resize:vertical}
   <header class="top"><div class="wrap"><h1 id="title">Home</h1><button class="iconbtn" data-act="lang" id="langBtn" aria-label="Language">EN</button></div></header>
   <main id="main"><div class="wrap" id="view"></div></main>
   <div class="totalbar" id="totalbar" hidden><div class="wrap"><span id="totalLbl">Total</span><span class="num" id="totalVal"></span></div></div>
-  <button class="fab" id="fab" data-act="newInvoice" aria-label="New invoice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="fab" id="fab" data-act="fab" aria-label="New"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
   <nav class="tabs"><div class="wrap" id="tabs"></div></nav>
 </div>
 <div class="sheet" id="sheet" hidden></div>
@@ -296,6 +296,7 @@ aboutText:'Invoice Free del Obrero es gratis y de código abierto (MIT). No hay 
 continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado'}
 };
 let lang='es';
+Object.assign(L.en,{fabInvoice:'New invoice',fabEstimate:'New estimate',fabClient:'New client',fabExpense:'New expense',fabItem:'New saved item'});Object.assign(L.es,{fabInvoice:'Nueva factura',fabEstimate:'Nuevo presupuesto',fabClient:'Nuevo cliente',fabExpense:'Nuevo gasto',fabItem:'Nuevo concepto'});
 function t(k,...a){const v=(L[lang]&&L[lang][k])??L.en[k]??k;return typeof v==='function'?v(...a):v}
 
 /* ---------- helpers ---------- */
@@ -446,8 +447,8 @@ function render(){
   $('#tabs').innerHTML=tabs.map(k=>`<button class="tab" data-act="tab" data-v="${k}" ${k===tab?'aria-current="page"':''}>${ic(k,1.9)}<span>${t(k)}</span></button>`).join('');
   $('#title').textContent=t(tab);
   const fab=$('#fab');fab.hidden=tab==='more';
-  fab.dataset.act=tab==='clients'?'newClient':tab==='estimates'?'newEstimate':'newInvoice';
-  fab.setAttribute('aria-label',t(fab.dataset.act));
+  fab.dataset.act='fab';
+  fab.setAttribute('aria-label',t('fabInvoice'));
   fab.classList.toggle('lift',tab==='invoices');
   $('#totalbar').hidden=tab!=='invoices';
   $('#main').classList.toggle('withTotal',tab==='invoices');
@@ -1071,6 +1072,8 @@ function settingsSheet(){return{live:false,render(){
   <div class="field"><label for="st-terms">${t('defTerms')}</label><textarea class="in" id="st-terms" data-s="terms">${esc(p.terms)}</textarea></div>
   <div class="field"><label for="st-contractTerms">${t('contractTerms')}</label><textarea class="in" id="st-contractTerms" data-s="contractTerms" style="min-height:140px" placeholder="${t('contractTermsPh')}">${esc(p.contractTerms||'')}</textarea><p class="small">${t('contractTermsNote')}</p></div>
   <div class="field"><label>${t('mySignature')}</label>${p.sig?`<div class="sigbox" style="max-width:260px"><img src="${p.sig}" alt=""><div class="small">${esc(p.sigName||'')}</div></div>`:''}<button class="btn" data-act="mySign">${p.sig?t('changeMySig'):t('addMySig')}</button></div>
+  <div class="field"><label>${lang==='es'?'Opciones del botón ➕':'Options for the ➕ button'}</label>
+  ${FAB_OPTS.map(([k,a])=>`<label style="display:flex;gap:10px;align-items:center;margin:8px 0"><input type="checkbox" data-fab="${a}" ${fabOn(a)?'checked':''}>${t(k)}</label>`).join('')}</div>
   <button class="btn primary" data-act="saveSettings">${t('save')}</button></div>`;
 }}}
 let fileMode='csv';
@@ -1293,6 +1296,9 @@ async function restoreJSON(o){
 }
 
 /* ---------- actions ---------- */
+const FAB_OPTS=[['fabInvoice','newInvoice'],['fabEstimate','newEstimate'],['fabClient','newClient'],['fabExpense','newExpense'],['fabItem','newSaved']];
+const fabOn=a=>!S.profile.fabOptions||S.profile.fabOptions.includes(a);
+function fabMenuSheet(){const rows=FAB_OPTS.filter(([l,a])=>fabOn(a));return{live:false,render(){return sheetHead('',{close:true})+`<div class="wrap sheet-b"><div class="list">${rows.map(([l,a])=>`<button class="row" data-act="fabPick" data-v="${a}"><div class="main"><div class="t1">${t(l)}</div></div></button>`).join('')}</div></div>`}}}
 const A={
   getStarted:()=>{S.profile.started=true;showWelcome=false;persist();render();if(!S.profile.company)showSheet(settingsSheet())},
   install:async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;render()},
@@ -1306,6 +1312,8 @@ const A={
   back:()=>closeSheet(),
   newInvoice:()=>openEditor(newDoc('invoice')),
   newEstimate:()=>openEditor(newDoc('estimate')),
+  fab:()=>showSheet(fabMenuSheet()),
+  fabPick:e=>{const f=A[e.dataset.v];closeSheet();if(f)f(e)},
   newClient:()=>openClientEditor(),
   newInvoiceFor:e=>openEditor(newDoc('invoice',{clientId:e.dataset.id})),
   newEstimateFor:e=>openEditor(newDoc('estimate',{clientId:e.dataset.id})),
@@ -1410,7 +1418,7 @@ const A={
   logoPlace:e=>{S.profile.logoPlace=e.dataset.v;commit();redrawSheet()},
   useAppArt:async()=>{try{const r=await fetch('roofer.png');const b=await r.blob();S.profile.logo=await logoDataURL(new File([b],'roofer.png',{type:'image/png'}));commit();redrawSheet();toast(t('saved'))}catch(e){toast('Error')}},
   rmLogo:()=>{delete S.profile.logo;commit();redrawSheet()},
-  saveSettings:()=>{document.querySelectorAll('[data-s]').forEach(el=>{S.profile[el.dataset.s]=['nextInvoice','nextEstimate','defDue'].includes(el.dataset.s)?(+el.value||0):el.value});closeSheet();commit();toast(t('saved'))},
+  saveSettings:()=>{document.querySelectorAll('[data-s]').forEach(el=>{S.profile[el.dataset.s]=['nextInvoice','nextEstimate','defDue'].includes(el.dataset.s)?(+el.value||0):el.value});const fo=[...document.querySelectorAll('[data-fab]')].filter(c=>c.checked).map(c=>c.dataset.fab);if(fo.length)S.profile.fabOptions=fo;closeSheet();commit();toast(t('saved'))},
   importExport:()=>showSheet(ieSheet()),
   aboutOpen:()=>showSheet(aboutSheet()),
   pickFile:e=>{fileMode=e.dataset.v;$('#fileIn').value='';$('#fileIn').click()},
