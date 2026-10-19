@@ -296,6 +296,7 @@ aboutText:'Invoice Free del Obrero es gratis y de código abierto (MIT). No hay 
 continueSetup:'Primero llena los datos de tu negocio',setupTitle:'Tu negocio',start:'Empezar a facturar',welcomeBack:'Abrir app',estDraft:'Borrador',estSent:'Enviado'}
 };
 let lang='es';
+Object.assign(L.en,{emailCopied:'Client email copied. Paste it in the To field.'});Object.assign(L.es,{emailCopied:'Correo del cliente copiado. Pégalo en el campo Para.'});
 Object.assign(L.en,{fabInvoice:'New invoice',fabEstimate:'New estimate',fabClient:'New client',fabExpense:'New expense',fabItem:'New saved item'});Object.assign(L.es,{fabInvoice:'Nueva factura',fabEstimate:'Nuevo presupuesto',fabClient:'Nuevo cliente',fabExpense:'Nuevo gasto',fabItem:'Nuevo concepto'});
 function t(k,...a){const v=(L[lang]&&L[lang][k])??L.en[k]??k;return typeof v==='function'?v(...a):v}
 
@@ -1262,7 +1263,7 @@ async function sendDoc(d,how,o){
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
     /* on phones the PDF must travel with the message: share it (the mail app attaches it). The client's address goes in the text so it can be pasted into To. */
-  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:(how==='email'&&to?'To: '+to+'\n\n':'')+body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
   if(how==='whatsapp'){
     /* WhatsApp: share the PDF + message through the phone's share sheet (pick WhatsApp and the client); otherwise open a WhatsApp chat with the message and the PDF downloaded to attach */
     if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
