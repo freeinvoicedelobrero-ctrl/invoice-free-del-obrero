@@ -1263,10 +1263,10 @@ async function sendDoc(d,how,o){
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
     /* on phones the PDF must travel with the message: share it (the mail app attaches it). The client's address goes in the text so it can be pasted into To. */
-  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(!was){d.sent=false;commit()}throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
   if(how==='whatsapp'){
     /* WhatsApp: share the PDF + message through the phone's share sheet (pick WhatsApp and the client); otherwise open a WhatsApp chat with the message and the PDF downloaded to attach */
-    if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:subj,text:body});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}}
+    if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(!was){d.sent=false;commit()}throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
     const digits=(to||'').replace(/\D/g,'');const full=digits.length===10?'1'+digits:digits;
     doc.save(pdfName(d));
     if(!d.sent){d.sent=true;flushSave()}
