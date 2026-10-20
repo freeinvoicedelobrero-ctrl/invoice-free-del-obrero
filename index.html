@@ -847,6 +847,8 @@ async function smSend(how){
   const cl=S.clients[d.clientId];if(cl){if(SM.to&&!(cl.emails||[]).includes(SM.to)){cl.emails=(cl.emails||[]).filter(Boolean);cl.emails.unshift(SM.to)}if(SM.phone&&!cl.mobile)cl.mobile=SM.phone;commit()}
   if(smMode==='reminder'){d.reminders=d.reminders||[];d.reminders.push(todayISO());if(D)D.reminders=d.reminders;commit()}
   await sendDoc(d,how,{to:how==='email'?SM.to:SM.phone,subject:SM.subject,body:SM.msg});
+  /* the editor works on a draft copy: save the "sent" state into the real invoice so it survives leaving the editor without pressing SAVE */
+  if(d.sent&&d.id){S.docs[d.id]=d;commit()}
   redrawSheet();
 }
 function saveDocFromEditor(){
