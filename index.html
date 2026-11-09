@@ -1085,7 +1085,7 @@ function storeSheet(){return{live:true,render(){
   const lines=cartLines();const total=r2(lines.reduce((a,[id,q])=>a+S.products[id].price*q,0));
   return sheetHead(rt('Tienda','Store'),{close:true,right:`<button class="textbtn" data-act="productsOpen">${rt('Productos','Products')}</button>`})+`<div class="wrap sheet-b">
   <div class="cards" style="margin-top:12px"><div class="card good"><span class="lbl">${rt('Vendido hoy','Sold today')}</span><span class="val num">${money(dayTot)}</span></div><div class="card"><span class="lbl">${rt('Ventas hoy','Sales today')}</span><span class="val num">${todays.length}</span></div></div>
-  ${products.length?`<div class="grid2" style="margin-top:12px">${products.map(p=>{const q=cart[p.id]||0;return `<button class="card" data-act="addCart" data-id="${p.id}"><span class="lbl">${esc(p.name)}</span><span class="val num">${money(p.price)}</span>${q?`<span class="small num">× ${q}</span>`:''}</button>`}).join('')}</div>`:`<div class="empty" style="margin-top:20px">${rt('Agrega tus productos con el botón Productos.','Add your products with the Products button.')}</div>`}
+  ${products.length?`<div class="grid2" style="margin-top:12px">${products.map(p=>{const q=cart[p.id]||0;return `<button class="card" data-act="addCart" data-id="${p.id}">${p.photo?`<img src="${p.photo}" alt="" style="width:100%;height:84px;object-fit:cover;border-radius:10px">`:''}<span class="lbl">${esc(p.name)}</span><span class="val num">${money(p.price)}</span>${q?`<span class="small num">× ${q}</span>`:''}</button>`}).join('')}</div>`:`<div class="empty" style="margin-top:20px">${rt('Agrega tus productos con el botón Productos.','Add your products with the Products button.')}</div>`}
   ${lines.length?`<div class="group" style="margin-top:14px">${lines.map(([id,q])=>`<div class="kv"><span>${esc(S.products[id].name)} × ${q}</span><span class="num">${money(S.products[id].price*q)}</span></div>`).join('')}<div class="kv"><b>${t('total')}</b><b class="num">${money(total)}</b></div><div class="grid2" style="margin-top:10px"><button class="btn outline" data-act="clearCart">${rt('Limpiar','Clear')}</button><button class="btn primary" data-act="checkout">${rt('Cobrar','Charge')}</button></div></div>`:''}
   <div class="group" style="margin-top:14px"><div class="gl">${rt('Últimas ventas','Recent sales')}</div>${sales.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,8).map(s=>`<div class="kv"><span>${s.date} · ${esc(s.method)}</span><span class="num">${money(s.total)}</span></div>`).join('')||`<div class="small">${rt('Sin ventas todavía','No sales yet')}</div>`}</div>
   </div>`}}}
@@ -1108,10 +1108,15 @@ async function shareReceipt(id){
   try{if(navigator.share){await navigator.share({text,title:rt('Recibo','Receipt')});return}}catch(e){if(e&&e.name==='AbortError')return}
   try{await navigator.clipboard.writeText(text);toast(rt('Recibo copiado','Receipt copied'))}catch(e){toast(text)}
 }
+/* product photo: shrink to 240px so it stays light on the phone */
+function shrinkImage(file,max){return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',0.7))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('image'))};img.src=url})}
+document.addEventListener('change',async e=>{const el=e.target;if(el.id!=='p-f'||!el.files||!el.files[0])return;try{pendingPhoto=await shrinkImage(el.files[0],240);const pv=document.getElementById('p-prev');if(pv){pv.src=pendingPhoto;pv.hidden=false}}catch(err){toast(rt('No se pudo leer la foto','Could not read the photo'))}});
 function productsSheet(){return{live:true,render(){
   const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
   return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row"><button class="main" style="background:none;border:0;text-align:left;padding:0" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}</div></button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
-function productEditor(p){const it=p||{id:uid(),name:'',price:0};return{live:false,render(){return sheetHead(rt('Producto','Product'),{close:true})+`<div class="wrap sheet-b">
+let pendingPhoto=null;
+function productEditor(p){const it=p||{id:uid(),name:'',price:0};pendingPhoto=(p&&p.photo)||null;return{live:false,render(){return sheetHead(rt('Producto','Product'),{close:true})+`<div class="wrap sheet-b">
+  <div class="field" style="margin-top:14px"><label for="p-f">${rt('Foto (opcional)','Photo (optional)')}</label><img id="p-prev" src="${it.photo||''}" alt="" ${it.photo?'':'hidden'} style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-bottom:8px"><input class="in" id="p-f" type="file" accept="image/*"></div>
   <div class="field" style="margin-top:14px"><label for="p-n">${t('desc')}</label><input class="in" id="p-n" value="${esc(it.name)}" placeholder="${rt('Agua 16 oz','Water 16 oz')}"></div>
   <div class="field"><label for="p-p">${t('rate')}</label><input class="in num" id="p-p" type="number" step="0.01" inputmode="decimal" value="${esc(it.price)}"></div>
   <button class="btn primary" data-act="saveProduct" data-id="${it.id}">${t('save')}</button>${p?`<button class="btn outline" style="margin-top:10px" data-act="delProduct" data-id="${it.id}">${t('del')}</button>`:''}</div>`}}}
@@ -1585,7 +1590,7 @@ const A={
   productsOpen:()=>showSheet(productsSheet()),
   newProduct:()=>showSheet(productEditor()),
   editProduct:e=>showSheet(productEditor(S.products[e.dataset.id])),
-  saveProduct:e=>{const n=$('#p-n').value.trim(),p=+$('#p-p').value||0;if(!n){toast(rt('Escribe el nombre','Write the name'));return}S.products[e.dataset.id]={id:e.dataset.id,name:n,price:p};closeSheet();commit()},
+  saveProduct:e=>{const n=$('#p-n').value.trim(),p=+$('#p-p').value||0;if(!n){toast(rt('Escribe el nombre','Write the name'));return}S.products[e.dataset.id]={id:e.dataset.id,name:n,price:p,photo:pendingPhoto||undefined};closeSheet();commit()},
   delProduct:e=>{delete S.products[e.dataset.id];delete cart[e.dataset.id];closeSheet();commit()},
   newSaved:()=>showSheet(savedEditor()),
   editSaved:e=>showSheet(savedEditor(S.saved[e.dataset.id])),
