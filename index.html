@@ -1357,7 +1357,7 @@ async function sharePDF(d){
 /* save right now: the mail / SMS / WhatsApp app takes over the screen, so the normal delayed save could be lost */
 function flushSave(){clearTimeout(saveT);try{S.meta=S.meta||{};S.meta.savedAt=Date.now();localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){}}
 
-function markSent(d){d.sent=true;const r=S.docs[d.id];if(r&&r!==d)r.sent=true;flushSave()}
+function markSent(d){d.sent=true;const r=S.docs[d.id];if(r&&r!==d)r.sent=true;flushSave();render()}
 /* send by email / text: share the PDF where the phone allows it, otherwise download it and open the mail or SMS app with the message ready */
 async function sendDoc(d,how,o){
   o=o||{};const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
@@ -1623,6 +1623,9 @@ $('#fileIn').addEventListener('change',async e=>{
 });
 
 /* ---------- boot ---------- */
+/* when the phone brings the app back from the share sheet, redraw so the list shows the current Sent state */
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+window.addEventListener("pageshow",()=>render());
 window.addEventListener("storage",e=>{if(e.key===LKEY&&!D){load();render()}});
 load();
 const madeRecur=runRecurring();
