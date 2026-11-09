@@ -630,6 +630,7 @@ function paySection(d){
     ${p.stable?`<p class="note" style="margin:0">${t('sendOnly',esc(m.network))}</p>`:''}
     <div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>
     <div class="btns" style="margin:0"><button class="btn" data-act="copy" data-v="${esc(addr)}">${p.ach?t('copyDetails'):t('copyAddress')}</button><button class="btn" data-act="copy" data-v="${esc(amt||usd.toFixed(2))}">${t('copyAmount')}</button></div>
+    ${m.type==='bsv'?`<button class="btn primary" data-act="chainCheck" data-id="${d.id}">${rt('Revisar pago en la cadena','Check payment on chain')}</button>`:''}
     ${!p.fiat&&p.cg?`<p class="small" style="margin:0">${prices.data?`${t('rateAsOf')} ${new Date(prices.ts).toLocaleTimeString(lang==='es'?'es-MX':'en-US',{hour:'numeric',minute:'2-digit'})}`:(prices.failed?t('priceUnavailable'):'…')} · <button class="textbtn" style="padding:0" data-act="refreshPrices">${t('refresh')}</button></p>`:''}
     ${!p.fiat?`<p class="small" style="margin:0">${t('memoNote',esc(d.number))}</p>`:''}`;
   }
@@ -1128,6 +1129,52 @@ async function shareProduct(id){
   try{await navigator.clipboard.writeText(text);toast(rt('Copiado','Copied'))}catch(e){toast(text)}
 }
 
+/* BSV payment check on the public chain (WhatsOnChain). Looks for an unspent output at the invoice's address that reaches the amount.
+   Nothing is recorded until the user confirms. If the chain cannot be read, the app says so and never marks anything paid. */
+const WOC='https://api.whatsonchain.com/v1/bsv/main/';
+let chainState={};
+function bsvMethod(){return enabledMethods().find(m=>m.type==='bsv')}
+async function wocGet(path){const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),12000);try{const r=await fetch(WOC+path,{signal:ctl.signal});if(!r.ok)throw new Error('http '+r.status);return await r.json()}finally{clearTimeout(to)}}
+function chainCheckStart(id){
+  const m=bsvMethod();if(!m){toast(rt('Agrega tu dirección BSV en Mi cartera','Add your BSV address in My wallet'));return}
+  showSheet(chainSheet(id));runChainCheck(id);
+}
+async function runChainCheck(id){
+  const d=S.docs[id];const m=bsvMethod();if(!d||!m)return;
+  const c=calc(d);const usd=Math.max(0,c.balance);
+  const amt=coinAmount(m,usd);
+  if(!amt){chainState[id]={s:'noprice'};redrawSheet();return}
+  const want=Math.round(Number(amt)*1e8);
+  chainState[id]={s:'checking'};redrawSheet();
+  try{
+    const list=await wocGet('address/'+payAddress(m,d)+'/unspent');
+    if(!Array.isArray(list))throw new Error('shape');
+    const seen=new Set(d.bsvSeen||[]);
+    const hit=list.filter(u=>u&&typeof u.value==='number'&&u.value>=want&&u.tx_hash&&!seen.has(u.tx_hash)).sort((a,b)=>b.value-a.value)[0];
+    chainState[id]=hit?{s:'found',tx:hit.tx_hash,sats:hit.value,amt}:{s:'none',amt};
+  }catch(e){chainState[id]={s:'error'}}
+  redrawSheet();
+}
+function chainSheet(id){return{live:true,render(){
+  const st=chainState[id]||{s:'checking'};
+  let body;
+  if(st.s==='checking')body=`<p class="small">${rt('Revisando la cadena…','Checking the chain…')}</p>`;
+  else if(st.s==='none')body=`<p>${rt('Todavía no llega el pago.','The payment has not arrived yet.')}</p><p class="small">${rt('Monto esperado','Expected amount')}: <b class="num">${esc(st.amt)} BSV</b></p><button class="btn outline" data-act="chainRetry" data-id="${id}">${rt('Revisar otra vez','Check again')}</button>`;
+  else if(st.s==='found')body=`<p>${rt('Encontré un pago de','I found a payment of')} <b class="num">${(st.sats/1e8).toFixed(8)} BSV</b></p><p class="small mono" style="word-break:break-all">${esc(st.tx)}</p><button class="btn primary" data-act="chainConfirm" data-id="${id}">${rt('Sí, registrar pago','Yes, record payment')}</button><button class="btn outline" style="margin-top:10px" data-act="chainSkip" data-id="${id}" data-tx="${esc(st.tx)}">${rt('No es este pago','Not this payment')}</button>`;
+  else if(st.s==='noprice')body=`<p>${rt('No hay precio de BSV ahora. Intenta con Internet.','No BSV price right now. Try with Internet.')}</p><button class="btn outline" data-act="chainRetry" data-id="${id}">${rt('Reintentar','Retry')}</button>`;
+  else body=`<p>${rt('No pude revisar la cadena. Intenta más tarde.','Could not check the chain. Try later.')}</p><button class="btn outline" data-act="chainRetry" data-id="${id}">${rt('Reintentar','Retry')}</button>`;
+  return sheetHead(rt('Pago en BSV','BSV payment'),{close:true})+`<div class="wrap sheet-b" style="margin-top:14px">${body}</div>`;
+}}}
+function chainConfirm(id){
+  const d=S.docs[id];const st=chainState[id];if(!d||!st||st.s!=='found')return;
+  const c=calc(d);
+  d.payments=d.payments||[];
+  d.payments.push({id:uid(),amount:r2(Math.max(0,c.balance)),date:todayISO(),method:'BSV',ref:st.tx,note:'blockchain'});
+  d.bsvSeen=[...(d.bsvSeen||[]),st.tx];
+  delete chainState[id];
+  closeSheet();commit();toast(rt('Pago registrado','Payment recorded'));
+}
+
 function productsSheet(){return{live:true,render(){
   const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
   return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row"><button class="main" style="background:none;border:0;text-align:left;padding:0" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}</div></button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
@@ -1609,6 +1656,10 @@ const A={
   editProduct:e=>showSheet(productEditor(S.products[e.dataset.id])),
   saveProduct:e=>{const n=$('#p-n').value.trim(),p=+$('#p-p').value||0;if(!n){toast(rt('Escribe el nombre','Write the name'));return}S.products[e.dataset.id]={id:e.dataset.id,name:n,price:p,photo:pendingPhoto||undefined};closeSheet();commit()},
   delProduct:e=>{delete S.products[e.dataset.id];delete cart[e.dataset.id];closeSheet();commit()},
+  chainCheck:e=>chainCheckStart(e.dataset.id),
+  chainRetry:e=>runChainCheck(e.dataset.id),
+  chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
+  chainConfirm:e=>chainConfirm(e.dataset.id),
   prodMenu:e=>showSheet(prodMenuSheet(e.dataset.id,false)),
   askDelProd:e=>{closeSheet();showSheet(prodMenuSheet(e.dataset.id,true))},
   shareProduct:e=>shareProduct(e.dataset.id),
