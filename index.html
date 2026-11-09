@@ -348,7 +348,7 @@ function rooferSVG(cls){
 
 /* ---------- state & storage ---------- */
 const DEFAULT_PROFILE={company:'',address:'',phone:'',email:'',license:'',nextInvoice:1001,nextEstimate:1001,defDue:30,payInstr:'',terms:'Thank you for your business. / Gracias por su preferencia.',lang:'es',started:false,sortKey:'due',sortDir:'asc',lastBackup:''};
-const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},recur:{},meta:{}};
+const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},recur:{},products:{},sales:{},meta:{}};
 const LKEY='invoice-free-del-obrero-v1';
 function load(){try{const r=localStorage.getItem(LKEY);if(r){const o=JSON.parse(r);for(const k of Object.keys(S)){if(o[k])S[k]=k==='profile'?{...DEFAULT_PROFILE,...o.profile}:o[k]}}}catch(e){}lang=S.profile.lang||'es'}
 let saveT;function persist(){if(!window.cloudApplying){S.meta=S.meta||{};S.meta.savedAt=Date.now();if(window.cloudSchedule)window.cloudSchedule()}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast(t('storageFull'))}},120)}
@@ -485,6 +485,7 @@ function vHome(){
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
   ${unsentOpen.length?`<div class="banner">${ic('bell',2)}<div><p>${t('unsentAlert',unsentOpen.length)}</p><button class="textbtn" data-act="filterTo" data-v="unsent">${t('readySend')}</button></div></div>`:''}
   ${Object.keys(S.docs).length&&lb>14?`<div class="note">${t('backupReminder')} <button class="textbtn" style="padding:0" data-act="exportJson">${t('exportJson')}</button></div>`:''}
+  <button class="btn primary" data-act="storeOpen" style="margin:10px 0">${rt('Abrir tienda','Open store')}</button>
   <div class="sec-h"><h2>${t('overview')}</h2></div>
   <div class="cards">
     <button class="card bad" data-act="filterTo" data-v="overdue"><span class="lbl">${t('overdue')} (${over.length})</span><span class="val num">${sum(over)}</span></button>
@@ -1073,6 +1074,48 @@ function recurEditor(p){const it=p||{id:uid(),clientId:'',desc:'',unit:'',qty:1,
   <div class="field"><label for="r-n">${rt('Próxima fecha','Next date')}</label><input class="in" id="r-n" type="date" value="${esc(it.next)}"></div></div>
   <button class="btn primary" data-act="saveRecur" data-id="${it.id}">${t('save')}</button></div>`}}}
 
+/* ---------- store mode: quick sales, price only, no stock. Fully on the phone. ---------- */
+let cart={};
+function cartLines(){return Object.entries(cart).filter(([id,q])=>q>0&&S.products[id])}
+function storeSheet(){return{live:true,render(){
+  const today=todayISO();const sales=Object.values(S.sales||{});
+  const todays=sales.filter(s=>s.date===today);
+  const dayTot=todays.reduce((a,s)=>a+s.total,0);
+  const products=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
+  const lines=cartLines();const total=r2(lines.reduce((a,[id,q])=>a+S.products[id].price*q,0));
+  return sheetHead(rt('Tienda','Store'),{close:true,right:`<button class="textbtn" data-act="productsOpen">${rt('Productos','Products')}</button>`})+`<div class="wrap sheet-b">
+  <div class="cards" style="margin-top:12px"><div class="card good"><span class="lbl">${rt('Vendido hoy','Sold today')}</span><span class="val num">${money(dayTot)}</span></div><div class="card"><span class="lbl">${rt('Ventas hoy','Sales today')}</span><span class="val num">${todays.length}</span></div></div>
+  ${products.length?`<div class="grid2" style="margin-top:12px">${products.map(p=>{const q=cart[p.id]||0;return `<button class="card" data-act="addCart" data-id="${p.id}"><span class="lbl">${esc(p.name)}</span><span class="val num">${money(p.price)}</span>${q?`<span class="small num">× ${q}</span>`:''}</button>`}).join('')}</div>`:`<div class="empty" style="margin-top:20px">${rt('Agrega tus productos con el botón Productos.','Add your products with the Products button.')}</div>`}
+  ${lines.length?`<div class="group" style="margin-top:14px">${lines.map(([id,q])=>`<div class="kv"><span>${esc(S.products[id].name)} × ${q}</span><span class="num">${money(S.products[id].price*q)}</span></div>`).join('')}<div class="kv"><b>${t('total')}</b><b class="num">${money(total)}</b></div><div class="grid2" style="margin-top:10px"><button class="btn outline" data-act="clearCart">${rt('Limpiar','Clear')}</button><button class="btn primary" data-act="checkout">${rt('Cobrar','Charge')}</button></div></div>`:''}
+  <div class="group" style="margin-top:14px"><div class="gl">${rt('Últimas ventas','Recent sales')}</div>${sales.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,8).map(s=>`<div class="kv"><span>${s.date} · ${esc(s.method)}</span><span class="num">${money(s.total)}</span></div>`).join('')||`<div class="small">${rt('Sin ventas todavía','No sales yet')}</div>`}</div>
+  </div>`}}}
+function payPickSheet(){return{live:false,render(){
+  const ms=[rt('Efectivo','Cash'),rt('Débito','Debit'),'ACH',rt('Otro','Other')];
+  return sheetHead(rt('Método de pago','Payment method'),{close:true})+`<div class="wrap sheet-b"><p class="small" style="margin:12px 0">${rt('Solo registra cómo te pagaron. El cobro con tarjeta o ACH se hace en tu terminal o banco.','This only records how you were paid. Card or ACH payments are taken on your terminal or bank.')}</p>${ms.map(m=>`<button class="btn outline" style="margin-bottom:10px" data-act="pickMethod" data-m="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}}}
+function recordSale(method){
+  const lines=cartLines();if(!lines.length)return;
+  const items=lines.map(([id,q])=>({name:S.products[id].name,qty:q,price:S.products[id].price}));
+  const total=r2(items.reduce((a,i)=>a+i.qty*i.price,0));
+  const sale={id:uid(),date:todayISO(),at:Date.now(),items,total,method};
+  S.sales=S.sales||{};S.sales[sale.id]=sale;cart={};
+  closeSheet();commit();
+  showSheet({live:false,render(){return sheetHead(rt('Venta guardada','Sale saved'),{close:true})+`<div class="wrap sheet-b"><p style="margin:14px 0" class="num"><b>${money(total)}</b> · ${esc(method)}</p><button class="btn primary" data-act="shareReceipt" data-id="${sale.id}">${rt('Enviar recibo por texto o WhatsApp','Send receipt by text or WhatsApp')}</button></div>`}});
+}
+async function shareReceipt(id){
+  const s=S.sales[id];if(!s)return;
+  const lines=s.items.map(i=>`${i.name} x${i.qty}  ${money(i.qty*i.price)}`).join('\n');
+  const text=`${S.profile.company||rt('Recibo','Receipt')}\n${lines}\nTotal: ${money(s.total)} (${s.method})\n${s.date}`;
+  try{if(navigator.share){await navigator.share({text,title:rt('Recibo','Receipt')});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(text);toast(rt('Recibo copiado','Receipt copied'))}catch(e){toast(text)}
+}
+function productsSheet(){return{live:true,render(){
+  const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
+  return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row"><button class="main" style="background:none;border:0;text-align:left;padding:0" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}</div></button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
+function productEditor(p){const it=p||{id:uid(),name:'',price:0};return{live:false,render(){return sheetHead(rt('Producto','Product'),{close:true})+`<div class="wrap sheet-b">
+  <div class="field" style="margin-top:14px"><label for="p-n">${t('desc')}</label><input class="in" id="p-n" value="${esc(it.name)}" placeholder="${rt('Agua 16 oz','Water 16 oz')}"></div>
+  <div class="field"><label for="p-p">${t('rate')}</label><input class="in num" id="p-p" type="number" step="0.01" inputmode="decimal" value="${esc(it.price)}"></div>
+  <button class="btn primary" data-act="saveProduct" data-id="${it.id}">${t('save')}</button>${p?`<button class="btn outline" style="margin-top:10px" data-act="delProduct" data-id="${it.id}">${t('del')}</button>`:''}</div>`}}}
+
 /* ---------- reports ---------- */
 function jobsSheet(){return{live:true,render(){
   const m={};invoicesAll().forEach(d=>{const k=d.clientId+'|'+(d.jobId||'_');const c=calc(d);const j=jobOf(d);m[k]=m[k]||{client:clientName(d.clientId),job:j?j.name:t('noJob'),addr:j?j.address:'',b:0,p:0,n:0};m[k].b+=c.total;m[k].p+=c.paid;m[k].n++;m[k].jobId=d.jobId});
@@ -1533,6 +1576,17 @@ const A={
   saveRecur:e=>{const c=$('#r-c').value,d=$('#r-d').value.trim();if(!c||!d){toast(rt('Elige cliente y descripción','Choose a client and a description'));return}const old=S.recur[e.dataset.id]||{};S.recur[e.dataset.id]={id:e.dataset.id,clientId:c,desc:d,unit:$('#r-u').value.trim(),qty:+$('#r-q').value||1,rate:+$('#r-r').value||0,freq:$('#r-f').value,next:$('#r-n').value||todayISO(),active:old.active!==false};closeSheet();commit()},
   recurToggle:e=>{const p=S.recur[e.dataset.id];if(p){p.active=!p.active;commit()}},
   recurDel:e=>{delete S.recur[e.dataset.id];commit()},
+  storeOpen:()=>showSheet(storeSheet()),
+  addCart:e=>{cart[e.dataset.id]=(cart[e.dataset.id]||0)+1;commit()},
+  clearCart:()=>{cart={};commit()},
+  checkout:()=>{if(!cartLines().length){toast(rt('Agrega productos primero','Add products first'));return}showSheet(payPickSheet())},
+  pickMethod:e=>recordSale(e.dataset.m),
+  shareReceipt:e=>shareReceipt(e.dataset.id),
+  productsOpen:()=>showSheet(productsSheet()),
+  newProduct:()=>showSheet(productEditor()),
+  editProduct:e=>showSheet(productEditor(S.products[e.dataset.id])),
+  saveProduct:e=>{const n=$('#p-n').value.trim(),p=+$('#p-p').value||0;if(!n){toast(rt('Escribe el nombre','Write the name'));return}S.products[e.dataset.id]={id:e.dataset.id,name:n,price:p};closeSheet();commit()},
+  delProduct:e=>{delete S.products[e.dataset.id];delete cart[e.dataset.id];closeSheet();commit()},
   newSaved:()=>showSheet(savedEditor()),
   editSaved:e=>showSheet(savedEditor(S.saved[e.dataset.id])),
   saveSaved:e=>{const d=$('#s-d').value.trim();if(!d)return;S.saved[e.dataset.id]={id:e.dataset.id,desc:d,unit:$('#s-u').value.trim(),rate:+$('#s-r').value||0};closeSheet();commit()},
