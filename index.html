@@ -884,6 +884,7 @@ function saveDocFromEditor(){
   const isNew=D._new;delete D._new;
   D.items=D.items.filter(i=>i.desc||+i.rate);
   D.discountValue=+D.discountValue||0;D.taxRate=+D.taxRate||0;D.dueDays=+D.dueDays||0;D.updatedAt=Date.now();
+  const keepS=S.docs[D.id];if(keepS){D.sent=!!keepS.sent;D.payments=keepS.payments||D.payments}
   S.docs[D.id]=D;
   const n=parseInt(D.number);if(!isNaN(n)){const key=D.kind==='estimate'?'nextEstimate':'nextInvoice';if(n>=(+S.profile[key]||0))S.profile[key]=n+1}
   const id=D.id;D=null;closeSheet();if(isNew)showSheet(docDetail(id));commit();toast(t('saved'));
@@ -1356,6 +1357,7 @@ async function sharePDF(d){
 /* save right now: the mail / SMS / WhatsApp app takes over the screen, so the normal delayed save could be lost */
 function flushSave(){clearTimeout(saveT);try{S.meta=S.meta||{};S.meta.savedAt=Date.now();localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){}}
 
+function markSent(d){d.sent=true;const r=S.docs[d.id];if(r&&r!==d)r.sent=true;flushSave()}
 /* send by email / text: share the PDF where the phone allows it, otherwise download it and open the mail or SMS app with the message ready */
 async function sendDoc(d,how,o){
   o=o||{};const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
@@ -1367,20 +1369,20 @@ async function sendDoc(d,how,o){
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
     /* on phones the PDF must travel with the message: share it (the mail app attaches it). The client's address goes in the text so it can be pasted into To. */
-  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(err&&err.name==='AbortError')return;throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
+  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;markSent(d);if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(err&&err.name==='AbortError')return;throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
   if(how==='whatsapp'){
     /* WhatsApp: share the PDF + message through the phone's share sheet (pick WhatsApp and the client); otherwise open a WhatsApp chat with the message and the PDF downloaded to attach */
-    if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(err&&err.name==='AbortError')return;throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
+    if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;markSent(d);try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(err&&err.name==='AbortError')return;throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
     const digits=(to||'').replace(/\D/g,'');const full=digits.length===10?'1'+digits:digits;
     doc.save(pdfName(d));
-    if(!d.sent){d.sent=true;flushSave()}
+    markSent(d)
     window.open('https://wa.me/'+full+'?text='+encodeURIComponent(body),'_blank');
     setTimeout(()=>toast(t('attachNote')),600);
     if(!d.sent){d.sent=true;commit()}
     return;
   }
   doc.save(pdfName(d));
-  if(!d.sent){d.sent=true;flushSave()}
+  markSent(d)
   if(how==='email'){
     /* computer: copy the client's address, then open the chosen mail app with To / subject / message ready. The PDF is downloaded; attach it there. */
     if(!to)toast(t('noEmail'));
@@ -1621,6 +1623,7 @@ $('#fileIn').addEventListener('change',async e=>{
 });
 
 /* ---------- boot ---------- */
+window.addEventListener("storage",e=>{if(e.key===LKEY&&!D){load();render()}});
 load();
 const madeRecur=runRecurring();
 showWelcome=!S.profile.started;
