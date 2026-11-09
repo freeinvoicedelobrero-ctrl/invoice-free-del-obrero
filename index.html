@@ -213,6 +213,16 @@ textarea.in{min-height:84px;resize:vertical}
 .switch[aria-checked="true"]::after{transform:translateX(20px);background:#fff}
 @media (max-width:360px){.cards{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(16px);opacity:.6}to{transform:none;opacity:1}}}
+/* 3D touch: cards float with a soft shadow and tilt slightly when pressed. Light on the phone, off when motion is reduced. */
+.card{transform-style:preserve-3d;box-shadow:0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .18s ease,box-shadow .18s ease}
+button.card:active{transform:perspective(600px) rotateX(6deg) rotateY(-4deg) translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06)}
+@media (prefers-reduced-motion:reduce){.card,button.card:active{transition:none;transform:none}}
+/* suggestions from items the user already used: a small list under the description, tap to pick */
+.sugg{display:flex;flex-direction:column;gap:4px;margin:-2px 0 10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 10px 22px rgba(0,0,0,.5)}
+.sugg[hidden]{display:none}
+.sugg button{background:none;border:0;color:var(--fg);text-align:left;padding:8px 10px;border-radius:8px;font:inherit;min-height:44px;cursor:pointer}
+.sugg button:hover,.sugg button:focus-visible{background:var(--surface)}
+.sugg .n{color:var(--muted);font-size:13px}
 </style>
 </head>
 <body>
@@ -338,7 +348,7 @@ function rooferSVG(cls){
 
 /* ---------- state & storage ---------- */
 const DEFAULT_PROFILE={company:'',address:'',phone:'',email:'',license:'',nextInvoice:1001,nextEstimate:1001,defDue:30,payInstr:'',terms:'Thank you for your business. / Gracias por su preferencia.',lang:'es',started:false,sortKey:'due',sortDir:'asc',lastBackup:''};
-const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},meta:{}};
+const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},recur:{},meta:{}};
 const LKEY='invoice-free-del-obrero-v1';
 function load(){try{const r=localStorage.getItem(LKEY);if(r){const o=JSON.parse(r);for(const k of Object.keys(S)){if(o[k])S[k]=k==='profile'?{...DEFAULT_PROFILE,...o.profile}:o[k]}}}catch(e){}lang=S.profile.lang||'es'}
 let saveT;function persist(){if(!window.cloudApplying){S.meta=S.meta||{};S.meta.savedAt=Date.now();if(window.cloudSchedule)window.cloudSchedule()}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast(t('storageFull'))}},120)}
@@ -531,7 +541,7 @@ function vMore(){
   return `<div class="mlist">
   ${sec(t('secWorkflow'),it('jobs',t('jobs')))}
   ${sec(t('secCashflow'),it('walletOpen',t('wallet'),esc(t('walletHeader'))))}
-  ${sec(t('secItems'),it('savedItems',t('savedItems'))+it('expensesOpen',t('expenses'),expMonth?t('thisMonth')+': '+money(expMonth):''))}
+  ${sec(t('secItems'),it('recurOpen',rt('Facturas recurrentes','Recurring invoices'))+it('savedItems',t('savedItems'))+it('expensesOpen',t('expenses'),expMonth?t('thisMonth')+': '+money(expMonth):''))}
   ${sec(t('secInsights'),it('reports',t('reports')))}
   ${sec(t('secBusiness'),(window.cloudMoreRow?window.cloudMoreRow():'')+it('settings',t('settings'),esc(S.profile.company))+it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never'))))}
   ${sec(t('secSupport'),it('shareApp',t('shareApp'),t('shareAppSub'))+it('donateOpen',t('donate'),t('donateSub'))+it('helpOpen',t('help'))+it('aboutOpen',t('about')))}
@@ -755,11 +765,28 @@ function editorSheet(){return{live:false,render(){
 const UNITS=['','ea','sq','LF','SF','hr','day','job','lot','gal','bundle'];
 function itemRow(i,k){
   const units=UNITS.slice();if(!units.includes(i.unit||''))units.push(i.unit);
-  return `<div class="item"><div class="field"><label for="i${k}d">${t('desc')}</label><input class="in" id="i${k}d" data-item="${k}" data-k="desc" value="${esc(i.desc)}" placeholder="Tear-off & install 30-yr shingles"></div>
+  return `<div class="item"><div class="field"><label for="i${k}d">${t('desc')}</label><input class="in" id="i${k}d" data-item="${k}" data-k="desc" value="${esc(i.desc)}" placeholder="Tear-off & install 30-yr shingles"></div><div class="sugg" id="sg${k}" hidden></div>
   <div class="grid3"><div class="field"><label for="i${k}q">${t('qty')}</label><input class="in num" id="i${k}q" type="number" step="any" inputmode="decimal" data-item="${k}" data-k="qty" value="${esc(i.qty)}"></div>
   <div class="field"><label for="i${k}u">${t('unit')}</label><select class="in" id="i${k}u" data-item="${k}" data-k="unit">${units.map(u=>`<option ${u===(i.unit||'')?'selected':''}>${esc(u)}</option>`).join('')}</select></div>
   <div class="field"><label for="i${k}r">${t('rate')}</label><input class="in num" id="i${k}r" type="number" step="0.01" inputmode="decimal" data-item="${k}" data-k="rate" value="${esc(i.rate)}"></div></div>
   <div class="foot"><span><button class="iconbtn" data-act="rmItem" data-i="${k}" aria-label="${t('del')}">${ic('trash')}</button><button class="iconbtn" data-act="saveLine" data-i="${k}" aria-label="${t('saveLine')}">${ic('star')}</button></span><b class="num" id="amt${k}">${money((+i.qty||0)*(+i.rate||0))}</b></div></div>`;
+}
+/* past items (from invoices and saved items) that match what is being typed, most recent first */
+let suggList=[];
+function pastItems(q){
+  const seen=new Map();
+  const add=(desc,unit,rate,at)=>{const txt=(desc||'').trim();if(!txt)return;const key=txt.toLowerCase();const old=seen.get(key);if(!old||at>old.at)seen.set(key,{desc:txt,unit:unit||'',rate:+rate||0,at:at||0})};
+  Object.values(S.docs||{}).forEach(d=>(d.items||[]).forEach(i=>add(i.desc,i.unit,i.rate,d.updatedAt||0)));
+  Object.values(S.saved||{}).forEach(s=>add(s.desc,s.unit,s.rate,0));
+  const k=(q||'').trim().toLowerCase();
+  return [...seen.values()].filter(x=>!k||x.desc.toLowerCase().includes(k)).sort((a,b)=>(b.at-a.at)||a.desc.localeCompare(b.desc)).slice(0,5);
+}
+function showSugg(k,q){
+  const box=document.getElementById('sg'+k);if(!box)return;
+  suggList=pastItems(q);
+  if(!suggList.length){box.hidden=true;box.innerHTML='';return}
+  box.innerHTML=suggList.map((s,j)=>`<button type="button" data-sugg="${j}" data-k="${k}"><div>${esc(s.desc)}</div><div class="n num">${s.unit?esc(s.unit)+' · ':''}${money(s.rate)}</div></button>`).join('');
+  box.hidden=false;
 }
 function updTotals(){
   const box=$('#totBox');if(!box||!D)return;const c=calc(D);
@@ -1011,6 +1038,40 @@ function savedEditor(s){const it=s||{id:uid(),desc:'',unit:'',rate:0};return{liv
   <button class="btn primary" data-act="saveSaved" data-id="${it.id}">${t('save')}</button></div>`;
 }}}
 
+/* ---------- recurring invoices (yards, rentals): the app creates the invoice when its date arrives, as Unsent. The user reviews and sends it. ---------- */
+function rt(es,en){return lang==='es'?es:en}
+function freqLbl(f){return f==='biweekly'?rt('Cada 2 semanas','Every 2 weeks'):f==='monthly'?rt('Cada mes','Monthly'):rt('Cada semana','Weekly')}
+function addPeriod(s,f){const [y,m,d]=s.split('-').map(Number);let dt;if(f==='monthly'){const last=new Date(y,m+1,0).getDate();dt=new Date(y,m,Math.min(d,last),12)}else dt=new Date(y,m-1,d+(f==='biweekly'?14:7),12);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')}
+/* creates one invoice per plan that is due (not one per missed period) and moves its date to the next future period */
+function runRecurring(){
+  let made=0;const today=todayISO();
+  Object.values(S.recur||{}).forEach(p=>{
+    if(!p.active||!p.next||p.next>today)return;
+    const d=newDoc('invoice',{clientId:p.clientId,items:[{desc:p.desc,qty:p.qty,unit:p.unit||'',rate:p.rate}],date:today,dueDays:+S.profile.defDue||30,sent:false,recurId:p.id});
+    delete d._new;S.docs[d.id]=d;S.profile.nextInvoice=(+d.number||0)+1;made++;
+    let nx=p.next;while(nx<=today)nx=addPeriod(nx,p.freq);p.next=nx;
+  });
+  if(made)persist();
+  return made;
+}
+function recurSheet(){return{live:true,render(){
+  const list=Object.values(S.recur||{}).sort((a,b)=>(a.next||'').localeCompare(b.next||''));
+  return sheetHead(rt('Facturas recurrentes','Recurring invoices'),{right:`<button class="textbtn" data-act="recurNew">+</button>`})+`<div class="wrap sheet-b">
+  <p class="small" style="margin:12px 0">${rt('Cuando llega la fecha, la app crea la factura como Sin enviar. Tú la revisas y la mandas.','When the date arrives, the app creates the invoice as Unsent. You review it and send it.')}</p>
+  ${list.length?`<div class="list">${list.map(p=>{const c=S.clients[p.clientId]||{};return `<div class="row"><div class="main"><div class="t1">${esc(c.name||'—')} · ${esc(p.desc)}</div><div class="t2 num">${money(p.rate)} · ${freqLbl(p.freq)} · ${rt('próxima','next')}: ${fdate(p.next)}${p.active?'':' · '+rt('pausada','paused')}</div></div><button class="textbtn" data-act="recurEdit" data-id="${p.id}">${rt('Editar','Edit')}</button><button class="textbtn" data-act="recurToggle" data-id="${p.id}">${p.active?rt('Pausar','Pause'):rt('Activar','Resume')}</button><button class="iconbtn" data-act="recurDel" data-id="${p.id}" aria-label="${t('del')}">${ic('trash')}</button></div>`}).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes facturas recurrentes.','No recurring invoices yet.')}</div>`}
+  </div>`}}}
+function recurEditor(p){const it=p||{id:uid(),clientId:'',desc:'',unit:'',qty:1,rate:0,freq:'weekly',next:todayISO(),active:true};
+  const opts=Object.values(S.clients).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(c=>`<option value="${c.id}" ${c.id===it.clientId?'selected':''}>${esc(c.name)}</option>`).join('');
+  return{live:false,render(){return sheetHead(rt('Factura recurrente','Recurring invoice'),{close:true})+`<div class="wrap sheet-b">
+  <div class="field" style="margin-top:14px"><label for="r-c">${rt('Cliente','Client')}</label><select class="in" id="r-c"><option value="">—</option>${opts}</select></div>
+  <div class="field"><label for="r-d">${t('desc')}</label><input class="in" id="r-d" value="${esc(it.desc)}" placeholder="${rt('Corte de yarda','Lawn mowing')}"></div>
+  <div class="grid3"><div class="field"><label for="r-q">${t('qty')}</label><input class="in num" id="r-q" type="number" step="any" value="${esc(it.qty)}"></div>
+  <div class="field"><label for="r-u">${t('unit')}</label><input class="in" id="r-u" value="${esc(it.unit)}" placeholder="ea, mo"></div>
+  <div class="field"><label for="r-r">${t('rate')}</label><input class="in num" id="r-r" type="number" step="0.01" inputmode="decimal" value="${esc(it.rate)}"></div></div>
+  <div class="grid2"><div class="field"><label for="r-f">${rt('Frecuencia','Frequency')}</label><select class="in" id="r-f">${['weekly','biweekly','monthly'].map(f=>`<option value="${f}" ${f===it.freq?'selected':''}>${freqLbl(f)}</option>`).join('')}</select></div>
+  <div class="field"><label for="r-n">${rt('Próxima fecha','Next date')}</label><input class="in" id="r-n" type="date" value="${esc(it.next)}"></div></div>
+  <button class="btn primary" data-act="saveRecur" data-id="${it.id}">${t('save')}</button></div>`}}}
+
 /* ---------- reports ---------- */
 function jobsSheet(){return{live:true,render(){
   const m={};invoicesAll().forEach(d=>{const k=d.clientId+'|'+(d.jobId||'_');const c=calc(d);const j=jobOf(d);m[k]=m[k]||{client:clientName(d.clientId),job:j?j.name:t('noJob'),addr:j?j.address:'',b:0,p:0,n:0};m[k].b+=c.total;m[k].p+=c.paid;m[k].n++;m[k].jobId=d.jobId});
@@ -1043,7 +1104,48 @@ function expenseEditor(e){E=JSON.parse(JSON.stringify(e||{id:uid(),date:todayISO
 }}}
 const HELP={es:[['¿Cómo hago una factura?','Toca + en Inicio o en Facturas. Elige el cliente, el trabajo, agrega conceptos y toca Guardar. Luego Compartir PDF.'],['¿Cómo registro un pago?','Abre la factura y toca Registrar pago. Puedes poner pagos parciales; el saldo se actualiza solo.'],['¿Dónde se guardan mis datos?','En este teléfono. Crea una cuenta (email o frase de 12 palabras) en Más → Cuenta y respaldo, o descarga un respaldo seguido.'],['¿Qué pasa si pierdo el teléfono?','Si tienes cuenta, instala la app en el nuevo teléfono y entra. Si no, restaura tu archivo de respaldo.'],['¿Cómo la instalo como app?','Abre el link en Chrome o Brave y toca Instalar app (en iPhone: Compartir → Agregar a inicio).'],['¿Cómo me pagan con crypto?','Agrega tus direcciones en Mi cartera. Cada factura muestra un código QR para pagarte directo.']],
 en:[['How do I make an invoice?','Tap + on Home or Invoices. Pick the client and job, add items and tap Save. Then Share PDF.'],['How do I record a payment?','Open the invoice and tap Record payment. Partial payments are fine; the balance updates itself.'],['Where is my data saved?','On this phone. Create an account (email or 12-word phrase) in More → Account & backup, or download a backup often.'],['What if I lose my phone?','If you have an account, install the app on the new phone and sign in. If not, restore your backup file.'],['How do I install it as an app?','Open the link in Chrome or Brave and tap Install app (iPhone: Share → Add to Home Screen).'],['How do clients pay me with crypto?','Add your addresses in My wallet. Each invoice shows a QR code so they pay you directly.']]};
-function helpSheet(){return{live:false,render(){return sheetHead(t('help'))+`<div class="wrap sheet-b">${HELP[lang==='es'?'es':'en'].map(([q,a])=>`<div class="group"><b>${q}</b><p style="margin:6px 0 0">${a}</p></div>`).join('')}</div>`}}}
+/* help with search: works offline, no AI. Each entry is [question, answer, optional keywords]. */
+HELP.es.push(
+  ['¿Cómo hago una estimación?','Toca + y elige Nueva estimación. Cuando el cliente acepte, la puedes convertir en factura.','estimado presupuesto cotizacion'],
+  ['¿Cómo guardo un concepto para usarlo después?','Al escribir una línea, toca la estrella. Para verlos o editarlos, abre Conceptos guardados en Más.','favorito precio estrella guardar'],
+  ['¿Cómo uso los conceptos que ya usé?','Al escribir la descripción de una línea aparece una lista con conceptos anteriores. Toca el que quieras y se llenan descripción, unidad y precio. Nada se llena solo.','sugerencia autocompletar sugerir'],
+  ['¿Cuándo se marca una factura como enviada?','Se marca sola cuando la envías por Email, Texto o WhatsApp. Si necesitas cambiarlo, abre la factura y toca Marcar no enviada o Marcar enviada.','enviada no enviada estado sent'],
+  ['¿Cómo mando un recordatorio de pago?','Abre la factura con saldo pendiente y toca Mandar recordatorio de pago. La app guarda la fecha del último recordatorio.','cobrar atrasada vencida cobro'],
+  ['¿Cómo duplico una factura?','Abre la factura y toca Duplicar. Se crea una copia nueva con su propio número.','copiar repetir copia'],
+  ['¿Cómo elimino una factura?','Abre la factura y toca Eliminar. La app pide confirmación porque no se puede deshacer.','borrar quitar'],
+  ['¿Qué significan los estados?','Sin enviar: no se ha enviado. Enviada: ya se envió. Parcial: tiene pagos, pero falta saldo. Pagada: ya está completa. Vencida: pasó la fecha límite.','sin enviar parcial pagada vencida estado'],
+  ['¿Cómo busco una factura?','En Facturas usa el campo de búsqueda y los botones de estado. La búsqueda encuentra cliente, número de factura, trabajo y dirección del trabajo.','buscar buscador encontrar'],
+  ['¿Por qué no encuentro una palabra de la descripción?','La búsqueda no revisa las descripciones de los conceptos. Busca por cliente, número, trabajo y dirección.','buscar descripcion linea concepto'],
+  ['¿Cómo agrego fotos a una factura?','Abre la factura y agrega fotos. Salen en el PDF si dejas activada la opción de incluir fotos.','imagen foto pdf'],
+  ['¿Cómo agrego un gasto o un cliente?','Toca + y elige Nuevo gasto o Nuevo cliente.','gasto cliente nuevo agregar'],
+  ['¿Puedo cambiar las opciones del botón +?','Sí. En la configuración del botón + eliges qué opciones aparecen.','menu boton fab opciones'],
+  ['¿Cómo cambio el idioma?','Toca EN o ES arriba a la derecha.','idioma english espanol language']
+);
+HELP.en.push(
+  ['How do I make an estimate?','Tap + and choose New estimate. When the client accepts, you can convert it into an invoice.','estimate quote bid'],
+  ['How do I save an item to reuse it?','When typing a line, tap the star. To view or edit them, open Saved items under More.','favorite price star save'],
+  ['How do I reuse items I already used?','When typing a line description, a list of past items appears. Tap one to fill description, unit and price. Nothing fills in by itself.','suggest autocomplete past'],
+  ['When is an invoice marked as sent?','It is marked automatically when you send it by Email, Text or WhatsApp. To change it, open the invoice and tap Mark unsent or Mark sent.','sent unsent status'],
+  ['How do I send a payment reminder?','Open an invoice with a balance and tap Send payment reminder. The app saves the date of the last reminder.','remind due overdue collect'],
+  ['How do I duplicate an invoice?','Open the invoice and tap Duplicate. A new copy is created with its own number.','copy repeat'],
+  ['How do I delete an invoice?','Open the invoice and tap Delete. The app asks for confirmation because it cannot be undone.','remove erase'],
+  ['What do the statuses mean?','Unsent: not sent yet. Sent: already sent. Partial: has payments but a balance remains. Paid: fully paid. Overdue: past the due date.','unsent partial paid overdue status'],
+  ['How do I find an invoice?','In Invoices, use the search box and the status buttons. Search covers client, invoice number, job and job address.','search find'],
+  ['Why does search not find a word from an item description?','Search does not check item descriptions. It looks at client, number, job and address.','search description line item'],
+  ['How do I add photos to an invoice?','Open the invoice and add photos. They appear in the PDF if the include photos option is on.','image photo pdf'],
+  ['How do I add an expense or a client?','Tap + and choose New expense or New client.','expense client new add'],
+  ['Can I change the options in the + button?','Yes. In the + button settings you choose which options appear.','menu fab options button'],
+  ['How do I change the language?','Tap EN or ES at the top right.','language idioma spanish english']
+);
+let helpQuery='';
+const normTxt=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+function helpSheet(){return{live:true,render(){
+  const L=lang==='es'?'es':'en';
+  const words=normTxt(helpQuery).split(/\s+/).filter(Boolean);
+  const items=HELP[L].filter(([q,a,kw])=>{const hay=normTxt(q+' '+a+' '+(kw||''));return words.every(w=>hay.includes(w))});
+  const none=L==='es'?'No encontré eso. Prueba con otra palabra, como "pago", "estimado" o "recordatorio".':'Nothing found. Try another word, like "payment", "estimate" or "reminder".';
+  const ph=L==='es'?'Buscar en la ayuda':'Search help';
+  return sheetHead(t('help'))+`<div class="wrap sheet-b"><input class="in" id="hq" type="search" placeholder="${ph}" value="${esc(helpQuery)}" style="margin-top:10px">${items.length?items.map(([q,a])=>`<div class="group"><b>${q}</b><p style="margin:6px 0 0">${a}</p></div>`).join(''):`<div class="empty">${none}</div>`}</div>`}}}
 function reportsSheet(){return{live:true,render(){
   const byC={};invoicesAll().forEach(d=>{const c=calc(d);if(c.balance>0.005)byC[d.clientId]=(byC[d.clientId]||0)+c.balance});
   const months=[];const now=new Date();for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))}
@@ -1265,10 +1367,10 @@ async function sendDoc(d,how,o){
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
   const mobile=/Android|iPhone|iPad/i.test(navigator.userAgent);
     /* on phones the PDF must travel with the message: share it (the mail app attaches it). The client's address goes in the text so it can be pasted into To. */
-  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(!was){d.sent=false;commit()}throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
+  if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}if(how==='email'&&to){try{await navigator.clipboard.writeText(to);toast(t('emailCopied'))}catch(e){}}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(err&&err.name==='AbortError')return;throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
   if(how==='whatsapp'){
     /* WhatsApp: share the PDF + message through the phone's share sheet (pick WhatsApp and the client); otherwise open a WhatsApp chat with the message and the PDF downloaded to attach */
-    if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(!was){d.sent=false;commit()}throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
+    if(mobile){try{if(navigator.canShare&&navigator.canShare({files:[file]})){const was=d.sent;if(!d.sent){d.sent=true;flushSave()}try{await navigator.share({files:[file],title:subj,text:body})}catch(err){if(err&&err.name==='AbortError')return;throw err}commit();return}}catch(e){if(e&&e.name==='AbortError')return}}
     const digits=(to||'').replace(/\D/g,'');const full=digits.length===10?'1'+digits:digits;
     doc.save(pdfName(d));
     if(!d.sent){d.sent=true;flushSave()}
@@ -1423,6 +1525,12 @@ const A={
   shareAppNow:()=>shareAppNow(),
   reports:()=>showSheet(reportsSheet()),
   savedItems:()=>showSheet(savedSheet(false)),
+  recurOpen:()=>showSheet(recurSheet()),
+  recurNew:()=>showSheet(recurEditor()),
+  recurEdit:e=>showSheet(recurEditor(S.recur[e.dataset.id])),
+  saveRecur:e=>{const c=$('#r-c').value,d=$('#r-d').value.trim();if(!c||!d){toast(rt('Elige cliente y descripción','Choose a client and a description'));return}const old=S.recur[e.dataset.id]||{};S.recur[e.dataset.id]={id:e.dataset.id,clientId:c,desc:d,unit:$('#r-u').value.trim(),qty:+$('#r-q').value||1,rate:+$('#r-r').value||0,freq:$('#r-f').value,next:$('#r-n').value||todayISO(),active:old.active!==false};closeSheet();commit()},
+  recurToggle:e=>{const p=S.recur[e.dataset.id];if(p){p.active=!p.active;commit()}},
+  recurDel:e=>{delete S.recur[e.dataset.id];commit()},
   newSaved:()=>showSheet(savedEditor()),
   editSaved:e=>showSheet(savedEditor(S.saved[e.dataset.id])),
   saveSaved:e=>{const d=$('#s-d').value.trim();if(!d)return;S.saved[e.dataset.id]={id:e.dataset.id,desc:d,unit:$('#s-u').value.trim(),rate:+$('#s-r').value||0};closeSheet();commit()},
@@ -1454,10 +1562,27 @@ function photoViewer(doc,k,editable){return{live:false,doc,k,render(){
   ${editable?`<div id="delZone" style="width:100%"><button class="btn bad" data-act="askDelPhoto">${t('del')}</button></div>`:''}</div></div>`;
 }}}
 
+/* pick a suggestion: fills description, unit and rate of that line (the user taps; nothing is automatic) */
+document.addEventListener('mousedown',e=>{if(e.target.closest('[data-sugg]'))e.preventDefault()});
+document.addEventListener('focusin',e=>{const el=e.target;if(el.dataset&&el.dataset.item!==undefined&&el.dataset.k==='desc')showSugg(el.dataset.item,el.value)});
+document.addEventListener('focusout',e=>{const el=e.target;if(el.dataset&&el.dataset.item!==undefined&&el.dataset.k==='desc'){const box=document.getElementById('sg'+el.dataset.item);if(box)box.hidden=true}});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-sugg]');
+  if(b){
+    const s=suggList[+b.dataset.sugg],k=+b.dataset.k,i=D&&D.items[k];if(!s||!i)return;
+    i.desc=s.desc;i.unit=s.unit;i.rate=s.rate;
+    const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v};
+    set('i'+k+'d',s.desc);set('i'+k+'r',s.rate);
+    const u=document.getElementById('i'+k+'u');if(u&&s.unit&&![...u.options].some(o=>o.value===s.unit))u.add(new Option(s.unit,s.unit));set('i'+k+'u',s.unit||'');
+    const box=document.getElementById('sg'+k);if(box){box.hidden=true;box.innerHTML=''}
+    updTotals();return;
+  }
+});
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const f=A[el.dataset.act];if(!f)return;if(el.type!=='checkbox')e.preventDefault();f(el)});
 document.addEventListener('input',e=>{
   const el=e.target;
   if(el.id==='q'){query=el.value;render();return}
+  if(el.id==='hq'){helpQuery=el.value;const pos=el.selectionStart;redrawSheet();const q=$('#hq');if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}return}
   if(el.id==='cq'){clientQuery=el.value;const pos=el.selectionStart;redrawSheet();const q=$('#cq');if(q){q.focus();try{q.setSelectionRange(pos,pos)}catch(_){}}return}
   if(el.id==='sortSel'){S.profile.sortKey=el.value;persist();render();return}
   if(SM&&el.dataset.sm){SM[el.dataset.sm]=el.value;return}
@@ -1465,6 +1590,7 @@ document.addEventListener('input',e=>{
     if(el.dataset.bind==='clientId'){D.clientId=el.value;D.jobId='';NJ=null;redrawSheet();return}
     if(el.dataset.bind==='jobSel'){if(el.value==='__new'){NJ={name:'',address:'',same:false}}else{NJ=null;D.jobId=el.value}redrawSheet();return}
     D[el.dataset.bind]=el.value;updTotals();return}
+  if(D&&el.dataset.item!==undefined&&el.dataset.k==='desc'){D.items[+el.dataset.item].desc=el.value;showSugg(el.dataset.item,el.value);return}
   if(D&&el.dataset.item!==undefined){D.items[+el.dataset.item][el.dataset.k]=el.value;updTotals();return}
   if(D&&el.dataset.cap!==undefined){D.photos[+el.dataset.cap].caption=el.value;return}
   if(D&&NJ&&el.dataset.nj){NJ[el.dataset.nj]=el.value;return}
@@ -1496,8 +1622,10 @@ $('#fileIn').addEventListener('change',async e=>{
 
 /* ---------- boot ---------- */
 load();
+const madeRecur=runRecurring();
 showWelcome=!S.profile.started;
 render();
+if(madeRecur)setTimeout(()=>toast(rt(`${madeRecur} factura(s) recurrente(s) lista(s) para enviar`,`${madeRecur} recurring invoice(s) ready to send`)),600);
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}
 </script>
