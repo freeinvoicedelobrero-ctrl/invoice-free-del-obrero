@@ -586,7 +586,7 @@ async function fetchPrices(force){
   fetchPrices.busy=false;
   const top=stack[stack.length-1];if(top&&top.pay)redrawSheet();
 }
-function coinAmount(m,usd){const p=PRESETS[m.type];if(!p)return null;if(p.stable)return r2(usd).toFixed(2);if(!p.cg||!prices.data||!prices.data[p.cg])return null;const px=prices.data[p.cg].usd;if(!px)return null;const v=usd/px;return v.toFixed(p.sym==='BTC'?8:p.sym==='XMR'?6:6)}
+function coinAmount(m,usd){const p=PRESETS[m.type];if(!p)return null;if(p.stable)return r2(usd).toFixed(2);if(!p.cg||!prices.data||!prices.data[p.cg])return null;const px=prices.data[p.cg].usd;if(!px)return null;const v=usd/px;return v.toFixed(p.sym==='BTC'||p.sym==='BSV'?8:p.sym==='XMR'?6:6)}
 function ensureXmrSub(d,m){
   if(d.xmrSub&&d.xmrMethod===m.id)return d.xmrSub;
   const subs=(m.subaddresses||[]).map(s=>s.trim()).filter(Boolean);m.used=m.used||{};
@@ -602,6 +602,7 @@ function payURI(m,d,amt){
     case 'eth':return `ethereum:${a}`;
     case 'ltc':return `litecoin:${a}${amt?`?amount=${amt}`:''}`;
     case 'sol':return `solana:${a}${amt?`?amount=${amt}`:''}`;
+    case 'bsv':return a;
     case 'cashapp':{const tag=a.replace(/^\$/,'');return `https://cash.app/$${tag}${amt?'/'+amt:''}`}
     case 'venmo':return `https://venmo.com/u/${a.replace(/^@/,'')}`;
     case 'paypal':{const u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'');return `https://paypal.me/${u}${amt?'/'+amt+'USD':''}`}
