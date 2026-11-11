@@ -1090,7 +1090,7 @@ function recurEditor(p){const it=p||{id:uid(),clientId:'',desc:'',unit:'',qty:1,
 /* ---------- store mode: quick sales, price only, no stock. Fully on the phone. ---------- */
 let cart={};
 function cartLines(){return Object.entries(cart).filter(([id,q])=>q>0&&S.products[id])}
-function storeSheet(){return{live:true,render(){
+function storeSheet(){return{live:true,store:true,render(){
   const today=todayISO();const sales=Object.values(S.sales||{});
   const todays=sales.filter(s=>s.date===today);
   const dayTot=todays.reduce((a,s)=>a+s.total,0);
@@ -1098,9 +1098,10 @@ function storeSheet(){return{live:true,render(){
   const lines=cartLines();const total=r2(lines.reduce((a,[id,q])=>a+S.products[id].price*q,0));
   return sheetHead(esc(storeTitle()),{close:true,right:`<button class="textbtn" data-act="productsOpen">${rt('Productos','Products')}</button>`})+`<div class="wrap sheet-b">
   <div class="btns" style="margin:12px 0 0"><button class="btn" data-act="storeName">✎ ${rt('Nombre y horario','Name and hours')}</button><button class="btn" data-act="menuOpen">${rt('Menú con QR','Menu with QR')}</button></div>
+  ${menuCloudOK()&&S.profile.menuId?`<button class="btn ${newOrders()?'primary':''}" style="margin-top:10px" data-act="ordersOpen">${rt('Pedidos','Orders')}${newOrders()?' ('+newOrders()+' '+rt('nuevos','new')+')':''}</button>`:''}
   ${storeHours().mode==='hours'?`<p class="small" style="margin:10px 0 0">${storeOpenNow()?rt('Abierto ahora','Open now'):rt('Cerrado ahora','Closed now')} · ${esc(storeHours().open)}–${esc(storeHours().close)}</p>`:''}
   <div class="cards" style="margin-top:12px"><div class="card good"><span class="lbl">${rt('Vendido hoy','Sold today')}</span><span class="val num">${money(dayTot)}</span></div><div class="card"><span class="lbl">${rt('Ventas hoy','Sales today')}</span><span class="val num">${todays.length}</span></div></div>
-  ${products.length?`<div class="grid2" style="margin-top:12px">${products.map(p=>{const q=cart[p.id]||0;return `<div style="position:relative"><button class="card" data-act="addCart" data-id="${p.id}">${p.photo?`<img src="${p.photo}" alt="" style="width:100%;height:84px;object-fit:cover;border-radius:10px">`:''}<span class="lbl">${esc(p.name)}</span><span class="val num">${money(p.price)}</span>${q?`<span class="small num">× ${q}</span>`:''}</button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="position:absolute;top:6px;right:6px;background:var(--surface-2);border-radius:50%;width:36px;height:36px;font-size:20px">⋮</button></div>`}).join('')}</div>`:`<div class="empty" style="margin-top:20px">${rt('Agrega tus productos con el botón Productos.','Add your products with the Products button.')}</div>`}
+  ${products.length?`<div class="grid2" style="margin-top:12px">${products.map(p=>{const q=cart[p.id]||0;return `<div style="position:relative"><button class="card" data-act="addCart" data-id="${p.id}">${p.photo?`<img src="${p.photo}" alt="" style="width:100%;height:84px;object-fit:cover;border-radius:10px">`:''}<span class="lbl">${esc(p.name)}</span><span class="val num">${money(p.price)}</span>${p.out?`<span class="small" style="color:var(--warn,#E0A83A)">${rt('Agotado','Sold out')}</span>`:''}${q?`<span class="small num">× ${q}</span>`:''}</button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="position:absolute;top:6px;right:6px;background:var(--surface-2);border-radius:50%;width:36px;height:36px;font-size:20px">⋮</button></div>`}).join('')}</div>`:`<div class="empty" style="margin-top:20px">${rt('Agrega tus productos con el botón Productos.','Add your products with the Products button.')}</div>`}
   ${lines.length?`<div class="group" style="margin-top:14px">${lines.map(([id,q])=>`<div class="kv"><span>${esc(S.products[id].name)} × ${q}</span><span class="num">${money(S.products[id].price*q)}</span></div>`).join('')}<div class="kv"><b>${t('total')}</b><b class="num">${money(total)}</b></div><div class="grid2" style="margin-top:10px"><button class="btn outline" data-act="clearCart">${rt('Limpiar','Clear')}</button><button class="btn primary" data-act="checkout">${rt('Cobrar','Charge')}</button></div></div>`:''}
   <div class="group" style="margin-top:14px"><div class="gl">${rt('Últimas ventas','Recent sales')}</div>${sales.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,8).map(s=>`<div class="kv"><span>${s.date} · ${esc(s.method)}</span><span class="num">${money(s.total)}</span></div>`).join('')||`<div class="small">${rt('Sin ventas todavía','No sales yet')}</div>`}</div>
   </div>`}}}
@@ -1242,9 +1243,14 @@ function storeHours(){const x=S.profile.storeHours||{};return{mode:x.mode==='hou
 function hm(s){const [a,b]=s.split(':').map(Number);return a*60+b}
 function storeOpenNow(){const hh=storeHours();if(hh.mode==='always')return true;const n=new Date();const o=hm(hh.open),c=hm(hh.close),m=n.getHours()*60+n.getMinutes(),d=n.getDay();if(o===c)return hh.days.includes(d);if(o<c)return hh.days.includes(d)&&m>=o&&m<c;return (hh.days.includes(d)&&m>=o)||(hh.days.includes((d+6)%7)&&m<c)}
 function storeNameSheet(){return{live:false,render(){return sheetHead(rt('Nombre y horario','Name and hours'),{close:true})+`<div class="wrap sheet-b"><div class="field" style="margin-top:14px"><label for="sn-n">${rt('Nombre','Name')}</label><input class="in" id="sn-n" maxlength="60" value="${esc(S.profile.storeName||'')}" placeholder="${rt('Tacos El Güero','Joe\'s Tacos')}"></div>${(()=>{const hh=storeHours();const dn=lang==='es'?['D','L','M','M','J','V','S']:['S','M','T','W','T','F','S'];return `<div class="field"><label for="sn-m">${rt('Horario','Hours')}</label><select class="in" id="sn-m"><option value="always" ${hh.mode==='always'?'selected':''}>${rt('Siempre abierto','Always open')}</option><option value="hours" ${hh.mode==='hours'?'selected':''}>${rt('Con horario','Set hours')}</option></select></div><div class="grid2"><div class="field"><label for="sn-o">${rt('Abre','Opens')}</label><input class="in" id="sn-o" type="time" value="${esc(hh.open)}"></div><div class="field"><label for="sn-c">${rt('Cierra','Closes')}</label><input class="in" id="sn-c" type="time" value="${esc(hh.close)}"></div></div><div class="field"><label>${rt('Días','Days')}</label><div style="display:flex;gap:6px;flex-wrap:wrap">${dn.map((d,k)=>`<label style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:38px;padding:6px 0"><span>${d}</span><input type="checkbox" data-sday="${k}" ${hh.days.includes(k)?'checked':''} style="width:22px;height:22px"></label>`).join('')}</div></div><p class="small">${rt('El horario aplica al menú que compartes. Fuera de horario, el cliente ve el menú pero no puede pedir.','Hours apply to the menu you share. Outside hours, customers can see the menu but cannot order.')}</p>`})()}<button class="btn primary" data-act="saveStoreName">${t('save')}</button></div>`}}}
-function menuSheet(){return{live:false,render(){
+function menuSheet(){return{live:true,render(){
   const n=Object.keys(S.products||{}).length;
   if(!n)return sheetHead(rt('Menú con QR','Menu with QR'),{close:true})+`<div class="wrap sheet-b"><div class="empty" style="margin-top:20px">${rt('Agrega productos primero.','Add products first.')}</div></div>`;
+  if(menuCloudOK()){const live=menuLive();const ll=live?liveLink():'';const lq=live?menuQR(ll):'';
+  return sheetHead(rt('Menú con QR','Menu with QR'),{close:true})+`<div class="wrap sheet-b" style="margin-top:14px">
+  ${live?`<p class="small">${rt('Menú en vivo: tus clientes ven fotos, precios y si está abierto. El pedido llega a Pedidos en esta app. Los cambios se publican solos.','Live menu: customers see photos, prices and whether you are open. Orders arrive in Orders in this app. Changes publish by themselves.')}</p>${lq?`<div class="qr">${lq}</div>`:''}<div class="mono" style="word-break:break-all">${esc(ll)}</div><div class="btns" style="margin:10px 0"><button class="btn primary" data-act="shareMenu">${rt('Compartir enlace','Share link')}</button><button class="btn" data-act="copy" data-v="${esc(ll)}">${rt('Copiar enlace','Copy link')}</button></div><div class="btns" style="margin:0 0 10px"><button class="btn" data-act="storeToggle">${S.profile.storeClosed?rt('Abrir la tienda','Open the store'):rt('Cerrar la tienda ahora','Close the store now')}</button><button class="btn" data-act="publishMenu">${rt('Publicar de nuevo','Publish again')}</button></div><p class="small">${S.profile.storeClosed?rt('La tienda está CERRADA. Los clientes ven el menú pero no pueden pedir.','The store is CLOSED. Customers see the menu but cannot order.'):rt('La tienda está abierta.','The store is open.')}</p>`
+  :`<p>${rt('Publica tu menú en vivo para recibir pedidos en la app.','Publish your live menu to receive orders in the app.')}</p><p class="note">${rt('Se publica: nombre de la tienda, productos, precios, fotos, horario, y el teléfono y correo de Datos del negocio. Cualquiera con el enlace lo puede ver.','This publishes: store name, products, prices, photos, hours, and the phone and email from Business settings. Anyone with the link can see it.')}</p><button class="btn primary" data-act="publishMenu">${rt('Publicar menú en vivo','Publish live menu')}</button>`}
+  </div>`}
   const link=menuLink();const qr=menuQR(link);
   return sheetHead(rt('Menú con QR','Menu with QR'),{close:true})+`<div class="wrap sheet-b" style="margin-top:14px">
   <p class="small">${rt('Tus clientes escanean el código o abren el enlace, ven tu menú y te mandan el pedido por WhatsApp o mensaje.','Your customers scan the code or open the link, see your menu and send you the order by WhatsApp or text.')}</p>
@@ -1253,7 +1259,59 @@ function menuSheet(){return{live:false,render(){
   <div class="btns" style="margin:10px 0"><button class="btn primary" data-act="shareMenu">${rt('Compartir enlace','Share link')}</button><button class="btn" data-act="copy" data-v="${esc(link)}">${rt('Copiar enlace','Copy link')}</button></div>
   <p class="small">${rt('Si cambias precios o productos, comparte el enlace o el código nuevo. No lleva fotos.','If you change prices or products, share the new link or code. It carries no photos.')}</p></div>`;
 }}}
-async function shareMenu(){const link=menuLink();try{if(navigator.share){await navigator.share({title:storeTitle(),text:storeTitle(),url:link});return}}catch(e){if(e&&e.name==='AbortError')return}try{await navigator.clipboard.writeText(link);toast(rt('Enlace copiado','Link copied'))}catch(e){}}
+async function shareMenu(){const link=menuCloudOK()&&menuLive()?liveLink():menuLink();try{if(navigator.share){await navigator.share({title:storeTitle(),text:storeTitle(),url:link});return}}catch(e){if(e&&e.name==='AbortError')return}try{await navigator.clipboard.writeText(link);toast(rt('Enlace copiado','Link copied'))}catch(e){}}
+
+/* ---------- live menu (Supabase): the store publishes its menu; customers read it and send orders. The phone keeps a random id + secret; no account needed. ---------- */
+const MCFG=window.OBRERO_CONFIG||{};
+function menuCloudOK(){return !!(MCFG.supabaseUrl&&MCFG.supabaseAnonKey)}
+async function menuRpc(fn,args){const r=await fetch(MCFG.supabaseUrl+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:MCFG.supabaseAnonKey,Authorization:'Bearer '+MCFG.supabaseAnonKey},body:JSON.stringify(args)});if(!r.ok)throw new Error('http '+r.status);return r.status===204?null:r.json()}
+function rndId(n){const a='abcdefghijklmnopqrstuvwxyz0123456789';return [...crypto.getRandomValues(new Uint8Array(n))].map(x=>a[x%36]).join('')}
+function menuData(){
+  const d={v:1,n:storeTitle(),c:ccy(),p:(S.profile.phone||'').replace(/[^\d+]/g,''),open:!S.profile.storeClosed,
+    i:Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>{const o={n:p.name,p:+p.price||0};if(p.photo)o.ph=p.photo;if(p.out)o.off=1;return o})};
+  const hh=storeHours();if(hh.mode==='hours')d.h=[hm(hh.open),hm(hh.close),hh.days.reduce((a,x)=>a|(1<<x),0)];
+  if((S.profile.email||'').trim())d.e=S.profile.email.trim();
+  return d;
+}
+function menuLive(){return !!(S.profile.menuId&&S.profile.menuPublishedAt)}
+function liveLink(){return new URL('menu.html',location.href).href.split(/[?#]/)[0]+'?m='+S.profile.menuId}
+async function publishMenu(quiet){
+  if(!menuCloudOK())return false;
+  if(!S.profile.menuId||!S.profile.menuSecret){S.profile.menuId=rndId(12);S.profile.menuSecret=rndId(32);persist()}
+  try{await menuRpc('menu_put',{p_id:S.profile.menuId,p_secret:S.profile.menuSecret,p_data:JSON.stringify(menuData())});S.profile.menuPublishedAt=Date.now();persist();if(!quiet)toast(rt('Menú publicado','Menu published'));return true}
+  catch(e){toast(rt('No se pudo publicar el menú. Revisa tu Internet.','Could not publish the menu. Check your Internet.'));return false}
+}
+/* after any change to products, name, hours or open/closed: update the published menu quietly */
+function republish(){if(menuLive())publishMenu(true)}
+let ordersState={s:'idle',list:[]},ordersTimer=null;
+async function loadOrders(){
+  if(!S.profile.menuId)return;
+  try{const rows=await menuRpc('orders_list',{p_menu:S.profile.menuId,p_secret:S.profile.menuSecret});ordersState={s:'ok',list:rows||[]}}
+  catch(e){ordersState={s:'error',list:ordersState.list||[]}}
+  const top=stack[stack.length-1];if(top&&(top.orders||top.store))redrawSheet();
+}
+function ordersWatch(){if(ordersTimer)return;ordersTimer=setInterval(()=>{if(!stack.some(s=>s.orders||s.store)){clearInterval(ordersTimer);ordersTimer=null;return}if(!document.hidden)loadOrders()},20000)}
+function newOrders(){return (ordersState.list||[]).filter(o=>o.status==='new').length}
+const ORDER_ST={new:['Nuevo','New'],accepted:['Aceptado','Accepted'],ready:['Listo','Ready'],done:['Entregado','Delivered'],cancelled:['Cancelado','Cancelled']};
+function ordersSheet(){return{live:true,orders:true,render(){
+  const st=ordersState;const list=st.list||[];
+  const card=o=>{let d={};try{d=JSON.parse(o.data)||{}}catch(e){}
+    const items=Array.isArray(d.items)?d.items:[];const lbl=(ORDER_ST[o.status]||ORDER_ST.new)[lang==='es'?0:1];
+    const next=o.status==='new'?`<button class="btn primary" data-act="orderSet" data-id="${o.id}" data-st="accepted">${rt('Aceptar','Accept')}</button><button class="btn" data-act="orderSet" data-id="${o.id}" data-st="cancelled">${rt('Cancelar','Cancel')}</button>`
+      :o.status==='accepted'?`<button class="btn primary" data-act="orderSet" data-id="${o.id}" data-st="ready">${rt('Marcar listo','Mark ready')}</button><button class="btn" data-act="orderSet" data-id="${o.id}" data-st="cancelled">${rt('Cancelar','Cancel')}</button>`
+      :o.status==='ready'?`<button class="btn primary" data-act="orderSet" data-id="${o.id}" data-st="done">${rt('Entregado','Delivered')}</button>`:'';
+    return `<div class="group" style="margin-top:12px"><div class="kv"><b>#${esc(o.num)} · ${esc(lbl)}</b><span class="small num">${new Date(o.created_at).toLocaleTimeString(lang==='es'?'es-MX':'en-US',{hour:'numeric',minute:'2-digit'})}</span></div>
+    ${d.name?`<div class="small">${esc(String(d.name).slice(0,40))}</div>`:''}
+    ${items.map(i=>`<div class="kv"><span>${esc(i.q)} × ${esc(String(i.n||'').slice(0,120))}</span><span class="num">${money((+i.q||0)*(+i.p||0))}</span></div>`).join('')}
+    <div class="kv"><b>${t('total')}</b><b class="num">${money(+d.total||0)}</b></div>
+    ${d.note?`<p class="note" style="margin:8px 0 0">${esc(String(d.note).slice(0,140))}</p>`:''}
+    ${next?`<div class="btns" style="margin:10px 0 0">${next}</div>`:''}</div>`};
+  return sheetHead(rt('Pedidos','Orders'),{close:true,right:`<button class="textbtn" data-act="ordersRefresh">${t('refresh')}</button>`})+`<div class="wrap sheet-b">
+  ${st.s==='error'?`<p class="note" style="margin-top:12px">${rt('No pude cargar los pedidos. Revisa tu Internet.','Could not load orders. Check your Internet.')}</p>`:''}
+  ${st.s==='idle'?`<p class="small" style="margin-top:12px">${rt('Cargando…','Loading…')}</p>`:''}
+  ${list.length?list.map(card).join(''):(st.s==='ok'?`<div class="empty">${rt('Todavía no hay pedidos. Aparecen aquí cuando un cliente pide desde tu menú.','No orders yet. They appear here when a customer orders from your menu.')}</div>`:'')}
+  <p class="small" style="margin-top:14px">${rt('Se actualiza solo cada 20 segundos mientras esta pantalla está abierta. Se muestran los pedidos de los últimos 2 días.','Refreshes every 20 seconds while this screen is open. Orders from the last 2 days are shown.')}</p></div>`;
+}}}
 
 function productsSheet(){return{live:true,render(){
   const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
@@ -1263,6 +1321,7 @@ function productEditor(p){const it=p||{id:uid(),name:'',price:0};pendingPhoto=(p
   <div class="field" style="margin-top:14px"><label for="p-f">${rt('Foto (opcional)','Photo (optional)')}</label><img id="p-prev" src="${it.photo||''}" alt="" ${it.photo?'':'hidden'} style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-bottom:8px"><input class="in" id="p-f" type="file" accept="image/*"></div>
   <div class="field" style="margin-top:14px"><label for="p-n">${t('desc')}</label><input class="in" id="p-n" value="${esc(it.name)}" placeholder="${rt('Agua 16 oz','Water 16 oz')}"></div>
   <div class="field"><label for="p-p">${t('rate')}</label><input class="in num" id="p-p" type="number" step="0.01" inputmode="decimal" value="${esc(it.price)}"></div>
+  <label style="display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:10px"><input type="checkbox" id="p-out" ${it.out?'checked':''} style="width:22px;height:22px"><span>${rt('Agotado (no se puede pedir en el menú)','Sold out (cannot be ordered on the menu)')}</span></label>
   <button class="btn primary" data-act="saveProduct" data-id="${it.id}">${t('save')}</button>${p?`<button class="btn outline" style="margin-top:10px" data-act="delProduct" data-id="${it.id}">${t('del')}</button>`:''}</div>`}}}
 
 /* ---------- reports ---------- */
@@ -1727,7 +1786,7 @@ const A={
   saveRecur:e=>{const c=$('#r-c').value,d=$('#r-d').value.trim();if(!c||!d){toast(rt('Elige cliente y descripción','Choose a client and a description'));return}const old=S.recur[e.dataset.id]||{};S.recur[e.dataset.id]={id:e.dataset.id,clientId:c,desc:d,unit:$('#r-u').value.trim(),qty:+$('#r-q').value||1,rate:+$('#r-r').value||0,freq:$('#r-f').value,next:$('#r-n').value||todayISO(),active:old.active!==false};closeSheet();commit()},
   recurToggle:e=>{const p=S.recur[e.dataset.id];if(p){p.active=!p.active;commit()}},
   recurDel:e=>{delete S.recur[e.dataset.id];commit()},
-  storeOpen:()=>showSheet(storeSheet()),
+  storeOpen:()=>{showSheet(storeSheet());if(menuCloudOK()&&S.profile.menuId){loadOrders();ordersWatch()}},
   addCart:e=>{cart[e.dataset.id]=(cart[e.dataset.id]||0)+1;commit()},
   clearCart:()=>{cart={};commit()},
   checkout:()=>{if(!cartLines().length){toast(rt('Agrega productos primero','Add products first'));return}showSheet(payPickSheet())},
@@ -1736,16 +1795,21 @@ const A={
   productsOpen:()=>showSheet(productsSheet()),
   newProduct:()=>showSheet(productEditor()),
   editProduct:e=>showSheet(productEditor(S.products[e.dataset.id])),
-  saveProduct:e=>{const n=$('#p-n').value.trim(),p=+$('#p-p').value||0;if(!n){toast(rt('Escribe el nombre','Write the name'));return}S.products[e.dataset.id]={id:e.dataset.id,name:n,price:p,photo:pendingPhoto||undefined};closeSheet();commit()},
-  delProduct:e=>{delete S.products[e.dataset.id];delete cart[e.dataset.id];closeSheet();commit()},
+  saveProduct:e=>{const n=$('#p-n').value.trim(),p=+$('#p-p').value||0;if(!n){toast(rt('Escribe el nombre','Write the name'));return}S.products[e.dataset.id]={id:e.dataset.id,name:n,price:p,photo:pendingPhoto||undefined,out:$('#p-out').checked||undefined};closeSheet();commit();republish()},
+  delProduct:e=>{delete S.products[e.dataset.id];delete cart[e.dataset.id];closeSheet();commit();republish()},
   chainCheck:e=>chainCheckStart(e.dataset.id),
   chainRetry:e=>runChainCheck(e.dataset.id),
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
   chainConfirm:e=>chainConfirm(e.dataset.id),
   storeBsv:()=>storeBsvStart(),
   storeName:()=>showSheet(storeNameSheet()),
-  saveStoreName:()=>{S.profile.storeName=$('#sn-n').value.trim();S.profile.storeHours={mode:$('#sn-m').value,open:$('#sn-o').value||'09:00',close:$('#sn-c').value||'21:00',days:[...document.querySelectorAll('[data-sday]')].filter(x=>x.checked).map(x=>+x.dataset.sday)};closeSheet();commit()},
+  saveStoreName:()=>{S.profile.storeName=$('#sn-n').value.trim();S.profile.storeHours={mode:$('#sn-m').value,open:$('#sn-o').value||'09:00',close:$('#sn-c').value||'21:00',days:[...document.querySelectorAll('[data-sday]')].filter(x=>x.checked).map(x=>+x.dataset.sday)};closeSheet();commit();republish()},
   menuOpen:()=>showSheet(menuSheet()),
+  publishMenu:async()=>{if(!Object.keys(S.products||{}).length)return;await publishMenu(false);redrawSheet()},
+  storeToggle:async()=>{S.profile.storeClosed=!S.profile.storeClosed;commit();await publishMenu(true)},
+  ordersOpen:()=>{showSheet(ordersSheet());loadOrders();ordersWatch()},
+  ordersRefresh:()=>loadOrders(),
+  orderSet:async e=>{try{await menuRpc('order_set',{p_menu:S.profile.menuId,p_secret:S.profile.menuSecret,p_id:+e.dataset.id,p_status:e.dataset.st})}catch(err){toast(rt('No se pudo cambiar el pedido. Revisa tu Internet.','Could not update the order. Check your Internet.'))}loadOrders()},
   shareMenu:()=>shareMenu(),
   storeBsvCheck:()=>storeBsvCheck(),
   storeBsvConfirm:()=>storeBsvConfirm(),
