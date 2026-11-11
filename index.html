@@ -217,6 +217,11 @@ textarea.in{min-height:84px;resize:vertical}
 .card{transform-style:preserve-3d;box-shadow:0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);transition:transform .18s ease,box-shadow .18s ease}
 button.card:active{transform:perspective(600px) rotateX(6deg) rotateY(-4deg) translateY(-2px);box-shadow:0 14px 28px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06)}
 @media (prefers-reduced-motion:reduce){.card,button.card:active{transition:none;transform:none}}
+/* home: three big actions */
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.big3 .card{align-items:center;justify-content:center;text-align:center;min-height:88px;font-weight:600;font-size:14px;color:var(--fg)}
+.big3 .b3i{font-size:24px;line-height:1}
+.big3 .go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 /* suggestions from items the user already used: a small list under the description, tap to pick */
 .sugg{display:flex;flex-direction:column;gap:4px;margin:-2px 0 10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 10px 22px rgba(0,0,0,.5)}
 .sugg[hidden]{display:none}
@@ -485,7 +490,7 @@ function vHome(){
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
   ${unsentOpen.length?`<div class="banner">${ic('bell',2)}<div><p>${t('unsentAlert',unsentOpen.length)}</p><button class="textbtn" data-act="filterTo" data-v="unsent">${t('readySend')}</button></div></div>`:''}
   ${Object.keys(S.docs).length&&lb>14?`<div class="note">${t('backupReminder')} <button class="textbtn" style="padding:0" data-act="exportJson">${t('exportJson')}</button></div>`:''}
-  <button class="btn primary" data-act="storeOpen" style="margin:10px 0">${rt('Abrir tienda','Open store')}</button>
+  <div class="big3"><button class="card" data-act="newInvoice"><span class="b3i">＋</span><span>${rt('Nueva factura','New invoice')}</span></button><button class="card go" data-act="storeOpen"><span class="b3i">$</span><span>${rt('Cobrar','Charge')}</span></button><button class="card" data-act="reports"><span class="b3i">✓</span><span>${rt('Pagos','Payments')}</span></button></div>
   <div class="sec-h"><h2>${t('overview')}</h2></div>
   <div class="cards">
     <button class="card bad" data-act="filterTo" data-v="overdue"><span class="lbl">${t('overdue')} (${over.length})</span><span class="val num">${sum(over)}</span></button>
@@ -1094,12 +1099,12 @@ function storeSheet(){return{live:true,render(){
   </div>`}}}
 function payPickSheet(){return{live:false,render(){
   const ms=[rt('Efectivo','Cash'),rt('Débito','Debit'),'ACH',rt('Otro','Other')];
-  return sheetHead(rt('Método de pago','Payment method'),{close:true})+`<div class="wrap sheet-b"><p class="small" style="margin:12px 0">${rt('Solo registra cómo te pagaron. El cobro con tarjeta o ACH se hace en tu terminal o banco.','This only records how you were paid. Card or ACH payments are taken on your terminal or bank.')}</p>${ms.map(m=>`<button class="btn outline" style="margin-bottom:10px" data-act="pickMethod" data-m="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}}}
-function recordSale(method){
+  return sheetHead(rt('Método de pago','Payment method'),{close:true})+`<div class="wrap sheet-b"><p class="small" style="margin:12px 0">${rt('Solo registra cómo te pagaron. El cobro con tarjeta o ACH se hace en tu terminal o banco.','This only records how you were paid. Card or ACH payments are taken on your terminal or bank.')}</p>${bsvMethod()?`<button class="btn primary" style="margin-bottom:10px" data-act="storeBsv">${rt('Bitcoin SV (QR)','Bitcoin SV (QR)')}</button>`:''}${ms.map(m=>`<button class="btn outline" style="margin-bottom:10px" data-act="pickMethod" data-m="${esc(m)}">${esc(m)}</button>`).join('')}</div>`}}}
+function recordSale(method,ref){
   const lines=cartLines();if(!lines.length)return;
   const items=lines.map(([id,q])=>({name:S.products[id].name,qty:q,price:S.products[id].price}));
   const total=r2(items.reduce((a,i)=>a+i.qty*i.price,0));
-  const sale={id:uid(),date:todayISO(),at:Date.now(),items,total,method};
+  const sale={id:uid(),date:todayISO(),at:Date.now(),items,total,method,ref:ref||undefined};
   S.sales=S.sales||{};S.sales[sale.id]=sale;cart={};
   closeSheet();commit();
   showSheet({live:false,render(){return sheetHead(rt('Venta guardada','Sale saved'),{close:true})+`<div class="wrap sheet-b"><p style="margin:14px 0" class="num"><b>${money(total)}</b> · ${esc(method)}</p><button class="btn primary" data-act="shareReceipt" data-id="${sale.id}">${rt('Enviar recibo por texto o WhatsApp','Send receipt by text or WhatsApp')}</button></div>`}});
@@ -1149,7 +1154,7 @@ async function runChainCheck(id){
   try{
     const list=await wocGet('address/'+payAddress(m,d)+'/unspent');
     if(!Array.isArray(list))throw new Error('shape');
-    const seen=new Set(d.bsvSeen||[]);
+    const seen=usedBsvTx();
     const hit=list.filter(u=>u&&typeof u.value==='number'&&u.value>=want&&u.tx_hash&&!seen.has(u.tx_hash)).sort((a,b)=>b.value-a.value)[0];
     chainState[id]=hit?{s:'found',tx:hit.tx_hash,sats:hit.value,amt}:{s:'none',amt};
   }catch(e){chainState[id]={s:'error'}}
@@ -1173,6 +1178,46 @@ function chainConfirm(id){
   d.bsvSeen=[...(d.bsvSeen||[]),st.tx];
   delete chainState[id];
   closeSheet();commit();toast(rt('Pago registrado','Payment recorded'));
+}
+
+/* BSV charge at the store counter: QR with the address, the amount in BSV, and a chain check. Nothing is recorded until the user confirms. */
+let storeBsv=null;
+function usedBsvTx(){const s=new Set();Object.values(S.sales||{}).forEach(x=>x.ref&&s.add(x.ref));Object.values(S.docs||{}).forEach(d=>{(d.bsvSeen||[]).forEach(t=>s.add(t));(d.payments||[]).forEach(p=>p.ref&&s.add(p.ref))});return s}
+function storeBsvStart(){
+  const m=bsvMethod();if(!m){toast(rt('Agrega tu dirección BSV en Mi cartera','Add your BSV address in My wallet'));return}
+  const lines=cartLines();if(!lines.length)return;
+  const total=r2(lines.reduce((a,[id,q])=>a+S.products[id].price*q,0));
+  const amt=coinAmount(m,total);
+  storeBsv={total,amt,s:amt?'waiting':'noprice',tx:null,skip:[]};
+  showSheet(storeBsvSheet());
+}
+function storeBsvSheet(){return{live:true,render(){
+  const m=bsvMethod()||{};const b=storeBsv||{s:'waiting'};
+  const addr=(m.address||'').trim();
+  let body;
+  if(b.s==='noprice')body=`<p>${rt('No hay precio de BSV ahora. Intenta con Internet.','No BSV price right now. Try with Internet.')}</p>`;
+  else if(b.s==='found')body=`<p>${rt('Pago encontrado','Payment found')}: <b class="num">${(b.sats/1e8).toFixed(8)} BSV</b></p><p class="small mono" style="word-break:break-all">${esc(b.tx)}</p><button class="btn primary" data-act="storeBsvConfirm">${rt('Registrar venta','Record sale')}</button><button class="btn outline" style="margin-top:10px" data-act="storeBsvSkip" data-tx="${esc(b.tx)}">${rt('No es este pago','Not this payment')}</button>`;
+  else body=`<div class="qr">${qrSVG(addr)}</div><div class="kv"><span>USD</span><span class="num">${money(b.total)}</span></div><div class="kv"><span>BSV</span><span class="num">${esc(b.amt||'—')}</span></div><div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>${b.s==='none'?`<p class="small">${rt('Todavía no llega el pago.','The payment has not arrived yet.')}</p>`:''}${b.s==='error'?`<p class="small">${rt('No pude revisar la cadena.','Could not check the chain.')}</p>`:''}<button class="btn primary" data-act="storeBsvCheck">${b.s==='checking'?rt('Revisando…','Checking…'):rt('Revisar pago','Check payment')}</button>`;
+  return sheetHead(rt('Cobro en BSV','BSV charge'),{close:true})+`<div class="wrap sheet-b" style="margin-top:14px">${body}</div>`;
+}}}
+async function storeBsvCheck(){
+  const m=bsvMethod();const b=storeBsv;if(!m||!b||!b.amt||b.s==='checking')return;
+  b.s='checking';redrawSheet();
+  const want=Math.round(Number(b.amt)*1e8);
+  try{
+    const list=await wocGet('address/'+(m.address||'').trim()+'/unspent');
+    if(!Array.isArray(list))throw new Error('shape');
+    const used=usedBsvTx();(b.skip||[]).forEach(t=>used.add(t));
+    const hit=list.filter(u=>u&&typeof u.value==='number'&&u.value>=want&&u.tx_hash&&!used.has(u.tx_hash)).sort((x,y)=>y.value-x.value)[0];
+    if(hit){b.s='found';b.tx=hit.tx_hash;b.sats=hit.value}else b.s='none';
+  }catch(e){b.s='error'}
+  redrawSheet();
+}
+function storeBsvConfirm(){
+  const b=storeBsv;if(!b||b.s!=='found')return;
+  const tx=b.tx;storeBsv=null;
+  closeSheet();          /* closes the BSV charge screen */
+  recordSale('BSV',tx);  /* closes the payment choice and saves the sale with its transaction */
 }
 
 function productsSheet(){return{live:true,render(){
@@ -1660,6 +1705,10 @@ const A={
   chainRetry:e=>runChainCheck(e.dataset.id),
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
   chainConfirm:e=>chainConfirm(e.dataset.id),
+  storeBsv:()=>storeBsvStart(),
+  storeBsvCheck:()=>storeBsvCheck(),
+  storeBsvConfirm:()=>storeBsvConfirm(),
+  storeBsvSkip:e=>{if(storeBsv){storeBsv.skip=[...(storeBsv.skip||[]),e.dataset.tx];storeBsv.s='waiting';storeBsv.tx=null;redrawSheet()}},
   prodMenu:e=>showSheet(prodMenuSheet(e.dataset.id,false)),
   askDelProd:e=>{closeSheet();showSheet(prodMenuSheet(e.dataset.id,true))},
   shareProduct:e=>shareProduct(e.dataset.id),
