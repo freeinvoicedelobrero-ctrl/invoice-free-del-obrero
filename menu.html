@@ -25,6 +25,9 @@ h1{font-size:28px;margin:10px 0 2px;overflow-wrap:anywhere}
 .btn.o{background:none;color:#4D6BFF;border-color:#26292F}
 .btn:disabled{opacity:.4}
 .empty{color:#9AA0AB;padding:40px 0;text-align:center}
+.closed{border:1px dashed #E0A83A;color:#E0A83A;border-radius:12px;padding:12px;margin:0 0 14px}
+.contact{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.contact a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid #26292F;border-radius:999px;color:#fff;text-decoration:none;font-size:14px}
 .foot{color:#9AA0AB;font-size:12px;text-align:center;margin-top:18px}
 :focus-visible{outline:2px solid #4D6BFF;outline-offset:2px}
 </style>
@@ -33,6 +36,8 @@ h1{font-size:28px;margin:10px 0 2px;overflow-wrap:anywhere}
 <div class="wrap">
   <h1 id="name">Menú</h1>
   <p class="sub" id="sub"></p>
+  <div class="contact" id="contact"></div>
+  <div class="closed" id="closed" hidden></div>
   <div id="list"></div>
   <p class="foot">Invoice Free del Obrero</p>
 </div>
@@ -45,8 +50,8 @@ h1{font-size:28px;margin:10px 0 2px;overflow-wrap:anywhere}
 (function(){
   window.addEventListener('hashchange',function(){location.reload()});
   var es=(navigator.language||'es').toLowerCase().indexOf('es')===0;
-  var T=es?{menu:'Menú',pick:'Toca + para armar tu pedido.',bad:'Este enlace de menú no es válido. Pide uno nuevo a la tienda.',none:'Esta tienda todavía no tiene productos.',wa:'Pedir por WhatsApp',sms:'Pedir por mensaje',share:'Enviar pedido',order:'Pedido',total:'Total',less:'Quitar uno',more:'Agregar uno'}
-           :{menu:'Menu',pick:'Tap + to build your order.',bad:'This menu link is not valid. Ask the shop for a new one.',none:'This shop has no products yet.',wa:'Order by WhatsApp',sms:'Order by text',share:'Send order',order:'Order',total:'Total',less:'Remove one',more:'Add one'};
+  var T=es?{menu:'Menú',pick:'Toca + para armar tu pedido.',bad:'Este enlace de menú no es válido. Pide uno nuevo a la tienda.',none:'Esta tienda todavía no tiene productos.',wa:'Pedir por WhatsApp',sms:'Pedir por mensaje',share:'Enviar pedido',order:'Pedido',total:'Total',less:'Quitar uno',more:'Agregar uno',closed:'Cerrado ahora. Puedes ver el menú. Horario: ',call:'Llamar',mail:'Email',chat:'WhatsApp'}
+           :{menu:'Menu',pick:'Tap + to build your order.',bad:'This menu link is not valid. Ask the shop for a new one.',none:'This shop has no products yet.',wa:'Order by WhatsApp',sms:'Order by text',share:'Send order',order:'Order',total:'Total',less:'Remove one',more:'Add one',closed:'Closed now. You can still see the menu. Hours: ',call:'Call',mail:'Email',chat:'WhatsApp'};
   document.documentElement.lang=es?'es':'en';
   var $=function(id){return document.getElementById(id)};
   function dec(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return JSON.parse(decodeURIComponent(escape(atob(s))))}
@@ -56,7 +61,17 @@ h1{font-size:28px;margin:10px 0 2px;overflow-wrap:anywhere}
   var name=String(M.n||T.menu).slice(0,80),cur=/^[A-Z]{3}$/.test(M.c)?M.c:'USD',phone=String(M.p||'').replace(/[^\d+]/g,'');
   var items=M.i.filter(function(x){return Array.isArray(x)&&x[0]}).map(function(x){return{n:String(x[0]).slice(0,120),p:Math.max(0,+x[1]||0),q:0}});
   function money(n){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:cur}).format(n)}catch(e){return cur+' '+n.toFixed(2)}}
-  document.title=name;$('name').textContent=name;$('sub').textContent=T.pick;
+  /* hours: [openMinutes, closeMinutes, daysBitmask]; no hours means always open */
+  var open=true,H=Array.isArray(M.h)&&M.h.length===3?M.h.map(Number):null;
+  function f2(x){return (x<10?'0':'')+x}function hhmm(v){return f2(Math.floor(v/60))+':'+f2(v%60)}
+  if(H){var now=new Date(),mm=now.getHours()*60+now.getMinutes(),dd=now.getDay(),o=H[0],c=H[1],on=function(d){return !!(H[2]&(1<<d))};
+    open=o===c?on(dd):o<c?(on(dd)&&mm>=o&&mm<c):((on(dd)&&mm>=o)||(on((dd+6)%7)&&mm<c));
+    if(!open){$('closed').hidden=false;$('closed').textContent=T.closed+hhmm(o)+'–'+hhmm(c)}}
+  var email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(M.e||'')?M.e:'';
+  function link(label,href){var a=document.createElement('a');a.textContent=label;a.href=href;$('contact').appendChild(a)}
+  if(phone){var dg=phone.replace(/\D/g,'');link(T.chat,'https://wa.me/'+(dg.length===10?'1'+dg:dg));link(T.call,'tel:'+phone)}
+  if(email)link(T.mail,'mailto:'+encodeURIComponent(email));
+  document.title=name;$('name').textContent=name;$('sub').textContent=open?T.pick:'';
   var list=$('list');
   if(!items.length){var d=document.createElement('div');d.className='empty';d.textContent=T.none;list.appendChild(d);return}
   items.forEach(function(it,k){
@@ -68,6 +83,7 @@ h1{font-size:28px;margin:10px 0 2px;overflow-wrap:anywhere}
     var minus=document.createElement('button');minus.type='button';minus.textContent='−';minus.setAttribute('aria-label',T.less+': '+it.n);
     var b=document.createElement('b');b.textContent='0';
     var plus=document.createElement('button');plus.type='button';plus.textContent='+';plus.setAttribute('aria-label',T.more+': '+it.n);
+    if(!open){minus.disabled=true;plus.disabled=true;minus.style.opacity=plus.style.opacity='.35'}
     minus.onclick=function(){if(it.q>0){it.q--;b.textContent=it.q;upd()}};
     plus.onclick=function(){if(it.q<99){it.q++;b.textContent=it.q;upd()}};
     q.appendChild(minus);q.appendChild(b);q.appendChild(plus);row.appendChild(n);row.appendChild(q);list.appendChild(row);
