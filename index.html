@@ -494,6 +494,7 @@ function vHome(){
   ${needSetup?`<div class="banner">${ic('user',2)}<div><p>${t('continueSetup')}</p><button class="textbtn" data-act="settings">${t('settings')}</button></div></div>`:''}
   ${unsentOpen.length?`<div class="banner">${ic('bell',2)}<div><p>${t('unsentAlert',unsentOpen.length)}</p><button class="textbtn" data-act="filterTo" data-v="unsent">${t('readySend')}</button></div></div>`:''}
   ${Object.keys(S.docs).length&&lb>14?`<div class="note">${t('backupReminder')} <button class="textbtn" style="padding:0" data-act="exportJson">${t('exportJson')}</button></div>`:''}
+  <button class="btn" data-act="guide" style="margin:10px 0 0;min-height:48px">${rt('¿Necesitas ayuda? Toca aquí','Need help? Tap here')}</button>
   <div class="big3"><button class="card" data-act="newInvoice"><span class="b3i">＋</span><span>${rt('Nueva factura','New invoice')}</span></button><button class="card go" data-act="storeOpen"><span class="b3i">$</span><span>${rt('Cobrar','Charge')}</span></button><button class="card" data-act="reports"><span class="b3i">✓</span><span>${rt('Pagos','Payments')}</span></button></div>
   <div class="sec-h"><h2>${t('overview')}</h2></div>
   <div class="cards">
@@ -1313,6 +1314,34 @@ function ordersSheet(){return{live:true,orders:true,render(){
   <p class="small" style="margin-top:14px">${rt('Se actualiza solo cada 20 segundos mientras esta pantalla está abierta. Se muestran los pedidos de los últimos 2 días.','Refreshes every 20 seconds while this screen is open. Orders from the last 2 days are shown.')}</p></div>`;
 }}}
 
+/* ---------- guided help: "What do you want to do?" Big buttons, short steps, and one button that takes the person there. Free, works offline. ---------- */
+const GUIDE=[
+  {k:'invoice',es:'Hacer una factura',en:'Make an invoice',go:()=>A.newInvoice(),
+   se:['Elige al cliente. Si es nuevo, escríbelo ahí mismo.','Agrega lo que vendiste o el trabajo que hiciste, con su precio.','Toca Guardar arriba a la derecha.','Toca Enviar para mandarla por WhatsApp, mensaje o correo.'],
+   sn:['Choose the client. If new, type it right there.','Add what you sold or the work you did, with its price.','Tap Save at the top right.','Tap Send to send it by WhatsApp, text or email.']},
+  {k:'charge',es:'Cobrar una venta',en:'Charge a sale',go:()=>A.storeOpen(),
+   se:['Toca los productos que te compraron.','Toca Cobrar.','Elige cómo te pagaron: efectivo, débito u otro.','Si quieres, manda el recibo por WhatsApp o mensaje.'],
+   sn:['Tap the products the customer bought.','Tap Charge.','Choose how you were paid: cash, debit or other.','If you want, send the receipt by WhatsApp or text.']},
+  {k:'products',es:'Agregar mis productos',en:'Add my products',go:()=>{A.storeOpen();A.productsOpen()},
+   se:['Toca + Nuevo.','Escribe el nombre y el precio.','Si quieres, ponle una foto.','Toca Guardar. Repite con cada producto.'],
+   sn:['Tap + New.','Type the name and the price.','If you want, add a photo.','Tap Save. Repeat for each product.']},
+  {k:'menu',es:'Compartir mi menú con clientes',en:'Share my menu with customers',go:()=>{A.storeOpen();A.menuOpen()},
+   se:['Primero agrega tus productos.','Toca Publicar menú en vivo.','Comparte el enlace o enseña el código QR.','Tus clientes piden desde su teléfono y el pedido te llega en Pedidos.'],
+   sn:['First add your products.','Tap Publish live menu.','Share the link or show the QR code.','Customers order from their phone and the order arrives in Orders.']},
+  {k:'wallet',es:'Poner cómo me pueden pagar',en:'Set how people can pay me',go:()=>A.walletOpen(),
+   se:['Toca Agregar.','Elige el tipo: Zelle, Cash App, banco, Bitcoin u otro.','Escribe tu dato de cobro y revísalo dos veces.','Toca Guardar. Saldrá en tus facturas.'],
+   sn:['Tap Add.','Choose the type: Zelle, Cash App, bank, Bitcoin or other.','Type your payment detail and check it twice.','Tap Save. It will appear on your invoices.']},
+  {k:'settings',es:'Poner el nombre y datos de mi negocio',en:'Set my business name and details',go:()=>A.settings(),
+   se:['Escribe el nombre de tu negocio, teléfono y correo.','Elige tu moneda.','Si tienes logo, agrégalo.','Toca Guardar arriba a la derecha.'],
+   sn:['Type your business name, phone and email.','Choose your currency.','If you have a logo, add it.','Tap Save at the top right.']},
+  {k:'search',es:'Tengo otra duda',en:'I have another question',go:()=>A.helpOpen(),
+   se:['Escribe una palabra de lo que buscas, como "pago" o "recordatorio".','Lee la respuesta que aparece.'],
+   sn:['Type a word about what you need, like "payment" or "reminder".','Read the answer that appears.']}
+];
+function guideSheet(){return{live:false,render(){return sheetHead(rt('¿Qué quieres hacer?','What do you want to do?'),{close:true})+`<div class="wrap sheet-b" style="margin-top:14px">${GUIDE.map(g=>`<button class="btn" style="margin-bottom:10px;min-height:56px;text-align:left;justify-content:flex-start;font-size:17px" data-act="guideStep" data-k="${g.k}">${esc(lang==='es'?g.es:g.en)}</button>`).join('')}</div>`}}}
+function guideStepSheet(k){const g=GUIDE.find(x=>x.k===k);return{live:false,render(){if(!g)return sheetHead('',{close:true});const steps=lang==='es'?g.se:g.sn;
+  return sheetHead(esc(lang==='es'?g.es:g.en))+`<div class="wrap sheet-b" style="margin-top:14px"><ol style="margin:0 0 18px;padding-left:22px;font-size:17px;line-height:1.5">${steps.map(s=>`<li style="margin-bottom:10px">${esc(s)}</li>`).join('')}</ol><button class="btn primary" style="min-height:56px;font-size:17px" data-act="guideGo" data-k="${g.k}">${rt('Llévame ahí','Take me there')}</button></div>`}}}
+
 function productsSheet(){return{live:true,render(){
   const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
   return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+ ${rt('Nuevo','New')}</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row" style="align-items:center;gap:12px">${p.photo?`<img src="${p.photo}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none">`:`<div style="width:56px;height:56px;border-radius:10px;border:1px dashed var(--line);flex:none"></div>`}<button class="main" style="background:none;border:0;text-align:left;padding:0;color:var(--fg)" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}${p.out?' · '+rt('Agotado','Sold out'):''}</div></button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="font-size:22px;min-width:44px;min-height:44px">⋮</button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
@@ -1802,6 +1831,9 @@ const A={
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
   chainConfirm:e=>chainConfirm(e.dataset.id),
   storeBsv:()=>storeBsvStart(),
+  guide:()=>showSheet(guideSheet()),
+  guideStep:e=>showSheet(guideStepSheet(e.dataset.k)),
+  guideGo:e=>{const g=GUIDE.find(x=>x.k===e.dataset.k);if(!g)return;let n=0;while(stack.length&&n++<10)closeSheet();g.go()},
   storeName:()=>showSheet(storeNameSheet()),
   saveStoreName:()=>{S.profile.storeName=$('#sn-n').value.trim();S.profile.storeHours={mode:$('#sn-m').value,open:$('#sn-o').value||'09:00',close:$('#sn-c').value||'21:00',days:[...document.querySelectorAll('[data-sday]')].filter(x=>x.checked).map(x=>+x.dataset.sday)};closeSheet();commit();republish()},
   menuOpen:()=>showSheet(menuSheet()),
