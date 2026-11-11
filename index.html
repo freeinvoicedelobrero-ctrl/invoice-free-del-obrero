@@ -318,7 +318,11 @@ function t(k,...a){const v=(L[lang]&&L[lang][k])??L.en[k]??k;return typeof v==='
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(+n||0);
+const CURRENCIES=['USD','MXN','EUR','CAD','GBP','BRL','COP','ARS','CLP','PEN','GTQ','DOP','JPY','INR','PHP','NGN'];
+const ccy=()=>CURRENCIES.includes(S.profile.currency)?S.profile.currency:'USD';
+const money=n=>{try{return new Intl.NumberFormat('en-US',{style:'currency',currency:ccy(),currencyDisplay:['INR','PHP'].includes(ccy())?'code':'symbol'}).format(+n||0)}catch(e){return ccy()+' '+(+n||0).toFixed(2)}};
+/* neutral name for whoever sells: contractor, shop, taco stand… the user can change it */
+const sellerLbl=()=>(S.profile.sellerLabel||'').trim()||(lang==='es'?'Vendedor':'Seller');
 const r2=n=>Math.round((+n||0)*100)/100;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 function isoOf(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -580,18 +584,19 @@ function abaOK(r){r=(r||'').replace(/\D/g,'');if(r.length!==9)return false;const
 function achText(m){return [m.holder&&('Account name: '+m.holder),m.bank&&('Bank: '+m.bank),m.routing&&('Routing (ABA): '+m.routing),m.account&&('Account: '+m.account+(m.acctType?' ('+m.acctType+')':''))].filter(Boolean).join('\n')}
 function addrValid(m){const p=PRESETS[m.type];if(p&&p.ach)return !m.routing||abaOK(m.routing);if(!p||!m.address)return true;if(p.stable)return (NET_RE[m.network]||/./).test(m.address.trim());if(m.type==='xmr')return /^4[1-9A-HJ-NP-Za-km-z]{94}$/.test(m.address.trim())||/^8/.test(m.address.trim());return p.re?p.re.test(m.address.trim()):true}
 const methods=()=>Object.values(S.wallet).sort((a,b)=>(a.order||0)-(b.order||0));
-const enabledMethods=()=>methods().filter(m=>m.enabled);
+const methodReady=m=>{const p=PRESETS[m.type]||{};if(p.ach)return !!((m.routing||'').trim()&&(m.account||'').trim());if(m.type==='xmr')return !!((m.address||'').trim()||(m.subaddresses||[]).some(s=>(s||'').trim()));return !!(m.address||'').trim()};
+const enabledMethods=()=>methods().filter(m=>m.enabled&&methodReady(m));
 let prices={ts:0,data:null,failed:false};
 async function fetchPrices(force){
   const ids=[...new Set(enabledMethods().map(m=>PRESETS[m.type]?.cg).filter(Boolean))];
   if(!ids.length)return;
   if(!force&&(prices.data||prices.failed)&&Date.now()-prices.ts<5*60e3)return;
   if(fetchPrices.busy)return;fetchPrices.busy=true;
-  try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?vs_currencies=usd&ids='+ids.join(','));if(!r.ok)throw 0;prices={ts:Date.now(),data:await r.json(),failed:false}}catch(e){prices={ts:Date.now(),data:prices.data,failed:!prices.data}}
+  try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?vs_currencies='+ccy().toLowerCase()+'&ids='+ids.join(','));if(!r.ok)throw 0;prices={ts:Date.now(),data:await r.json(),failed:false}}catch(e){prices={ts:Date.now(),data:prices.data,failed:!prices.data}}
   fetchPrices.busy=false;
   const top=stack[stack.length-1];if(top&&top.pay)redrawSheet();
 }
-function coinAmount(m,usd){const p=PRESETS[m.type];if(!p)return null;if(p.stable)return r2(usd).toFixed(2);if(!p.cg||!prices.data||!prices.data[p.cg])return null;const px=prices.data[p.cg].usd;if(!px)return null;const v=usd/px;return v.toFixed(p.sym==='BTC'||p.sym==='BSV'?8:p.sym==='XMR'?6:6)}
+function coinAmount(m,usd){const p=PRESETS[m.type];if(!p)return null;if(p.stable)return ccy()==='USD'?r2(usd).toFixed(2):null;if(!p.cg||!prices.data||!prices.data[p.cg])return null;const px=prices.data[p.cg][ccy().toLowerCase()];if(!px)return null;const v=usd/px;return v.toFixed(p.sym==='BTC'||p.sym==='BSV'?8:p.sym==='XMR'?6:6)}
 function ensureXmrSub(d,m){
   if(d.xmrSub&&d.xmrMethod===m.id)return d.xmrSub;
   const subs=(m.subaddresses||[]).map(s=>s.trim()).filter(Boolean);m.used=m.used||{};
@@ -610,7 +615,7 @@ function payURI(m,d,amt){
     case 'bsv':return a;
     case 'cashapp':{const tag=a.replace(/^\$/,'');return `https://cash.app/$${tag}${amt?'/'+amt:''}`}
     case 'venmo':return `https://venmo.com/u/${a.replace(/^@/,'')}`;
-    case 'paypal':{const u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'');return `https://paypal.me/${u}${amt?'/'+amt+'USD':''}`}
+    case 'paypal':{const u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'');return `https://paypal.me/${u}${amt?'/'+amt+ccy():''}`}
     default:return a;
   }
 }
@@ -630,7 +635,7 @@ function paySection(d){
   else{
     const showQR=m.type!=='zelle'&&!p.ach;
     body=`${showQR?`<div class="qr">${qrSVG(uri)}</div>`:''}
-    <div class="kv"><span>USD</span><span class="num">${money(usd)}</span></div>
+    <div class="kv"><span>${ccy()}</span><span class="num">${money(usd)}</span></div>
     ${!p.fiat&&p.sym?`<div class="kv"><span>${esc(p.sym)}${m.network?' · '+esc(m.network):''}</span><span class="num">${amt?esc(amt):'—'}</span></div>`:''}
     ${p.stable?`<p class="note" style="margin:0">${t('sendOnly',esc(m.network))}</p>`:''}
     <div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>
@@ -825,7 +830,7 @@ function previewHTML(d){
   ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
   ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d))}</p>`}).join('')}`:''}
   ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">TERMS & CONDITIONS</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
-  <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CONTRACTOR</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
+  <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">${esc(sellerLbl().toUpperCase())}</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
   <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CUSTOMER</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>
   ${d.notes?`<div class="plbl">NOTES</div><p class="psm" style="white-space:pre-wrap">${esc(d.notes)}</p>`:''}
   ${(d.photos||[]).length&&d.includePhotos!==false?`<p class="psm">📷 ${t('photosInPdf',d.photos.length)}</p>`:''}
@@ -944,7 +949,7 @@ function sigBlock(d){
   const when=sg?new Date(sg.at).toLocaleString(lang==='es'?'es-MX':'en-US',{dateStyle:'medium',timeStyle:'short'}):'';
   const changed=sg&&SIGCHK[d.id+':'+(d.updatedAt||0)]===true;
   return `<div class="group"><div class="gl">${t('signatures')}</div>
-  <div class="sigrow"><div class="sigbox"><div class="small">${t('contractor')}</div>${p.sig?`<img src="${p.sig}" alt="">`:'<div class="sigempty"></div>'}<div class="small">${esc(p.sigName||p.company||'')}</div></div>
+  <div class="sigrow"><div class="sigbox"><div class="small">${esc(sellerLbl())}</div>${p.sig?`<img src="${p.sig}" alt="">`:'<div class="sigempty"></div>'}<div class="small">${esc(p.sigName||p.company||'')}</div></div>
   <div class="sigbox"><div class="small">${t('customer')}</div>${sg?`<img src="${sg.img}" alt="">`:'<div class="sigempty"></div>'}<div class="small">${sg?esc(sg.name)+' · '+esc(when):''}</div></div></div>
   ${changed?`<p class="small red">${t('changedAfterSign')}</p>`:''}
   ${sg?`<p class="small">✓ ${t('signedOn')} ${esc(when)} · ID ${esc(sg.hash.slice(0,12))}</p>`:''}
@@ -1023,7 +1028,7 @@ function paySheet(id){const d=S.docs[id];const bal=calc(d).balance;return{live:f
   const ms=['Check','Zelle','ACH','Cash','Card','Cash App','Venmo','PayPal',...methods().filter(m=>!PRESETS[m.type]?.fiat).map(m=>m.name||PRESETS[m.type]?.label),'Other'];
   const uniq=[...new Set(ms)];
   return sheetHead(t('recordPayment')+' · #'+d.number,{close:true})+`<div class="wrap sheet-b"><div style="margin-top:14px"></div>
-  <div class="field"><label for="p-amt">${t('amount')} (USD)</label><input class="in num" id="p-amt" type="number" step="0.01" inputmode="decimal" value="${bal>0?bal.toFixed(2):''}"></div>
+  <div class="field"><label for="p-amt">${t('amount')} (${ccy()})</label><input class="in num" id="p-amt" type="number" step="0.01" inputmode="decimal" value="${bal>0?bal.toFixed(2):''}"></div>
   <div class="grid2"><div class="field"><label for="p-date">${t('date')}</label><input class="in" id="p-date" type="date" value="${todayISO()}"></div>
   <div class="field"><label for="p-m">${t('method')}</label><select class="in" id="p-m">${uniq.map(m=>`<option>${esc(m)}</option>`).join('')}</select></div></div>
   <div class="field"><label for="p-ref">${t('ref')}</label><input class="in" id="p-ref"></div>
@@ -1197,7 +1202,7 @@ function storeBsvSheet(){return{live:true,render(){
   let body;
   if(b.s==='noprice')body=`<p>${rt('No hay precio de BSV ahora. Intenta con Internet.','No BSV price right now. Try with Internet.')}</p>`;
   else if(b.s==='found')body=`<p>${rt('Pago encontrado','Payment found')}: <b class="num">${(b.sats/1e8).toFixed(8)} BSV</b></p><p class="small mono" style="word-break:break-all">${esc(b.tx)}</p><button class="btn primary" data-act="storeBsvConfirm">${rt('Registrar venta','Record sale')}</button><button class="btn outline" style="margin-top:10px" data-act="storeBsvSkip" data-tx="${esc(b.tx)}">${rt('No es este pago','Not this payment')}</button>`;
-  else body=`<div class="qr">${qrSVG(addr)}</div><div class="kv"><span>USD</span><span class="num">${money(b.total)}</span></div><div class="kv"><span>BSV</span><span class="num">${esc(b.amt||'—')}</span></div><div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>${b.s==='none'?`<p class="small">${rt('Todavía no llega el pago.','The payment has not arrived yet.')}</p>`:''}${b.s==='error'?`<p class="small">${rt('No pude revisar la cadena.','Could not check the chain.')}</p>`:''}<button class="btn primary" data-act="storeBsvCheck">${b.s==='checking'?rt('Revisando…','Checking…'):rt('Revisar pago','Check payment')}</button>`;
+  else body=`<div class="qr">${qrSVG(addr)}</div><div class="kv"><span>${ccy()}</span><span class="num">${money(b.total)}</span></div><div class="kv"><span>BSV</span><span class="num">${esc(b.amt||'—')}</span></div><div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>${b.s==='none'?`<p class="small">${rt('Todavía no llega el pago.','The payment has not arrived yet.')}</p>`:''}${b.s==='error'?`<p class="small">${rt('No pude revisar la cadena.','Could not check the chain.')}</p>`:''}<button class="btn primary" data-act="storeBsvCheck">${b.s==='checking'?rt('Revisando…','Checking…'):rt('Revisar pago','Check payment')}</button>`;
   return sheetHead(rt('Cobro en BSV','BSV charge'),{close:true})+`<div class="wrap sheet-b" style="margin-top:14px">${body}</div>`;
 }}}
 async function storeBsvCheck(){
@@ -1329,6 +1334,8 @@ function settingsSheet(){return{live:false,render(){
   <div class="field"><label for="st-address">${t('address')}</label><textarea class="in" id="st-address" data-s="address">${esc(p.address)}</textarea></div>
   <div class="grid2">${f('phone',t('phone'),'tel')}${f('email',t('email'),'email')}</div>
   ${f('license',t('license'))}
+  <div class="field"><label for="st-currency">${rt('Moneda','Currency')}</label><select class="in" id="st-currency" data-s="currency">${CURRENCIES.map(c=>`<option ${c===ccy()?'selected':''}>${c}</option>`).join('')}</select></div>
+  ${f('sellerLabel',rt('Cómo te llamas en la factura','What you are called on the invoice'),'text','placeholder="'+rt('Vendedor, Contratista, Tienda…','Seller, Contractor, Shop…')+'"')}
   <div class="grid2">${f('nextInvoice',t('nextInv'),'number','inputmode="numeric"')}${f('nextEstimate',t('nextEst'),'number','inputmode="numeric"')}</div>
   ${f('defDue',t('defDue'),'number','inputmode="numeric"')}
   <div class="field"><label for="st-payInstr">${t('defInstr')}</label><textarea class="in" id="st-payInstr" data-s="payInstr" placeholder="Zelle: … / Checks payable to …">${esc(p.payInstr)}</textarea></div>
@@ -1480,7 +1487,7 @@ async function buildPDF(d){
    doc.text(doc.splitTextToSize(`By signing below, the customer accepts the work, price and terms described in this ${isEst?'estimate':'invoice'} and authorizes ${p.company||'the contractor'} to proceed.`,W-2*M),M,y);y+=26;
    const cw=(W-2*M-30)/2,boxH=60;
    const col=(x,label,img,name,date)=>{if(img){try{doc.addImage(img,'PNG',x,y,Math.min(cw,180),boxH)}catch(e){}}doc.setDrawColor(0);doc.line(x,y+boxH+4,x+cw,y+boxH+4);doc.setFontSize(8);doc.setTextColor(110);doc.text(label,x,y+boxH+15);doc.setTextColor(0);doc.setFontSize(9.5);doc.text(name||'Printed name: ______________________',x,y+boxH+28);doc.text(date?('Date: '+date):'Date: ____________',x,y+boxH+41)};
-   col(M,'CONTRACTOR SIGNATURE',p.sig,p.sigName||p.company||'',p.sig&&sg?new Date(sg.at).toLocaleDateString('en-US'):'');
+   col(M,sellerLbl().toUpperCase(),p.sig,p.sigName||p.company||'',p.sig&&sg?new Date(sg.at).toLocaleDateString('en-US'):'');
    col(M+cw+30,'CUSTOMER SIGNATURE',sg&&sg.img,sg?sg.name:'',sg?new Date(sg.at).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'');
    y+=boxH+52;if(sg){doc.setFontSize(7);doc.setTextColor(130);doc.text('Signed electronically on '+new Date(sg.at).toISOString()+' · Document ID '+sg.hash,M,y);doc.setTextColor(0);y+=12}}
   if(d.includePhotos!==false&&(d.photos||[]).length){
@@ -1729,7 +1736,7 @@ const A={
   logoPlace:e=>{S.profile.logoPlace=e.dataset.v;commit();redrawSheet()},
   useAppArt:async()=>{try{const r=await fetch('roofer.png');const b=await r.blob();S.profile.logo=await logoDataURL(new File([b],'roofer.png',{type:'image/png'}));commit();redrawSheet();toast(t('saved'))}catch(e){toast('Error')}},
   rmLogo:()=>{delete S.profile.logo;commit();redrawSheet()},
-  saveSettings:()=>{document.querySelectorAll('[data-s]').forEach(el=>{S.profile[el.dataset.s]=['nextInvoice','nextEstimate','defDue'].includes(el.dataset.s)?(+el.value||0):el.value});const ma=document.querySelector('[data-mailapp]');if(ma)S.profile.mailApp=ma.value;const fo=[...document.querySelectorAll('[data-fab]')].filter(c=>c.checked).map(c=>c.dataset.fab);if(fo.length)S.profile.fabOptions=fo;closeSheet();commit();toast(t('saved'))},
+  saveSettings:()=>{prices={ts:0,data:null,failed:false};document.querySelectorAll('[data-s]').forEach(el=>{S.profile[el.dataset.s]=['nextInvoice','nextEstimate','defDue'].includes(el.dataset.s)?(+el.value||0):el.value});const ma=document.querySelector('[data-mailapp]');if(ma)S.profile.mailApp=ma.value;const fo=[...document.querySelectorAll('[data-fab]')].filter(c=>c.checked).map(c=>c.dataset.fab);if(fo.length)S.profile.fabOptions=fo;closeSheet();commit();toast(t('saved'))},
   importExport:()=>showSheet(ieSheet()),
   aboutOpen:()=>showSheet(aboutSheet()),
   pickFile:e=>{fileMode=e.dataset.v;$('#fileIn').value='';$('#fileIn').click()},
