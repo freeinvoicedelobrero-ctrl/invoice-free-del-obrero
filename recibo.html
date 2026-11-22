@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>Recibo de pago</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:26px;margin:6px 0 2px;overflow-wrap:anywhere}
+.sub{color:#9AA0AB;font-size:14px;margin:0 0 18px}
+.card{background:#0E0F12;border:1px solid #26292F;border-radius:14px;padding:14px;margin-bottom:14px}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #1c1f24}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:#9AA0AB}
+.kv span:last-child{text-align:right;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.paid{display:flex;justify-content:space-between;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:22px;letter-spacing:1px;margin:6px 0}
+.small{color:#9AA0AB;font-size:13px}
+.full{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#9AA0AB;overflow-wrap:anywhere}
+.bad{border-color:#E0A83A;color:#E0A83A}
+.foot{color:#9AA0AB;font-size:12px;text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* Payment receipt. The receipt data travels in the link (after #); this page recomputes its code. Nothing is sent to any server. */
+(function(){
+  var es=(navigator.language||'es').toLowerCase().indexOf('es')===0;
+  var T=es?{title:'Recibo de pago',bad:'Este enlace de recibo no es válido o está incompleto.',receipt:'Recibo',invoice:'Factura',client:'Cliente',date:'Fecha',method:'Método',ref:'Transacción',memo:'Memo',addr:'Dirección',proof:'Prueba de pago',proofHow:'Para comprobarla, abre una billetera de Monero en Prueba / Comprobar y pega la transacción, la dirección, el memo como mensaje y esta prueba. Si la billetera dice que es válida, este pago sí se hizo a esa dirección.',total:'Total de la factura',balance:'Saldo pendiente',paid:'Pagado',code:'Código del recibo',codeNote:'Este código se calcula con los datos de este recibo. Si alguien cambia un dato, el código cambia. Compáralo con el código impreso en tu recibo.',from:'De'}
+           :{title:'Payment receipt',bad:'This receipt link is not valid or is incomplete.',receipt:'Receipt',invoice:'Invoice',client:'Client',date:'Date',method:'Method',ref:'Transaction',memo:'Memo',addr:'Address',proof:'Payment proof',proofHow:'To check it, open a Monero wallet at Prove / Check and paste the transaction, the address, the memo as the message and this proof. If the wallet says it is valid, this payment was made to that address.',total:'Invoice total',balance:'Balance due',paid:'Paid',code:'Receipt code',codeNote:'This code is calculated from this receipt’s data. If anyone changes a detail, the code changes. Compare it with the code printed on your receipt.',from:'From'};
+  document.documentElement.lang=es?'es':'en';document.title=T.title;
+  var app=document.getElementById('app');
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function fail(){app.textContent='';app.appendChild(el('h1',null,T.title));app.appendChild(el('div','card bad',T.bad))}
+  var KEYS=['v','s','n','k','c','t','pid','a','dt','m','r','b','cur','mm','ad','pf'];
+  var o=null;
+  try{var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';o=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){o=null}
+  if(!o||o.v!==1||!o.n||!o.pid||!/^\d+(\.\d+)?$/.test(String(o.a))){fail();return}
+  var cur=/^[A-Z]{3}$/.test(o.cur)?o.cur:'USD';
+  function money(v){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:cur}).format(+v)}catch(e){return cur+' '+v}}
+  if(!window.crypto||!crypto.subtle){fail();return}
+  var canon=JSON.stringify(KEYS.map(function(k){return o[k]===undefined?null:o[k]}));
+  crypto.subtle.digest('SHA-256',new TextEncoder().encode(canon)).then(function(buf){
+    var h=Array.prototype.map.call(new Uint8Array(buf),function(b){return ('0'+b.toString(16)).slice(-2)}).join('');
+    app.textContent='';
+    app.appendChild(el('h1',null,T.title));
+    app.appendChild(el('p','sub',(o.s?T.from+' '+String(o.s).slice(0,80)+' · ':'')+T.receipt+' #'+o.n+'-'+o.k));
+    var c1=el('div','card');
+    var rows=[[T.invoice,'#'+o.n],[T.client,o.c||'-'],[T.date,o.dt||'-'],[T.method,o.m||'-']];
+    if(o.mm)rows.push([T.memo,o.mm]);if(o.r)rows.push([T.ref,o.r]);if(o.ad)rows.push([T.addr,o.ad]);
+    rows.push([T.total,money(o.t)],[T.balance,money(o.b)]);
+    rows.forEach(function(r){var k=el('div','kv');k.appendChild(el('span',null,r[0]));k.appendChild(el('span',null,String(r[1]).slice(0,200)));c1.appendChild(k)});
+    app.appendChild(c1);
+    var c2=el('div','card');var pd=el('div','paid');pd.appendChild(el('span',null,T.paid));pd.appendChild(el('span',null,money(o.a)));c2.appendChild(pd);app.appendChild(c2);
+    var c3=el('div','card');c3.appendChild(el('div','small',T.code));c3.appendChild(el('div','code',h.slice(0,16).toUpperCase().match(/.{4}/g).join('-')));
+    c3.appendChild(el('p','small',T.codeNote));c3.appendChild(el('div','full','SHA-256 '+h));app.appendChild(c3);
+    if(o.pf){var c4=el('div','card');c4.appendChild(el('div','small',T.proof));c4.appendChild(el('div','full',String(o.pf).slice(0,800)));c4.appendChild(el('p','small',T.proofHow));app.appendChild(c4)}
+    app.appendChild(el('p','foot','Invoice Free del Obrero'));
+  }).catch(fail);
+})();
+</script>
+</body>
+</html>

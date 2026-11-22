@@ -604,12 +604,13 @@ function ensureXmrSub(d,m){
   const free=subs.find(s=>!m.used[s]);if(!free)return null;
   m.used[free]=d.number;d.xmrSub=free;d.xmrMethod=m.id;persist();return free;
 }
+function payRef(d){if(!d.payRef){const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';d.payRef='F'+(String(d.number).replace(/\D/g,'')||'0')+'-'+[...crypto.getRandomValues(new Uint8Array(4))].map(x=>A[x%A.length]).join('');if(S.docs[d.id]===d)persist()}return d.payRef}
 function payURI(m,d,amt){
-  const a=(m.address||'').trim(),n=encodeURIComponent((lang==='es'?'Factura ':'Invoice ')+d.number);
+  const a=(m.address||'').trim(),n=encodeURIComponent(payRef(d));
   switch(m.type){
     case 'btc':return `bitcoin:${a}${amt?`?amount=${amt}&label=${n}`:''}`;
     case 'ln':return `lightning:${a}`;
-    case 'xmr':{const sub=ensureXmrSub(d,m);if(!sub)return null;return `monero:${sub}${amt?`?tx_amount=${amt}&tx_description=${n}`:''}`}
+    case 'xmr':{const sub=ensureXmrSub(d,m)||(m.address||'').trim();if(!sub)return null;return `monero:${sub}${amt?`?tx_amount=${amt}&tx_description=${n}`:''}`}
     case 'eth':return `ethereum:${a}`;
     case 'ltc':return `litecoin:${a}${amt?`?amount=${amt}`:''}`;
     case 'sol':return `solana:${a}${amt?`?amount=${amt}`:''}`;
@@ -621,7 +622,7 @@ function payURI(m,d,amt){
   }
 }
 function qrSVG(text){if(!window.qrcode||!text)return '';try{const q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){return ''}}
-function payAddress(m,d){return m.type==='xmr'?(d.xmrSub||ensureXmrSub(d,m)||''):(m.address||'')}
+function payAddress(m,d){return m.type==='xmr'?(d.xmrSub||ensureXmrSub(d,m)||(m.address||'').trim()):(m.address||'')}
 function paySection(d){
   const ms=enabledMethods();const c=calc(d);
   if(!ms.length)return `<div class="group"><div class="gl">${t('payTitle')}</div><p class="small">${t('noMethods')}</p></div>`;
@@ -636,6 +637,7 @@ function paySection(d){
   else{
     const showQR=m.type!=='zelle'&&!p.ach;
     body=`${showQR?`<div class="qr">${qrSVG(uri)}</div>`:''}
+    <div class="kv"><span>Memo</span><span class="mono">${esc(payRef(d))}</span></div>
     <div class="kv"><span>${ccy()}</span><span class="num">${money(usd)}</span></div>
     ${!p.fiat&&p.sym?`<div class="kv"><span>${esc(p.sym)}${m.network?' · '+esc(m.network):''}</span><span class="num">${amt?esc(amt):'—'}</span></div>`:''}
     ${p.stable?`<p class="note" style="margin:0">${t('sendOnly',esc(m.network))}</p>`:''}
@@ -717,7 +719,7 @@ function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&
   </div>
   ${!isEst&&c.balance>0.005?paySection(d):''}
   ${sigBlock(d)}
-  ${isEst?'':`<div class="group"><div class="gl">${t('payments')}</div>${(d.payments||[]).length?d.payments.map(p=>`<div class="kv"><span>${fdate(p.date)} · ${esc(p.method)}${p.ref?' · '+esc(p.ref):''}${p.coin?`<br><span class="small">${esc(p.coin)}</span>`:''}${p.txid?`<br><span class="small mono" style="padding:2px 4px">${esc(p.txid)}</span>`:''}${p.note?`<br><span class="small">${esc(p.note)}</span>`:''}</span><span class="num green">${money(p.amount)} <button class="iconbtn" style="padding:2px;vertical-align:middle" data-act="delPay" data-id="${id}" data-p="${p.id}" aria-label="${t('del')}">${ic('trash')}</button></span></div>`).join(''):`<p class="small">${t('noPayments')}</p>`}</div>`}
+  ${isEst?'':`<div class="group"><div class="gl">${t('payments')}</div>${(d.payments||[]).length?d.payments.map(p=>`<div class="kv"><span>${fdate(p.date)} · ${esc(p.method)}${p.ref?' · '+esc(p.ref):''}${p.coin?`<br><span class="small">${esc(p.coin)}</span>`:''}${p.txid?`<br><span class="small mono" style="padding:2px 4px">${esc(p.txid)}</span>`:''}${p.note?`<br><span class="small">${esc(p.note)}</span>`:''}</span><span class="num green">${money(p.amount)} <button class="textbtn" style="padding:2px 6px;vertical-align:middle" data-act="receipt" data-id="${id}" data-p="${p.id}">${rt('Recibo','Receipt')}</button><button class="iconbtn" style="padding:2px;vertical-align:middle" data-act="delPay" data-id="${id}" data-p="${p.id}" aria-label="${t('del')}">${ic('trash')}</button></span></div>`).join(''):`<p class="small">${t('noPayments')}</p>`}</div>`}
   ${d.payInstr?`<div class="group"><div class="gl">${t('payInstr')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.payInstr)}</p></div>`:''}
   ${d.notes?`<div class="group"><div class="gl">${t('notes')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.notes)}</p></div>`:''}
   <div id="delZone"><button class="btn bad" data-act="askDel" data-id="${id}">${t('del')}</button></div>
@@ -829,7 +831,7 @@ function previewHTML(d){
   <div class="pbig"><span>Total</span><span>${money(c.total)}</span></div>
   ${isEst?'':`<div><span>Paid</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>Balance due</span><span>${money(c.balance)}</span></div>`}</div>
   ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
-  ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d))}</p>`}).join('')}`:''}
+  ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div><p class="psm"><b>Memo / Referencia:</b> ${esc(payRef(d))}</p>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d))}</p>`}).join('')}`:''}
   ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">TERMS & CONDITIONS</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
   <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">${esc(sellerLbl().toUpperCase())}</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
   <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CUSTOMER</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>
@@ -1035,6 +1037,7 @@ function paySheet(id){const d=S.docs[id];const bal=calc(d).balance;return{live:f
   <div class="field"><label for="p-ref">${t('ref')}</label><input class="in" id="p-ref"></div>
   <div class="grid2"><div class="field"><label for="p-coin">${t('coinAmount')}</label><input class="in" id="p-coin" placeholder="0.0123 XMR"></div><div class="field"><label for="p-tx">${t('txid')}</label><input class="in" id="p-tx" autocapitalize="off" spellcheck="false"></div></div>
   <div class="field"><label for="p-note">${t('note')}</label><input class="in" id="p-note"></div>
+  <div class="field"><label for="p-proof">${rt('Prueba de pago (opcional)','Payment proof (optional)')}</label><textarea class="in" id="p-proof" rows="3" maxlength="800" autocapitalize="off" spellcheck="false" placeholder="OutProofV2…"></textarea><p class="small" style="margin:6px 0 0">${rt('Monero: el cliente la crea en su billetera (Prueba / Comprobar) con el número de transacción, tu dirección y el memo','Monero: the customer creates it in their wallet (Prove / Check) with the transaction ID, your address and the memo')} <b class="mono">${esc(payRef(d))}</b> ${rt('como mensaje.','as the message.')}</p></div>
   <p class="small">${t('balance')}: <span class="num">${money(bal)}</span></p>
   <button class="btn primary" data-act="savePay" data-id="${id}">${t('save')}</button></div>`;
 }}}
@@ -1342,6 +1345,43 @@ function guideSheet(){return{live:false,render(){return sheetHead(rt('¿Qué qui
 function guideStepSheet(k){const g=GUIDE.find(x=>x.k===k);return{live:false,render(){if(!g)return sheetHead('',{close:true});const steps=lang==='es'?g.se:g.sn;
   return sheetHead(esc(lang==='es'?g.es:g.en))+`<div class="wrap sheet-b" style="margin-top:14px"><ol style="margin:0 0 18px;padding-left:22px;font-size:17px;line-height:1.5">${steps.map(s=>`<li style="margin-bottom:10px">${esc(s)}</li>`).join('')}</ol><button class="btn primary" style="min-height:56px;font-size:17px" data-act="guideGo" data-k="${g.k}">${rt('Llévame ahí','Take me there')}</button></div>`}}}
 
+/* ---------- payment receipts: every payment gets its own receipt with a code unique to that payment, and a QR that opens it ---------- */
+const RKEYS=['v','s','n','k','c','t','pid','a','dt','m','r','b','cur','mm','ad','pf'];
+function receiptData(d,pid){
+  const pays=d.payments||[];const k=pays.findIndex(p=>p.id===pid);if(k<0)return null;const p=pays[k];const c=calc(d);
+  const paidTo=pays.slice(0,k+1).reduce((a,x)=>a+(+x.amount||0),0);const cl=S.clients[d.clientId]||{};
+  return {v:1,s:(S.profile.company||'').trim(),n:String(d.number),k:k+1,c:(cl.name||'').trim(),t:r2(c.total).toFixed(2),pid:p.id,a:r2(p.amount).toFixed(2),dt:p.date||'',m:p.method||'',r:(p.txid||p.ref||'').trim(),b:r2(Math.max(0,c.total-paidTo)).toFixed(2),cur:ccy(),mm:p.memo||d.payRef||'',ad:p.addr||'',pf:p.proof||''};
+}
+function rCanon(o){return JSON.stringify(RKEYS.map(k=>o[k]===undefined?null:o[k]))}
+async function rCode(o){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(rCanon(o)));return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('')}
+const rShort=h=>h.slice(0,16).toUpperCase().match(/.{4}/g).join('-');
+function b64url(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function receiptLink(o){return new URL('recibo.html',location.href).href.split(/[?#]/)[0]+'#'+b64url(JSON.stringify(o))}
+async function receiptPDF(d,pid){
+  if(!d)return;
+  if(!window.jspdf){toast(rt('No cargó la herramienta de PDF. Revisa tu Internet.','PDF library did not load. Check your connection.'));return}
+  const o=receiptData(d,pid);if(!o)return;const h=await rCode(o);const link=receiptLink(o);
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});const W=612,M=48;let y=64;
+  const fm=v=>{try{return new Intl.NumberFormat('en-US',{style:'currency',currency:o.cur}).format(+v)}catch(e){return o.cur+' '+v}};
+  doc.setFillColor(0,0,0);doc.rect(0,0,W,96,'F');doc.setTextColor(255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(o.s||'',M,y);
+  doc.setFontSize(10);doc.setFont('helvetica','normal');doc.text([S.profile.phone,S.profile.email].filter(Boolean).join('  ·  '),M,y+18);doc.setTextColor(0);
+  y=140;doc.setFont('helvetica','bold');doc.setFontSize(20);doc.text('RECIBO DE PAGO / PAYMENT RECEIPT',M,y);
+  y+=34;doc.setFontSize(11);
+  const rows=[['Recibo / Receipt #',o.n+'-'+o.k],['Factura / Invoice #',o.n],['Cliente / Client',o.c||'-'],['Fecha / Date',o.dt],['Método / Method',o.m||'-'],...(o.mm?[['Memo',o.mm]]:[]),...(o.r?[['Transacción / Transaction',o.r]]:[]),...(o.ad?[['Dirección / Address',o.ad]]:[]),['Total de la factura / Invoice total',fm(o.t)],['Saldo pendiente / Balance due',fm(o.b)]];
+  rows.forEach(([k,v])=>{doc.setFont('helvetica','normal');doc.setTextColor(110);doc.text(k,M,y);doc.setTextColor(0);const tl=doc.splitTextToSize(String(v),W-2*M-220);doc.text(tl,M+220,y);y+=18*Math.max(1,tl.length)});
+  y+=14;doc.setDrawColor(0);doc.line(M,y-12,W-M,y-12);doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('Pagado / Paid',M,y+8);doc.text(fm(o.a),W-M,y+8,{align:'right'});
+  y+=44;doc.setDrawColor(200);doc.rect(M,y,140,140);drawQR(doc,link,M+6,y+6,128,'L');
+  doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text('Código del recibo / Receipt code',M+160,y+20);
+  doc.setFont('courier','bold');doc.setFontSize(17);doc.text(rShort(h),M+160,y+46);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(80);
+  doc.text(doc.splitTextToSize('Este código es único para este pago. Escanea el QR para ver el recibo original. / This code is unique to this payment. Scan the QR to see the original receipt.',W-2*M-160),M+160,y+70);
+  doc.setFontSize(7);doc.text('SHA-256 '+h,M,y+156);doc.setTextColor(0);
+  if(o.pf){let py=y+180;doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Prueba de pago / Payment proof',M,py);py+=13;doc.setFont('courier','normal');doc.setFontSize(7);const pl=doc.splitTextToSize(o.pf,W-2*M);doc.text(pl,M,py);py+=pl.length*8+6;doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80);doc.text(doc.splitTextToSize('Para comprobarla: en una billetera de Monero abre Prueba / Comprobar, y pega la transacción, la dirección, el memo como mensaje y esta prueba. / To check it: in a Monero wallet open Prove / Check and paste the transaction, the address, the memo as the message and this proof.',W-2*M),M,py);doc.setTextColor(0)}
+  const name=`Recibo-${o.n}-${o.k}.pdf`;const file=new File([doc.output('blob')],name,{type:'application/pdf'});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+  doc.save(name);
+}
+
 function productsSheet(){return{live:true,render(){
   const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
   return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+ ${rt('Nuevo','New')}</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row" style="align-items:center;gap:12px">${p.photo?`<img src="${p.photo}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none">`:`<div style="width:56px;height:56px;border-radius:10px;border:1px dashed var(--line);flex:none"></div>`}<button class="main" style="background:none;border:0;text-align:left;padding:0;color:var(--fg)" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}${p.out?' · '+rt('Agotado','Sold out'):''}</div></button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="font-size:22px;min-width:44px;min-height:44px">⋮</button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
@@ -1551,7 +1591,7 @@ function docText(d){
   if(d.payInstr)s+=`\n\n${t('payInstr')}:\n${d.payInstr}`;
   return s;
 }
-function drawQR(doc,text,x,y,size){if(!window.qrcode||!text)return;try{const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=size/n;doc.setFillColor(0,0,0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))doc.rect(x+c*cell,y+r*cell,cell+0.15,cell+0.15,'F')}catch(e){}}
+function drawQR(doc,text,x,y,size,lvl){if(!window.qrcode||!text)return;try{const q=qrcode(0,lvl||'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=size/n;doc.setFillColor(0,0,0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))doc.rect(x+c*cell,y+r*cell,cell+0.15,cell+0.15,'F')}catch(e){}}
 async function buildPDF(d){
   if(!window.jspdf){toast('PDF library did not load. Check your connection.');return null}
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
@@ -1588,13 +1628,13 @@ async function buildPDF(d){
   const need=h=>{if(y+h>H-50){doc.addPage();y=M}};
   if(d.payInstr){const tl=doc.splitTextToSize(d.payInstr,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text('Payment instructions',M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13+10}
   if(!isEst&&c.balance>0.005){
-    const ms=enabledMethods();
+    const ms=enabledMethods().filter(m=>PRESETS[m.type]?.ach||(payAddress(m,d)||'').trim());
     if(ms.length){
-      need(40);doc.setFont('helvetica','bold');doc.text('Pay with / Pagar con',M,y);y+=14;doc.setFont('helvetica','normal');doc.setFontSize(9);
+      need(52);doc.setFont('helvetica','bold');doc.text('Pay with / Pagar con',M,y);y+=14;doc.setFontSize(9);doc.text('Memo / Referencia: '+payRef(d),M,y);doc.setFont('helvetica','normal');doc.text('  (escríbelo en la nota de tu pago / write it in your payment note)',M+doc.getTextWidth('Memo / Referencia: '+payRef(d))+6,y);y+=13;
       const crypto=ms.filter(m=>!PRESETS[m.type]?.fiat);
       ms.forEach(m=>{const pr=PRESETS[m.type]||{};const a=pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d);const tl=doc.splitTextToSize(`${m.name||pr.label}${m.network?' ('+m.network+')':''}: ${a}`,W-2*M);need(tl.length*11+4);doc.text(tl,M,y);y+=tl.length*11+3});
-      const qrs=crypto.slice(0,2);
-      if(qrs.length){y+=6;need(130);qrs.forEach((m,k)=>{const pr=PRESETS[m.type]||{};const amt=coinAmount(m,c.balance);const uri=payURI(m,d,amt);const x=M+k*170;doc.setDrawColor(200);doc.rect(x,y,110,110);drawQR(doc,uri,x+5,y+5,100);doc.setFontSize(8);doc.text(`${m.name||pr.label}${amt?' · '+amt+' '+(pr.sym||''):''}`,x,y+122)});y+=136}
+      const qrs=crypto.filter(m=>payURI(m,d,null)).slice(0,2);
+      if(qrs.length){y+=6;need(130);qrs.forEach((m,k)=>{const pr=PRESETS[m.type]||{};const amt=coinAmount(m,c.balance);const uri=payURI(m,d,amt);const x=M+k*170;doc.setDrawColor(200);doc.rect(x,y,110,110);drawQR(doc,uri,x+5,y+5,100);doc.setFontSize(8);doc.text(`${m.name||pr.label}${amt?' · '+amt+' '+(pr.sym||''):''}`,x,y+122)});y+=148}
       doc.setFontSize(10);
     }
   }
@@ -1769,7 +1809,7 @@ const A={
   clientFilter:e=>{clientFilter=e.dataset.v;redrawSheet()},
   groupJob:e=>{groupJob=e.checked;redrawSheet()},
   pay:e=>showSheet(paySheet(e.dataset.id)),
-  savePay:e=>{const d=S.docs[e.dataset.id];const amt=r2(+$('#p-amt').value);if(!amt)return;d.payments=d.payments||[];d.payments.push({id:uid(),amount:amt,date:$('#p-date').value||todayISO(),method:$('#p-m').value,ref:$('#p-ref').value.trim(),coin:$('#p-coin').value.trim(),txid:$('#p-tx').value.trim(),note:$('#p-note').value.trim()});d.sent=true;d.updatedAt=Date.now();closeSheet();commit();toast(t('saved'))},
+  savePay:e=>{const d=S.docs[e.dataset.id];const amt=r2(+$('#p-amt').value);if(!amt)return;d.payments=d.payments||[];d.payments.push({id:uid(),amount:amt,date:$('#p-date').value||todayISO(),method:$('#p-m').value,ref:$('#p-ref').value.trim(),coin:$('#p-coin').value.trim(),txid:$('#p-tx').value.trim(),note:$('#p-note').value.trim(),proof:$('#p-proof').value.trim().slice(0,800),memo:payRef(d),addr:(()=>{const mm=methods().find(x=>(x.name||PRESETS[x.type]?.label)===$('#p-m').value);return mm&&!PRESETS[mm.type]?.fiat?(payAddress(mm,d)||'').trim():''})()});d.sent=true;d.updatedAt=Date.now();closeSheet();commit();toast(t('saved'))},
   delPay:e=>{const d=S.docs[e.dataset.id];d.payments=(d.payments||[]).filter(p=>p.id!==e.dataset.p);commit()},
   toggleSent:e=>{const d=S.docs[e.dataset.id];d.sent=!d.sent;commit()},
   clientSign:e=>{SIG={mode:'client',id:e.dataset.id};showSheet(sigSheet())},
@@ -1831,6 +1871,7 @@ const A={
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
   chainConfirm:e=>chainConfirm(e.dataset.id),
   storeBsv:()=>storeBsvStart(),
+  receipt:e=>receiptPDF(S.docs[e.dataset.id],e.dataset.p),
   guide:()=>showSheet(guideSheet()),
   guideStep:e=>showSheet(guideStepSheet(e.dataset.k)),
   guideGo:e=>{const g=GUIDE.find(x=>x.k===e.dataset.k);if(!g)return;let n=0;while(stack.length&&n++<10)closeSheet();g.go()},
