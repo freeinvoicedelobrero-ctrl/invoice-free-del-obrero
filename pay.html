@@ -11,10 +11,11 @@
 html,body{margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
 .wrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
 h1{font-size:15px;font-weight:600;color:#9AA0AB;margin:4px 0 2px;overflow-wrap:anywhere}
+h2{font-size:15px;margin:0 0 8px}
 .due{font-size:40px;font-weight:800;margin:4px 0;font-variant-numeric:tabular-nums}
-.sub{color:#9AA0AB;font-size:14px;margin:0 0 6px}
-.memo{display:inline-flex;align-items:center;gap:8px;border:1px solid #26292F;border-radius:999px;padding:6px 12px;font-size:14px;margin:6px 0 18px}
+.memo{display:inline-flex;align-items:center;gap:8px;border:1px solid #26292F;border-radius:999px;padding:6px 12px;font-size:14px;margin:6px 0 16px}
 .memo b{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.5px}
+.card{background:#0E0F12;border:1px solid #26292F;border-radius:14px;padding:14px;margin-bottom:14px}
 .opt{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;margin-bottom:10px;padding:12px 16px;border-radius:14px;border:1px solid #26292F;background:#0E0F12;color:#fff;font-size:17px;font-weight:600;text-align:left;cursor:pointer}
 .opt.main{background:#4D6BFF;border-color:#4D6BFF}
 .opt small{display:block;font-weight:400;font-size:13px;color:#C9CDD6}
@@ -29,8 +30,16 @@ h1{font-size:15px;font-weight:600;color:#9AA0AB;margin:4px 0 2px;overflow-wrap:a
 .btn{flex:1;min-width:140px;min-height:46px;border-radius:12px;border:1px solid #26292F;background:#17191E;color:#fff;font-size:15px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;cursor:pointer}
 .btn.p{background:#4D6BFF;border-color:#4D6BFF}
 .note{color:#E0A83A;font-size:13px;margin:10px 0 0}
+.ok{color:#3ddc97;font-size:13px;margin:8px 0 0}
 .small{color:#9AA0AB;font-size:13px;margin:8px 0 0}
 .bad{border:1px solid #E0A83A;color:#E0A83A;border-radius:12px;padding:14px}
+.field{margin:10px 0}.field label{display:block;color:#9AA0AB;font-size:13px;margin-bottom:4px}
+.in{width:100%;min-height:46px;border-radius:12px;border:1px solid #26292F;background:#000;color:#fff;font-size:16px;padding:10px 12px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:90px;min-height:44px;border-radius:12px;border:1px solid #26292F;background:#17191E;color:#fff;font-size:15px;cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:#4D6BFF;background:#1b2550}
+.back{border:1px solid #3ddc97;background:#0c1a14;border-radius:14px;padding:14px;margin-bottom:14px}
+.vh{position:absolute;left:-9999px}
 .foot{color:#9AA0AB;font-size:12px;text-align:center;margin-top:22px}
 :focus-visible{outline:2px solid #4D6BFF;outline-offset:2px}
 </style>
@@ -39,12 +48,24 @@ h1{font-size:15px;font-weight:600;color:#9AA0AB;margin:4px 0 2px;overflow-wrap:a
 <div class="wrap" id="app"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script>
-/* Pay page for one invoice. Everything travels in the link (after #): seller, invoice number, memo, balance and payment methods.
-   Money goes straight from the customer to the seller; this page never touches it. Crypto amounts use the price at the moment of paying. */
+/* Pay page for one invoice. Everything travels in the link (after #): seller, invoice, memo, balance, payment methods, and the
+   customer's contact (to prefill where the receipt goes). Money goes straight from customer to seller; this page never touches it. */
 (function(){
   var es=(navigator.language||'es').toLowerCase().indexOf('es')===0;
-  var T=es?{title:'Pagar factura',inv:'Factura',to:'Para',memo:'Memo',memoHow:'Escríbelo en la nota de tu pago.',bad:'Este enlace de pago no es válido o está incompleto. Pide uno nuevo.',none:'Esta factura no tiene métodos de pago.',card:'Pagar con tarjeta o banco',cardSub:'Tarjeta de débito, crédito o cuenta de banco (ACH)',cardHow:'En la página de pago escribe este monto exacto:',open:'Abrir página de pago',copyAddr:'Copiar dirección',copyAmt:'Copiar monto',copy:'Copiar',copied:'Copiado',openWallet:'Abrir billetera',amount:'Monto',price:'Precio al momento',noPrice:'No pude obtener el precio ahora. Revisa tu Internet o pregunta el monto al vendedor.',loading:'Calculando monto…',sendOnly:'Envía solo por la red ',details:'Datos',payTo:'Paga a',crypto:'Cripto',stableNote:'1 a 1 con el dólar.',paid:'Ya pagué',paidHow:'Gracias. Avísale al vendedor y comparte el número de transacción o el comprobante.',foot:'Pagos directos al vendedor. Invoice Free del Obrero no recibe ni guarda tu dinero.'}
-           :{title:'Pay invoice',inv:'Invoice',to:'To',memo:'Memo',memoHow:'Write it in your payment note.',bad:'This payment link is not valid or is incomplete. Ask for a new one.',none:'This invoice has no payment methods.',card:'Pay with card or bank',cardSub:'Debit, credit card or bank account (ACH)',cardHow:'On the payment page, enter this exact amount:',open:'Open payment page',copyAddr:'Copy address',copyAmt:'Copy amount',copy:'Copy',copied:'Copied',openWallet:'Open wallet',amount:'Amount',price:'Price right now',noPrice:'Could not get the price right now. Check your connection or ask the seller for the amount.',loading:'Calculating amount…',sendOnly:'Send only on the network ',details:'Details',payTo:'Pay to',crypto:'Crypto',stableNote:'1 to 1 with the dollar.',paid:'I already paid',paidHow:'Thank you. Let the seller know and share the transaction number or receipt.',foot:'Payments go directly to the seller. Invoice Free del Obrero never receives or holds your money.'};
+  var T=es?{title:'Pagar factura',inv:'Factura',payTo:'Paga a',memo:'Memo',memoHow:'Escríbelo en la nota de tu pago.',bad:'Este enlace de pago no es válido o está incompleto. Pide uno nuevo.',none:'Esta factura no tiene métodos de pago.',
+      card:'Pagar con tarjeta o banco',cardSub:'Tarjeta de débito, crédito o cuenta de banco (ACH)',cardHow:'En la página de pago escribe este monto exacto:',open:'Abrir página de pago',copyAddr:'Copiar dirección',copyAmt:'Copiar monto',copy:'Copiar',copied:'Copiado',openWallet:'Abrir billetera',amount:'Monto',price:'Precio al momento',noPrice:'No pude obtener el precio ahora. Revisa tu Internet o pregunta el monto al vendedor.',loading:'Calculando monto…',sendOnly:'Envía solo por la red ',crypto:'Cripto',stableNote:'1 a 1 con el dólar.',
+      rTitle:'Tu recibo',rSub:'¿A dónde te mandamos el recibo?',wa:'WhatsApp',sms:'Mensaje',mail:'Email',phone:'Tu número de teléfono',email:'Tu correo',stripeRcpt:'Stripe te mandará su comprobante a ',stripeNo:'Elige Email arriba para que Stripe te mande su comprobante.',
+      choose:'Elige cómo pagar:',back:'¿Ya pagaste con ',backQ:'?',backBtn:'Sí, avisar al vendedor',paid:'Ya pagué',how:'¿Cómo pagaste?',ref:'Número de transacción o referencia (opcional)',name:'Tu nombre (opcional)',tell:'Avisar al vendedor y pedir mi recibo',badContact:'Arriba, en Tu recibo, escribe un número o correo válido.',
+      viaWa:'Se abrió WhatsApp con el mensaje listo. Solo toca enviar.',viaSms:'Se abrió tu app de mensajes con el mensaje listo.',viaMail:'Se abrió tu correo con el mensaje listo.',noSeller:'Comparte este mensaje con el vendedor:',
+      msgHi:'Hola, ya pagué la factura #',msgFor:' por ',msgWith:' con ',msgRef:'Transacción / referencia: ',msgSend:'Por favor mándame el recibo por ',msgTo:' a: ',msgName:'Soy ',txt:'mensaje de texto',
+      foot:'Pagos directos al vendedor. Invoice Free del Obrero no recibe ni guarda tu dinero.'}
+    :{title:'Pay invoice',inv:'Invoice',payTo:'Pay',memo:'Memo',memoHow:'Write it in your payment note.',bad:'This payment link is not valid or is incomplete. Ask for a new one.',none:'This invoice has no payment methods.',
+      card:'Pay with card or bank',cardSub:'Debit, credit card or bank account (ACH)',cardHow:'On the payment page, enter this exact amount:',open:'Open payment page',copyAddr:'Copy address',copyAmt:'Copy amount',copy:'Copy',copied:'Copied',openWallet:'Open wallet',amount:'Amount',price:'Price right now',noPrice:'Could not get the price right now. Check your connection or ask the seller for the amount.',loading:'Calculating amount…',sendOnly:'Send only on the network ',crypto:'Crypto',stableNote:'1 to 1 with the dollar.',
+      rTitle:'Your receipt',rSub:'Where should we send your receipt?',wa:'WhatsApp',sms:'Text',mail:'Email',phone:'Your phone number',email:'Your email',stripeRcpt:'Stripe will email its receipt to ',stripeNo:'Choose Email above so Stripe emails you its receipt.',
+      choose:'Choose how to pay:',back:'Did you pay with ',backQ:'?',backBtn:'Yes, tell the seller',paid:'I already paid',how:'How did you pay?',ref:'Transaction number or reference (optional)',name:'Your name (optional)',tell:'Tell the seller and ask for my receipt',badContact:'Above, in Your receipt, enter a valid number or email.',
+      viaWa:'WhatsApp opened with the message ready. Just tap send.',viaSms:'Your messages app opened with the message ready.',viaMail:'Your email opened with the message ready.',noSeller:'Share this message with the seller:',
+      msgHi:'Hi, I paid invoice #',msgFor:' for ',msgWith:' with ',msgRef:'Transaction / reference: ',msgSend:'Please send my receipt by ',msgTo:' to: ',msgName:'This is ',txt:'text message',
+      foot:'Payments go directly to the seller. Invoice Free del Obrero never receives or holds your money.'};
   document.documentElement.lang=es?'es':'en';document.title=T.title;
   var app=document.getElementById('app');
   function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
@@ -52,59 +73,121 @@ h1{font-size:15px;font-weight:600;color:#9AA0AB;margin:4px 0 2px;overflow-wrap:a
   var o=null;
   try{var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';o=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){o=null}
   if(!o||o.v!==1||!o.n||!Array.isArray(o.m)||!/^\d+(\.\d{1,2})?$/.test(String(o.b))){fail(T.bad);return}
+  var EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var cur=/^[A-Z]{3}$/.test(o.cur)?o.cur:'USD',bal=+o.b,memo=String(o.mm||'').replace(/[^A-Za-z0-9-]/g,'').slice(0,24),seller=String(o.s||'').slice(0,80);
+  var sPhone=String(o.p||'').replace(/[^\d+]/g,'').slice(0,16),sMail=EMAIL.test(o.e||'')?String(o.e).slice(0,120):'';
   function money(v){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:cur}).format(v)}catch(e){return cur+' '+(+v).toFixed(2)}}
-  /* what this page knows about each method: label, coin symbol, price id, decimals */
   var P={stripe:{l:'Stripe',k:'card'},zelle:{l:'Zelle',k:'fiat'},cashapp:{l:'Cash App',k:'fiat'},venmo:{l:'Venmo',k:'fiat'},paypal:{l:'PayPal',k:'fiat'},ach:{l:es?'Transferencia bancaria (ACH)':'Bank transfer (ACH)',k:'fiat'},
     btc:{l:'Bitcoin',s:'BTC',cg:'bitcoin',dp:8},bsv:{l:'Bitcoin SV',s:'BSV',cg:'bitcoin-cash-sv',dp:8},ln:{l:'Bitcoin Lightning',s:'BTC'},xmr:{l:'Monero',s:'XMR',cg:'monero',dp:6},eth:{l:'Ethereum',s:'ETH',cg:'ethereum',dp:6},
     ltc:{l:'Litecoin',s:'LTC',cg:'litecoin',dp:6},sol:{l:'Solana',s:'SOL',cg:'solana',dp:6},usdc:{l:'USDC',s:'USDC',st:1},usdt:{l:'USDT',s:'USDT',st:1},custom:{l:es?'Otra moneda':'Other coin'}};
   var ms=o.m.filter(function(r){return Array.isArray(r)&&P[r[0]]&&typeof r[2]==='string'&&r[2].trim()}).map(function(r){return{t:r[0],nm:String(r[1]||'').slice(0,40),v:r[2].trim().slice(0,600),net:String(r[3]||'').slice(0,20)}});
+  function label(m){return m.t==='stripe'?(es?'tarjeta o banco':'card or bank'):(m.nm||P[m.t].l)}
+
+  /* ---- receipt contact: prefilled from the invoice's client, remembered on this phone for this invoice ---- */
+  var RK='obrero-rcpt-'+memo+'-'+o.n;
+  var rc={ch:'wa',v:''};
+  var cE=EMAIL.test(o.ce||'')?String(o.ce).slice(0,120):'',cP=String(o.cp||'').replace(/[^\d+()\- ]/g,'').slice(0,20);
+  if(cP){rc={ch:'wa',v:cP}}else if(cE){rc={ch:'mail',v:cE}}
+  try{var saved=JSON.parse(localStorage.getItem(RK)||'null');if(saved&&saved.ch&&typeof saved.v==='string')rc=saved}catch(e){}
+  function saveRc(){try{localStorage.setItem(RK,JSON.stringify(rc))}catch(e){}}
+  function rcValid(){return rc.ch==='mail'?EMAIL.test(rc.v.trim()):rc.v.replace(/\D/g,'').length>=7}
+  function rcEmail(){return rc.ch==='mail'&&EMAIL.test(rc.v.trim())?rc.v.trim():''}
+
   function uri(m,amt){var a=m.v,n=encodeURIComponent(memo);
     switch(m.t){case 'btc':return 'bitcoin:'+a+(amt?'?amount='+amt+'&label='+n:'');case 'ln':return 'lightning:'+a;case 'xmr':return 'monero:'+a+(amt?'?tx_amount='+amt+'&tx_description='+n:'');
       case 'eth':return 'ethereum:'+a;case 'ltc':return 'litecoin:'+a+(amt?'?amount='+amt:'');case 'sol':return 'solana:'+a+(amt?'?amount='+amt:'');case 'bsv':return a;
-      case 'stripe':return /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9_]+\/?$/.test(a)?a+'?client_reference_id='+n:null;
+      case 'stripe':{if(!/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9_]+\/?$/.test(a))return null;var em=rcEmail();return a+'?client_reference_id='+n+(em?'&prefilled_email='+encodeURIComponent(em):'')}
       case 'cashapp':return 'https://cash.app/$'+encodeURIComponent(a.replace(/^\$/,''))+'/'+bal.toFixed(2);
       case 'venmo':return 'https://venmo.com/u/'+encodeURIComponent(a.replace(/^@/,''));
       case 'paypal':{var u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'').replace(/[^A-Za-z0-9_.-]/g,'');return u?'https://paypal.me/'+u+'/'+bal.toFixed(2)+cur:null}
       default:return null}}
   function qr(text){if(!window.qrcode||!text)return null;try{var q=qrcode(0,'M');q.addData(text);q.make();var d=el('div','qr');d.innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true});return d}catch(e){return null}}
-  function copyBtn(label,val){var b=el('button','btn',label);b.type='button';b.onclick=function(){var done=function(){b.textContent=T.copied;setTimeout(function(){b.textContent=label},1500)};if(navigator.clipboard)navigator.clipboard.writeText(val).then(done,function(){});};return b}
+  function copyBtn(lbl,val,onUse){var b=el('button','btn',lbl);b.type='button';b.onclick=function(){if(onUse)onUse();var done=function(){b.textContent=T.copied;setTimeout(function(){b.textContent=lbl},1500)};if(navigator.clipboard)navigator.clipboard.writeText(val).then(done,function(){})};return b}
+  function link(cls,lbl,hrefFn,onUse,blank){var a=el('a',cls,lbl);a.href=hrefFn()||'#';if(blank){a.target='_blank';a.rel='noopener'}a.addEventListener('click',function(){a.href=hrefFn()||'#';if(onUse)onUse()});return a}
   function kv(k,v){var d=el('div','kv');d.appendChild(el('span',null,k));d.appendChild(el('span',null,v));return d}
   var prices=null,priceTried=false,priceCbs=[];
-  function getPrices(cb){if(prices||priceTried){cb(prices);if(!prices&&!priceTried)priceCbs.push(cb);return}priceCbs.push(cb);if(priceCbs.length>1)return;
-    var ids=ms.map(function(m){return P[m.t].cg}).filter(Boolean).join(',');if(!ids){priceTried=true;priceCbs.forEach(function(f){f(null)});return}
+  function getPrices(cb){if(priceTried){cb(prices);return}priceCbs.push(cb);if(priceCbs.length>1)return;
+    var ids=ms.map(function(m){return P[m.t].cg}).filter(Boolean).join(',');
     fetch('https://api.coingecko.com/api/v3/simple/price?vs_currencies='+cur.toLowerCase()+'&ids='+ids).then(function(r){return r.ok?r.json():null}).then(function(j){prices=j}).catch(function(){prices=null}).then(function(){priceTried=true;var c=priceCbs;priceCbs=[];c.forEach(function(f){f(prices)})})}
-  /* header */
+
+  /* ---- "went to pay" tracking: when the customer leaves to a wallet or payment page and comes back, offer to tell the seller in one tap ---- */
+  var went=null,notified=false,backBox=el('div');
+  function usedMethod(m){went=label(m)}
+  document.addEventListener('visibilitychange',function(){if(!document.hidden&&went&&!notified)showBack()});
+  function showBack(){backBox.textContent='';var b=el('div','back');b.appendChild(el('h2',null,T.back+went+T.backQ));var go=el('button','btn p',T.backBtn);go.type='button';go.style.width='100%';var out=el('div');go.onclick=function(){tell(went,'','',out)};b.appendChild(go);b.appendChild(out);backBox.appendChild(b);backBox.scrollIntoView({block:'start'})}
+
+  /* ---- the message to the seller, sent from the customer's own phone ---- */
+  function tell(method,ref,name,out){
+    out.textContent='';
+    if(!rcValid()){out.appendChild(el('p','note',T.badContact));rcInput.focus();rcInput.scrollIntoView({block:'center'});return}
+    var chName=rc.ch==='wa'?'WhatsApp':rc.ch==='sms'?T.txt:'email';
+    var msg=T.msgHi+o.n+(memo?' ('+memo+')':'')+T.msgFor+money(bal)+T.msgWith+method+'.'+(ref?'\n'+T.msgRef+ref:'')+'\n'+T.msgSend+chName+T.msgTo+rc.v.trim()+(name?'\n'+T.msgName+name:'');
+    var dg=sPhone.replace(/\D/g,''),full=dg.length===10?'1'+dg:dg,href='',note='';
+    if(sPhone&&rc.ch!=='mail'){href=rc.ch==='wa'?'https://wa.me/'+full+'?text='+encodeURIComponent(msg):'sms:'+sPhone+'?&body='+encodeURIComponent(msg);note=rc.ch==='wa'?T.viaWa:T.viaSms}
+    else if(sMail){href='mailto:'+encodeURIComponent(sMail)+'?subject='+encodeURIComponent((es?'Pago de factura #':'Invoice payment #')+o.n)+'&body='+encodeURIComponent(msg);note=T.viaMail}
+    else if(sPhone){href='https://wa.me/'+full+'?text='+encodeURIComponent(msg);note=T.viaWa}
+    notified=true;
+    if(href){out.appendChild(el('p','ok',note));location.href=href}
+    else{out.appendChild(el('p','small',T.noSeller));out.appendChild(el('div','mono',msg));out.appendChild(copyBtn(T.copy,msg))}
+  }
+
+  /* ---- page ---- */
   app.textContent='';
   app.appendChild(el('h1',null,(seller?T.payTo+' '+seller+' · ':'')+T.inv+' #'+String(o.n).slice(0,20)));
   app.appendChild(el('div','due',money(bal)));
   if(memo){var mp=el('div','memo');mp.appendChild(el('span',null,T.memo));mp.appendChild(el('b',null,memo));app.appendChild(mp)}
   if(!ms.length){app.appendChild(el('div','bad',T.none));return}
+  app.appendChild(backBox);
+
+  var rcard=el('div','card');rcard.appendChild(el('h2',null,T.rTitle));rcard.appendChild(el('div','small',T.rSub));
+  var seg=el('div','seg');seg.style.marginTop='8px';
+  var rcInput=el('input','in');rcInput.maxLength=120;rcInput.id='rc';var rcLbl=el('label','vh',T.phone);rcLbl.htmlFor='rc';
+  function paintRc(){rcInput.type=rc.ch==='mail'?'email':'tel';rcInput.placeholder=rc.ch==='mail'?T.email:T.phone;rcInput.autocomplete=rc.ch==='mail'?'email':'tel';rcLbl.textContent=rc.ch==='mail'?T.email:T.phone;rcInput.value=rc.v;
+    [].forEach.call(seg.children,function(c){c.setAttribute('aria-pressed',c.dataset.ch===rc.ch?'true':'false')});paintStripe()}
+  [['wa',T.wa],['sms',T.sms],['mail',T.mail]].forEach(function(x){var b=el('button',null,x[1]);b.type='button';b.dataset.ch=x[0];b.onclick=function(){if(x[0]===rc.ch)return;var wasMail=rc.ch==='mail';rc.ch=x[0];if(x[0]==='mail'){rc.v=cE||(EMAIL.test(rc.v)?rc.v:'')}else if(wasMail){rc.v=cP||''}saveRc();paintRc();rcInput.focus()};seg.appendChild(b)});
+  rcInput.addEventListener('input',function(){rc.v=rcInput.value;saveRc();paintStripe()});
+  var f=el('div','field');f.appendChild(rcLbl);f.appendChild(rcInput);
+  rcard.appendChild(seg);rcard.appendChild(f);app.appendChild(rcard);
+
+  app.appendChild(el('div','small',T.choose));app.lastChild.style.margin='0 0 8px';
+  var stripeNotes=[];
+  function paintStripe(){stripeNotes.forEach(function(n){var em=rcEmail();n.className=em?'ok':'small';n.textContent=em?T.stripeRcpt+em+'.':T.stripeNo})}
   var open=null;
-  function panelFor(m){var p=el('div','panel'),pr=P[m.t];
-    if(m.t==='stripe'){var u=uri(m);p.appendChild(el('p','small',T.cardHow));p.appendChild(kv(T.amount,money(bal)));var row=el('div','row');row.appendChild(copyBtn(T.copyAmt,bal.toFixed(2)));if(u){var a=el('a','btn p',T.open);a.href=u;a.target='_blank';a.rel='noopener';row.appendChild(a)}p.appendChild(row);return p}
-    if(pr.k==='fiat'){p.appendChild(kv(T.amount,money(bal)));p.appendChild(el('div','mono',m.v));var u2=uri(m);var r2=el('div','row');r2.appendChild(copyBtn(m.t==='ach'?T.copy:T.copyAddr,m.v));r2.appendChild(copyBtn(T.copyAmt,bal.toFixed(2)));if(u2){var a2=el('a','btn p',(es?'Abrir ':'Open ')+pr.l);a2.href=u2;a2.target='_blank';a2.rel='noopener';r2.appendChild(a2)}p.appendChild(r2);if(memo)p.appendChild(el('p','small',T.memo+': '+memo+'. '+T.memoHow));return p}
-    /* crypto */
+  function panelFor(m){var p=el('div','panel'),pr=P[m.t],use=function(){usedMethod(m)};
+    if(m.t==='stripe'){p.appendChild(el('p','small',T.cardHow));p.appendChild(kv(T.amount,money(bal)));var row=el('div','row');row.appendChild(copyBtn(T.copyAmt,bal.toFixed(2)));if(uri(m))row.appendChild(link('btn p',T.open,function(){return uri(m)},use,true));p.appendChild(row);var sn=el('p');stripeNotes.push(sn);p.appendChild(sn);paintStripe();return p}
+    if(pr.k==='fiat'){p.appendChild(kv(T.amount,money(bal)));p.appendChild(el('div','mono',m.v));var r2=el('div','row');r2.appendChild(copyBtn(m.t==='ach'?T.copy:T.copyAddr,m.v,use));r2.appendChild(copyBtn(T.copyAmt,bal.toFixed(2)));if(uri(m))r2.appendChild(link('btn p',(es?'Abrir ':'Open ')+pr.l,function(){return uri(m)},use,true));p.appendChild(r2);if(memo)p.appendChild(el('p','small',T.memo+': '+memo+'. '+T.memoHow));return p}
     var box=el('div');p.appendChild(box);
     function draw(amt,px){box.textContent='';var u=uri(m,amt);var q=qr(u||m.v);if(q)box.appendChild(q);
       box.appendChild(kv(cur,money(bal)));box.appendChild(kv(pr.s||T.crypto,amt||'—'));if(px)box.appendChild(kv(T.price,money(px)+' / '+pr.s));
       if(pr.st)box.appendChild(el('p','small',T.stableNote));if(m.net)box.appendChild(el('p','note',T.sendOnly+m.net+'.'));
       if(!amt&&!pr.st&&pr.cg)box.appendChild(el('p','note',T.noPrice));
-      box.appendChild(el('div','mono',m.v));var row=el('div','row');row.appendChild(copyBtn(T.copyAddr,m.v));if(amt)row.appendChild(copyBtn(T.copyAmt,amt));
-      if(u&&!/^https?:/.test(u)&&m.t!=='bsv'){var a=el('a','btn p',T.openWallet);a.href=u;row.appendChild(a)}box.appendChild(row);
+      box.appendChild(el('div','mono',m.v));var row=el('div','row');row.appendChild(copyBtn(T.copyAddr,m.v,use));if(amt)row.appendChild(copyBtn(T.copyAmt,amt));
+      if(u&&!/^https?:/.test(u)&&m.t!=='bsv')row.appendChild(link('btn p',T.openWallet,function(){return u},use,false));box.appendChild(row);
       if(memo)box.appendChild(el('p','small',T.memo+': '+memo+'. '+T.memoHow))}
     if(pr.st){draw(cur==='USD'?bal.toFixed(2):null)}
     else if(pr.cg){box.appendChild(el('p','small',T.loading));getPrices(function(j){var px=j&&j[pr.cg]&&j[pr.cg][cur.toLowerCase()];draw(px?(bal/px).toFixed(pr.dp):null,px||null)})}
     else draw(null);
     return p}
-  ms.forEach(function(m,i){var pr=P[m.t];var b=el('button','opt'+(m.t==='stripe'?' main':''));b.type='button';b.setAttribute('aria-expanded','false');
+  ms.forEach(function(m){var pr=P[m.t];var b=el('button','opt'+(m.t==='stripe'?' main':''));b.type='button';b.setAttribute('aria-expanded','false');
     var lab=el('span');lab.appendChild(document.createTextNode(m.t==='stripe'?T.card:(m.nm||pr.l)));if(m.t==='stripe')lab.appendChild(el('small',null,T.cardSub));else if(pr.s)lab.appendChild(el('small',null,pr.s+(m.net?' · '+m.net:'')));
     b.appendChild(lab);b.appendChild(el('span',null,'›'));var holder=el('div');
-    b.onclick=function(){var was=b.getAttribute('aria-expanded')==='true';if(open){open.b.setAttribute('aria-expanded','false');open.h.textContent=''}open=null;if(was)return;b.setAttribute('aria-expanded','true');holder.appendChild(panelFor(m));open={b:b,h:holder}};
+    b.onclick=function(){var was=b.getAttribute('aria-expanded')==='true';if(open){open.b.setAttribute('aria-expanded','false');open.h.textContent=''}open=null;if(was)return;b.setAttribute('aria-expanded','true');stripeNotes=[];holder.appendChild(panelFor(m));open={b:b,h:holder,m:m}};
     app.appendChild(b);app.appendChild(holder)});
   if(ms.length===1)app.querySelector('.opt').click();
-  var paid=el('button','btn',T.paid);paid.type='button';paid.style.marginTop='8px';paid.style.width='100%';paid.onclick=function(){paid.replaceWith(el('p','small',T.paidHow))};app.appendChild(paid);
+
+  /* ---- "I already paid": method + optional reference and name; the receipt contact comes from the card above ---- */
+  var paid=el('button','btn',T.paid);paid.type='button';paid.style.marginTop='8px';paid.style.width='100%';
+  paid.onclick=function(){var box=el('div','panel');box.style.marginTop='8px';
+    var how=el('select','in');ms.forEach(function(m){var t=label(m);var op=el('option',null,t);op.value=t;if((went&&t===went)||(!went&&open&&open.m===m))op.selected=true;how.appendChild(op)});
+    function field(lbl,input){var w=el('div','field');var l=el('label',null,lbl);var id='f'+Math.random().toString(36).slice(2,8);l.htmlFor=id;input.id=id;w.appendChild(l);w.appendChild(input);return w}
+    box.appendChild(field(T.how,how));var ref=el('input','in');ref.maxLength=120;ref.autocapitalize='off';ref.spellcheck=false;box.appendChild(field(T.ref,ref));
+    var nm=el('input','in');nm.maxLength=60;nm.autocomplete='name';box.appendChild(field(T.name,nm));
+    var go=el('button','btn p',T.tell);go.type='button';go.style.width='100%';go.style.marginTop='6px';var out=el('div');
+    go.onclick=function(){tell(how.value,ref.value.trim().slice(0,120),nm.value.trim().slice(0,60),out)};box.appendChild(go);box.appendChild(out);
+    paid.replaceWith(box)};
+  app.appendChild(paid);
   app.appendChild(el('p','foot',T.foot));
+  paintRc();
 })();
 </script>
 </body>

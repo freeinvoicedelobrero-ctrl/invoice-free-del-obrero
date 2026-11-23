@@ -1391,7 +1391,11 @@ function payData(d){
   const ms=enabledMethods().filter(m=>PRESETS[m.type]?.ach||(payAddress(m,d)||'').trim()).sort((a,b)=>rank(a)-rank(b)||(a.order||0)-(b.order||0)).map(m=>{
     const pr=PRESETS[m.type]||{};const v=pr.ach?achText(m):m.type==='stripe'?(m.address||'').trim().replace(/[?#].*$/,''):(payAddress(m,d)||'').trim();
     const nm=(m.name||'').trim();const row=[m.type,nm&&nm!==pr.label?nm:'',v];if(m.network)row.push(m.network);return row});
-  return {v:1,s:(S.profile.company||'').trim(),n:String(d.number),mm:payRef(d),b:r2(Math.max(0,c.balance)).toFixed(2),cur:ccy(),m:ms};
+  const o={v:1,s:(S.profile.company||'').trim(),n:String(d.number),mm:payRef(d),b:r2(Math.max(0,c.balance)).toFixed(2),cur:ccy(),m:ms};
+  const ph=(S.profile.phone||'').replace(/[^\d+]/g,'');if(ph)o.p=ph;
+  /* the customer's own contact, to prefill where the receipt goes */
+  const cl=S.clients[d.clientId]||{};const ce=(cl.emails||[]).map(x=>(x||'').trim()).find(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));if(ce)o.ce=ce;const cp=(cl.mobile||'').trim();if(cp.replace(/\D/g,'').length>=7)o.cp=cp;const em=(S.profile.email||'').trim();if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))o.e=em;
+  return o;
 }
 function payLink(d){if(!d||d.kind==='estimate')return '';const o=payData(d);if(!o.m.length||+o.b<=0)return '';return new URL('pay.html',location.href).href.split(/[?#]/)[0]+'#'+b64url(JSON.stringify(o))}
 async function sharePayLink(d){const l=payLink(d);if(!l){toast(rt('Agrega un método de pago en Mi cartera','Add a payment method in My wallet'));return}
