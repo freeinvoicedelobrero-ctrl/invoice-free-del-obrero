@@ -574,6 +574,7 @@ const PRESETS={
   ltc:{label:'Litecoin',sym:'LTC',cg:'litecoin',re:/^(ltc1[ac-hj-np-z02-9]{11,71}|[LM3][a-km-zA-HJ-NP-Z1-9]{25,34})$/},
   sol:{label:'Solana',sym:'SOL',cg:'solana',re:/^[1-9A-HJ-NP-Za-km-z]{32,44}$/},
   custom:{label:'Custom coin / Otra moneda',sym:''},
+  stripe:{label:'Stripe (tarjeta / ACH)',fiat:true,link:true,re:/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9_]+\/?$/,hint:'https://buy.stripe.com/...'},
   ach:{label:'ACH / Bank transfer',fiat:true,ach:true},
   zelle:{label:'Zelle',fiat:true,hint:'email / phone'},
   cashapp:{label:'Cash App',fiat:true,hint:'$cashtag'},
@@ -615,6 +616,7 @@ function payURI(m,d,amt){
     case 'ltc':return `litecoin:${a}${amt?`?amount=${amt}`:''}`;
     case 'sol':return `solana:${a}${amt?`?amount=${amt}`:''}`;
     case 'bsv':return a;
+    case 'stripe':{if(!/^https:\/\/buy\.stripe\.com\//.test(a))return null;return a.replace(/[?#].*$/,'')+'?client_reference_id='+n}
     case 'cashapp':{const tag=a.replace(/^\$/,'');return `https://cash.app/$${tag}${amt?'/'+amt:''}`}
     case 'venmo':return `https://venmo.com/u/${a.replace(/^@/,'')}`;
     case 'paypal':{const u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'');return `https://paypal.me/${u}${amt?'/'+amt+ccy():''}`}
@@ -641,8 +643,8 @@ function paySection(d){
     <div class="kv"><span>${ccy()}</span><span class="num">${money(usd)}</span></div>
     ${!p.fiat&&p.sym?`<div class="kv"><span>${esc(p.sym)}${m.network?' · '+esc(m.network):''}</span><span class="num">${amt?esc(amt):'—'}</span></div>`:''}
     ${p.stable?`<p class="note" style="margin:0">${t('sendOnly',esc(m.network))}</p>`:''}
-    <div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>
-    <div class="btns" style="margin:0"><button class="btn" data-act="copy" data-v="${esc(addr)}">${p.ach?t('copyDetails'):t('copyAddress')}</button><button class="btn" data-act="copy" data-v="${esc(amt||usd.toFixed(2))}">${t('copyAmount')}</button></div>
+    ${p.link&&uri?`<a class="btn primary" href="${esc(uri)}" target="_blank" rel="noopener">${rt('Pagar ahora','Pay now')} · ${money(usd)}</a><p class="small" style="margin:0">${rt('Escribe el monto exacto en la página de pago. Tarjeta o cuenta de banco (ACH).','Enter the exact amount on the payment page. Card or bank account (ACH).')}</p>`:`<div class="mono" style="white-space:pre-wrap">${esc(addr)}</div>`}
+    <div class="btns" style="margin:0"><button class="btn" data-act="copy" data-v="${esc(p.link&&uri?uri:addr)}">${p.ach?t('copyDetails'):p.link?rt('Copiar enlace','Copy link'):t('copyAddress')}</button><button class="btn" data-act="copy" data-v="${esc(amt||usd.toFixed(2))}">${t('copyAmount')}</button></div>
     ${m.type==='bsv'?`<button class="btn primary" data-act="chainCheck" data-id="${d.id}">${rt('Revisar pago en la cadena','Check payment on chain')}</button>`:''}
     ${!p.fiat&&p.cg?`<p class="small" style="margin:0">${prices.data?`${t('rateAsOf')} ${new Date(prices.ts).toLocaleTimeString(lang==='es'?'es-MX':'en-US',{hour:'numeric',minute:'2-digit'})}`:(prices.failed?t('priceUnavailable'):'…')} · <button class="textbtn" style="padding:0" data-act="refreshPrices">${t('refresh')}</button></p>`:''}
     ${!p.fiat?`<p class="small" style="margin:0">${t('memoNote',esc(d.number))}</p>`:''}`;
@@ -831,7 +833,7 @@ function previewHTML(d){
   <div class="pbig"><span>Total</span><span>${money(c.total)}</span></div>
   ${isEst?'':`<div><span>Paid</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>Balance due</span><span>${money(c.balance)}</span></div>`}</div>
   ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
-  ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div><p class="psm"><b>Memo / Referencia:</b> ${esc(payRef(d))}</p>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d))}</p>`}).join('')}`:''}
+  ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div><p class="psm"><b>Memo / Referencia:</b> ${esc(payRef(d))}</p>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):pr.link?(payURI(m,d,null)||payAddress(m,d)):payAddress(m,d))}</p>`}).join('')}`:''}
   ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">TERMS & CONDITIONS</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
   <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">${esc(sellerLbl().toUpperCase())}</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
   <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CUSTOMER</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>
@@ -1632,9 +1634,9 @@ async function buildPDF(d){
     if(ms.length){
       need(52);doc.setFont('helvetica','bold');doc.text('Pay with / Pagar con',M,y);y+=14;doc.setFontSize(9);doc.text('Memo / Referencia: '+payRef(d),M,y);doc.setFont('helvetica','normal');doc.text('  (escríbelo en la nota de tu pago / write it in your payment note)',M+doc.getTextWidth('Memo / Referencia: '+payRef(d))+6,y);y+=13;
       const crypto=ms.filter(m=>!PRESETS[m.type]?.fiat);
-      ms.forEach(m=>{const pr=PRESETS[m.type]||{};const a=pr.ach?achText(m).replace(/\n/g,' · '):payAddress(m,d);const tl=doc.splitTextToSize(`${m.name||pr.label}${m.network?' ('+m.network+')':''}: ${a}`,W-2*M);need(tl.length*11+4);doc.text(tl,M,y);y+=tl.length*11+3});
-      const qrs=crypto.filter(m=>payURI(m,d,null)).slice(0,2);
-      if(qrs.length){y+=6;need(130);qrs.forEach((m,k)=>{const pr=PRESETS[m.type]||{};const amt=coinAmount(m,c.balance);const uri=payURI(m,d,amt);const x=M+k*170;doc.setDrawColor(200);doc.rect(x,y,110,110);drawQR(doc,uri,x+5,y+5,100);doc.setFontSize(8);doc.text(`${m.name||pr.label}${amt?' · '+amt+' '+(pr.sym||''):''}`,x,y+122)});y+=148}
+      ms.forEach(m=>{const pr=PRESETS[m.type]||{};const lk=pr.link?payURI(m,d,null):null;const a=pr.ach?achText(m).replace(/\n/g,' · '):lk?'Pay now / Pagar ahora (card or bank / tarjeta o banco): '+lk:payAddress(m,d);const tl=doc.splitTextToSize(`${m.name||pr.label}${m.network?' ('+m.network+')':''}: ${a}`,W-2*M);need(tl.length*11+4);if(lk){doc.setTextColor(0,0,200);doc.text(tl,M,y);doc.link(M,y-9,W-2*M,tl.length*11,{url:lk});doc.setTextColor(0)}else doc.text(tl,M,y);y+=tl.length*11+3});
+      const qrs=[...ms.filter(m=>PRESETS[m.type]?.link),...crypto].filter(m=>payURI(m,d,null)).slice(0,2);
+      if(qrs.length){y+=6;need(130);qrs.forEach((m,k)=>{const pr=PRESETS[m.type]||{};const amt=coinAmount(m,c.balance);const uri=payURI(m,d,amt);const x=M+k*170;doc.setDrawColor(200);doc.rect(x,y,110,110);drawQR(doc,uri,x+5,y+5,100);doc.setFontSize(8);doc.text(pr.link?`${m.name||pr.label} · ${money(c.balance)}`:`${m.name||pr.label}${amt?' · '+amt+' '+(pr.sym||''):''}`,x,y+122)});y+=148}
       doc.setFontSize(10);
     }
   }
