@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>Verificar sello</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:24px;margin:6px 0 12px}
+.card{background:#0E0F12;border:1px solid #26292F;border-radius:14px;padding:14px;margin-bottom:14px}
+.ok{border-color:#2E7D5B;background:#0c1a14}
+.ok b{color:#3ddc97}
+.warn{border-color:#E0A83A;color:#E0A83A}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #1c1f24}
+.kv span:first-child{color:#9AA0AB}
+.kv span:last-child{text-align:right;overflow-wrap:anywhere;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.big{font-size:20px;font-weight:700;margin:0 0 6px}
+.small{color:#9AA0AB;font-size:13px;margin:8px 0 0}
+a.btn{display:flex;align-items:center;justify-content:center;min-height:46px;border-radius:12px;background:#4D6BFF;color:#fff;text-decoration:none;font-weight:600;margin-top:10px}
+.foot{color:#9AA0AB;font-size:12px;text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* Checks that an invoice's fingerprint (hash) was written on the BSV blockchain. Reads the transaction from a public explorer. */
+(function(){
+  var es=(navigator.language||'es').toLowerCase().indexOf('es')===0;
+  var T=es?{title:'Verificar sello',bad:'Este enlace de verificación no es válido.',checking:'Revisando la cadena de BSV…',ok:'Sello verificado',okSub:'La huella de esta factura está grabada en la cadena de BSV. Nadie puede cambiarla ni borrarla.',no:'No encontré la huella en esa transacción.',noSub:'La transacción existe, pero no contiene esta huella. La factura pudo haber sido modificada.',err:'No pude consultar la cadena desde aquí.',errSub:'Ábrela en el explorador y busca esta huella dentro de la transacción.',hash:'Huella (SHA-256)',tx:'Transacción',net:'Red',when:'Fecha del bloque',pending:'Esperando confirmación',confs:'Confirmaciones',open:'Ver en el explorador',test:'Prueba (testnet)',main:'Principal',foot:'Invoice Free del Obrero · Sello en BSV'}
+           :{title:'Verify seal',bad:'This verification link is not valid.',checking:'Checking the BSV blockchain…',ok:'Seal verified',okSub:'This invoice fingerprint is written on the BSV blockchain. Nobody can change or delete it.',no:'The fingerprint is not in that transaction.',noSub:'The transaction exists but does not contain this fingerprint. The invoice may have been changed.',err:'Could not check the blockchain from here.',errSub:'Open it in the explorer and look for this fingerprint inside the transaction.',hash:'Fingerprint (SHA-256)',tx:'Transaction',net:'Network',when:'Block date',pending:'Waiting for confirmation',confs:'Confirmations',open:'View in explorer',test:'Test (testnet)',main:'Main',foot:'Invoice Free del Obrero · BSV seal'};
+  document.documentElement.lang=es?'es':'en';document.title=T.title;
+  var app=document.getElementById('app');
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function kv(k,v){var d=el('div','kv');d.appendChild(el('span',null,k));d.appendChild(el('span',null,v));return d}
+  var q=new URLSearchParams(location.hash.slice(1));
+  var h=(q.get('h')||'').toLowerCase(),tx=(q.get('t')||'').toLowerCase(),net=q.get('n')==='main'?'main':'test';
+  app.appendChild(el('h1',null,T.title));
+  if(!/^[0-9a-f]{64}$/.test(h)||!/^[0-9a-f]{64}$/.test(tx)){app.appendChild(el('div','card warn',T.bad));return}
+  var explorer=(net==='main'?'https://whatsonchain.com/tx/':'https://test.whatsonchain.com/tx/')+tx;
+  var status=el('div','card',T.checking);app.appendChild(status);
+  var info=el('div','card');info.appendChild(kv(T.hash,h));info.appendChild(kv(T.tx,tx));info.appendChild(kv(T.net,net==='main'?T.main:T.test));
+  var when=kv(T.when,'—');info.appendChild(when);app.appendChild(info);
+  var a=el('a','btn',T.open);a.href=explorer;a.target='_blank';a.rel='noopener';app.appendChild(a);
+  app.appendChild(el('p','foot',T.foot));
+  var api='https://api.whatsonchain.com/v1/bsv/'+net+'/';
+  function result(cls,title,sub){status.className='card '+cls;status.textContent='';status.appendChild(el('p','big',title));status.appendChild(el('p','small',sub))}
+  /* the seal output is: OP_FALSE OP_RETURN push("obrero") push(32-byte hash) */
+  var mark='066f627265726f20'+h;
+  fetch(api+'tx/'+tx+'/hex').then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.text()}).then(function(hex){
+    hex=hex.replace(/[^0-9a-f]/gi,'').toLowerCase();
+    if(hex.indexOf(mark)!==-1){result('ok',T.ok,T.okSub);status.querySelector('.big').innerHTML='';status.querySelector('.big').appendChild(el('b',null,'✓ '+T.ok))}
+    else result('warn',T.no,T.noSub);
+    return fetch(api+'tx/hash/'+tx).then(function(r){return r.ok?r.json():null}).then(function(j){
+      var v=when.lastChild;if(j&&j.blocktime){v.textContent=new Date(j.blocktime*1000).toLocaleString(es?'es-MX':'en-US')+(j.confirmations?' · '+j.confirmations+' '+T.confs.toLowerCase():'')}else v.textContent=T.pending});
+  }).catch(function(){result('warn',T.err,T.errSub)});
+})();
+</script>
+</body>
+</html>

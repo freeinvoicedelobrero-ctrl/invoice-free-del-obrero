@@ -721,6 +721,7 @@ function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&
   <button class="btn" data-act="duplicate" data-id="${id}">${t('duplicate')}</button>
   </div>
   ${!isEst&&c.balance>0.005?paySection(d):''}
+  ${sealRow(d)}
   ${sigBlock(d)}
   ${isEst?'':`<div class="group"><div class="gl">${t('payments')}</div>${(d.payments||[]).length?d.payments.map(p=>`<div class="kv"><span>${fdate(p.date)} · ${esc(p.method)}${p.ref?' · '+esc(p.ref):''}${p.coin?`<br><span class="small">${esc(p.coin)}</span>`:''}${p.txid?`<br><span class="small mono" style="padding:2px 4px">${esc(p.txid)}</span>`:''}${p.note?`<br><span class="small">${esc(p.note)}</span>`:''}</span><span class="num green">${money(p.amount)} <button class="textbtn" style="padding:2px 6px;vertical-align:middle" data-act="receipt" data-id="${id}" data-p="${p.id}">${rt('Recibo','Receipt')}</button><button class="iconbtn" style="padding:2px;vertical-align:middle" data-act="delPay" data-id="${id}" data-p="${p.id}" aria-label="${t('del')}">${ic('trash')}</button></span></div>`).join(''):`<p class="small">${t('noPayments')}</p>`}</div>`}
   ${d.payInstr?`<div class="group"><div class="gl">${t('payInstr')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.payInstr)}</p></div>`:''}
@@ -904,10 +905,11 @@ function saveDocFromEditor(){
   const isNew=D._new;delete D._new;
   D.items=D.items.filter(i=>i.desc||+i.rate);
   D.discountValue=+D.discountValue||0;D.taxRate=+D.taxRate||0;D.dueDays=+D.dueDays||0;D.updatedAt=Date.now();
-  const keepS=S.docs[D.id];if(keepS){D.sent=!!keepS.sent;D.payments=keepS.payments||D.payments}
+  const keepS=S.docs[D.id];if(keepS){D.sent=!!keepS.sent;D.payments=keepS.payments||D.payments;if(keepS.seal)D.seal=keepS.seal}
   S.docs[D.id]=D;
   const n=parseInt(D.number);if(!isNaN(n)){const key=D.kind==='estimate'?'nextEstimate':'nextInvoice';if(n>=(+S.profile[key]||0))S.profile[key]=n+1}
   const id=D.id;D=null;closeSheet();if(isNew)showSheet(docDetail(id));commit();toast(t('saved'));
+  setTimeout(()=>sealDoc(S.docs[id],true).then(s=>{if(s)redrawSheet()}),50);
 }
 
 
@@ -1402,6 +1404,31 @@ async function sharePayLink(d){const l=payLink(d);if(!l){toast(rt('Agrega un mé
   const txt=rt('Paga la factura #','Pay invoice #')+d.number+' · '+money(calc(d).balance);
   try{if(navigator.share){await navigator.share({title:txt,text:txt,url:l});return}}catch(e){if(e&&e.name==='AbortError')return}
   try{await navigator.clipboard.writeText(l);toast(rt('Enlace copiado','Link copied'))}catch(e){}}
+/* ---------- BSV seal: the invoice fingerprint (SHA-256) is written on the BSV chain by the "seal" function, paid by the fund. No customer data goes on chain. ---------- */
+function invoiceCanon(d){const c=calc(d);const cl=S.clients[d.clientId]||{};return JSON.stringify(['obrero-inv-1',(S.profile.company||'').trim(),String(d.number),d.date||'',(cl.name||'').trim(),(d.items||[]).map(i=>[String(i.desc||''),+i.qty||0,String(i.unit||''),r2(+i.rate||0)]),r2(c.total).toFixed(2),ccy(),payRef(d)])}
+async function sha256hex(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function sealOk(d){return !!(d&&d.seal&&d.seal.txid&&d.seal.c===invoiceCanon(d))}
+function sealLink(d){const s=d.seal;return new URL('sello.html',location.href).href.split(/[?#]/)[0]+'#n='+s.net+'&t='+s.txid+'&h='+s.h}
+let sealOff=false,sealBusy={};
+async function sealDoc(d,quiet){
+  if(!d||d.kind==='estimate'||!menuCloudOK())return null;
+  if(sealOk(d))return d.seal;
+  if(quiet&&sealOff)return null;
+  if(sealBusy[d.id])return null;sealBusy[d.id]=1;
+  try{
+    const c=invoiceCanon(d);const hh=await sha256hex(c);
+    const r=await fetch(MCFG.supabaseUrl+'/functions/v1/seal',{method:'POST',headers:{'Content-Type':'application/json',apikey:MCFG.supabaseAnonKey},body:JSON.stringify({hash:hh,kind:'inv'})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!/^[0-9a-f]{64}$/.test(j.txid||''))throw new Error(j.error||('http '+r.status));
+    const seal={h:hh,c,txid:j.txid,net:j.net==='main'?'main':'test',at:Date.now()};
+    const real=S.docs[d.id]||d;real.seal=seal;if(real!==d)d.seal=seal;commit();
+    if(!quiet)toast(rt('Factura sellada en BSV','Invoice sealed on BSV'));return seal;
+  }catch(e){if(quiet)sealOff=true;else toast(rt('No se pudo sellar ahora: ','Could not seal right now: ')+String(e&&e.message||'').slice(0,60));return null}
+  finally{delete sealBusy[d.id]}
+}
+function sealRow(d){if(!d||d.kind==='estimate'||!menuCloudOK())return '';
+  if(sealOk(d))return `<div class="group"><div class="kv"><span>${rt('Sello BSV','BSV seal')}</span><span style="color:var(--green,#3ddc97)">✓ ${new Date(d.seal.at).toLocaleDateString(lang==='es'?'es-MX':'en-US')}${d.seal.net==='test'?' · testnet':''}</span></div><a class="btn" style="margin-top:8px" href="${esc(sealLink(d))}" target="_blank" rel="noopener">${rt('Verificar sello','Verify seal')}</a></div>`;
+  return `<div class="group"><div class="kv"><span>${rt('Sello BSV','BSV seal')}</span><span class="small">${d.seal?rt('Cambió después del sello','Changed after sealing'):rt('Sin sellar','Not sealed')}</span></div><button class="btn" style="margin-top:8px" data-act="sealNow" data-id="${d.id}">${rt('Sellar en BSV','Seal on BSV')}</button></div>`}
 function productsSheet(){return{live:true,render(){
   const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
   return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+ ${rt('Nuevo','New')}</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row" style="align-items:center;gap:12px">${p.photo?`<img src="${p.photo}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none">`:`<div style="width:56px;height:56px;border-radius:10px;border:1px dashed var(--line);flex:none"></div>`}<button class="main" style="background:none;border:0;text-align:left;padding:0;color:var(--fg)" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}${p.out?' · '+rt('Agotado','Sold out'):''}</div></button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="font-size:22px;min-width:44px;min-height:44px">⋮</button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
@@ -1641,10 +1668,12 @@ async function buildPDF(d){
   y=Math.max(ly,ry)+18;
   doc.autoTable({startY:y,margin:{left:M,right:M},head:[['Description','Qty','Unit','Rate','Amount']],body:(d.items||[]).map(i=>[i.desc,String(i.qty),i.unit||'',money(i.rate),money((+i.qty||0)*(+i.rate||0))]),headStyles:{fillColor:[0,0,0],textColor:255},styles:{fontSize:10,cellPadding:6},columnStyles:{1:{halign:'right'},3:{halign:'right'},4:{halign:'right'}}});
   y=doc.lastAutoTable.finalY+20;
+  var sealBottom=0;
+  if(!isEst&&sealOk(d)){sealBottom=y+96;const cx=M+46,cy=y+36,rr=42,g=[46,125,91];doc.setDrawColor(...g);doc.setLineWidth(1.6);doc.circle(cx,cy,rr);doc.setLineWidth(0.6);doc.circle(cx,cy,rr-5);doc.setTextColor(...g);doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.text('SELLADO EN BSV',cx,cy-11,{align:'center'});doc.setFontSize(6);doc.text('SEALED ON BSV',cx,cy-3,{align:'center'});doc.setFont('courier','bold');doc.setFontSize(6.5);doc.text('tx '+d.seal.txid.slice(0,12),cx,cy+7,{align:'center'});doc.setFont('helvetica','normal');doc.text(new Date(d.seal.at).toISOString().slice(0,10)+(d.seal.net==='test'?' testnet':''),cx,cy+15,{align:'center'});doc.setTextColor(0);doc.setDrawColor(200);doc.setLineWidth(0.5);doc.rect(M+100,y+2,68,68);drawQR(doc,sealLink(d),M+102,y+4,64,'L');doc.setFontSize(6.5);doc.setTextColor(90);doc.text('Verificar / Verify',M+134,y+80,{align:'center'});doc.setTextColor(0);doc.setDrawColor(0);doc.setLineWidth(1)}
   const line=(l,v,b)=>{doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(b?12:10);doc.text(l,W-M-160,y);doc.text(v,W-M,y,{align:'right'});y+=b?20:16};
   line('Subtotal',money(c.sub));if(c.disc)line('Discount','-'+money(c.disc));if(c.tax)line('Tax',money(c.tax));line('Total',money(c.total),true);
   if(!isEst){line('Paid','-'+money(c.paid));line('Balance due',money(c.balance),true)}
-  y+=8;doc.setFont('helvetica','normal');doc.setFontSize(10);
+  y+=8;if(sealBottom&&y<sealBottom)y=sealBottom;doc.setFont('helvetica','normal');doc.setFontSize(10);
   const need=h=>{if(y+h>H-50){doc.addPage();y=M}};
   if(d.payInstr){const tl=doc.splitTextToSize(d.payInstr,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text('Payment instructions',M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13+10}
   if(!isEst&&c.balance>0.005){
@@ -1699,7 +1728,7 @@ async function sharePDF(d){
 /* save right now: the mail / SMS / WhatsApp app takes over the screen, so the normal delayed save could be lost */
 function flushSave(){clearTimeout(saveT);try{S.meta=S.meta||{};S.meta.savedAt=Date.now();localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){}}
 
-function markSent(d){d.sent=true;const r=S.docs[d.id];if(r&&r!==d)r.sent=true;flushSave();render()}
+function markSent(d){d.sent=true;const r=S.docs[d.id];if(r&&r!==d)r.sent=true;flushSave();render();sealDoc(r||d,true)}
 /* send by email / text: share the PDF where the phone allows it, otherwise download it and open the mail or SMS app with the message ready */
 async function sendDoc(d,how,o){
   o=o||{};const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
@@ -1891,6 +1920,7 @@ const A={
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
   chainConfirm:e=>chainConfirm(e.dataset.id),
   storeBsv:()=>storeBsvStart(),
+  sealNow:async e=>{const d=S.docs[e.dataset.id];sealOff=false;await sealDoc(d,false);redrawSheet()},
   sharePayLink:e=>sharePayLink(S.docs[e.dataset.id]),
   receipt:e=>receiptPDF(S.docs[e.dataset.id],e.dataset.p),
   guide:()=>showSheet(guideSheet()),
