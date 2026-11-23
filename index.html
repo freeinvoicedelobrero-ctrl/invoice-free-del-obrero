@@ -650,6 +650,7 @@ function paySection(d){
     ${!p.fiat?`<p class="small" style="margin:0">${t('memoNote',esc(d.number))}</p>`:''}`;
   }
   return `<div class="group"><div class="gl">${t('payTitle')}</div>
+  <button class="btn primary" style="margin:6px 0 10px" data-act="sharePayLink" data-id="${d.id}">${rt('Compartir enlace de pago','Share pay link')}</button>
   <div class="paytabs">${ms.map(x=>`<button class="chip" data-act="payTab" data-v="${x.id}" aria-pressed="${x.id===payTab}">${esc(x.name||PRESETS[x.type]?.label||x.type)}</button>`).join('')}</div>
   <div class="paybox">${body}</div></div>`;
 }
@@ -846,7 +847,7 @@ function defaultMsg(d){
   const c=calc(d),p=S.profile,isEst=d.kind==='estimate',cl=S.clients[d.clientId]||{};
   const hi=cl.name?`Hi ${cl.name},`:'Hi,';
   return isEst?`${hi}\n\nAttached is estimate EST ${d.number} for ${money(c.total)}.\n\nThank you,\n${p.company||''}${p.phone?'\n'+p.phone:''}`
-  :`${hi}\n\nAttached is invoice #${d.number} for ${money(c.total)}. Balance due: ${money(c.balance)} by ${enDate(c.due)}.${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nThank you for your business,\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
+  :`${hi}\n\nAttached is invoice #${d.number} for ${money(c.total)}. Balance due: ${money(c.balance)} by ${enDate(c.due)}.${payLink(d)?'\n\nPay here / Paga aquí: '+payLink(d):''}${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nThank you for your business,\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
 }
 let smMode='invoice';
 const enDate=iso=>{try{return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch(e){return iso}};
@@ -854,7 +855,7 @@ function reminderMsg(d){
   const c=calc(d),p=S.profile,cl=S.clients[d.clientId]||{};
   const n=daysBetween(todayISO(),c.due);
   const when=n<0?`was due on ${enDate(c.due)} (${-n} day${-n===1?'':'s'} ago)`:n===0?'is due today':`is due on ${enDate(c.due)}`;
-  return `${cl.name?'Hi '+cl.name+',':'Hi,'}\n\nThis is a friendly reminder that invoice #${d.number} for ${money(c.total)} ${when}. Balance due: ${money(c.balance)}.${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nIf you already sent the payment, thank you and please disregard this message.\n\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
+  return `${cl.name?'Hi '+cl.name+',':'Hi,'}\n\nThis is a friendly reminder that invoice #${d.number} for ${money(c.total)} ${when}. Balance due: ${money(c.balance)}.${payLink(d)?'\n\nPay here / Paga aquí: '+payLink(d):''}${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nIf you already sent the payment, thank you and please disregard this message.\n\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
 }
 function sendPane(){
   const d=D,cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
@@ -1384,6 +1385,19 @@ async function receiptPDF(d,pid){
   doc.save(name);
 }
 
+/* ---------- one pay link per invoice: a single QR opens pay.html with every payment method. Crypto amounts are calculated when the customer pays. ---------- */
+function payData(d){
+  const c=calc(d);const rank=m=>m.type==='stripe'?0:PRESETS[m.type]?.fiat?1:2;
+  const ms=enabledMethods().filter(m=>PRESETS[m.type]?.ach||(payAddress(m,d)||'').trim()).sort((a,b)=>rank(a)-rank(b)||(a.order||0)-(b.order||0)).map(m=>{
+    const pr=PRESETS[m.type]||{};const v=pr.ach?achText(m):m.type==='stripe'?(m.address||'').trim().replace(/[?#].*$/,''):(payAddress(m,d)||'').trim();
+    const nm=(m.name||'').trim();const row=[m.type,nm&&nm!==pr.label?nm:'',v];if(m.network)row.push(m.network);return row});
+  return {v:1,s:(S.profile.company||'').trim(),n:String(d.number),mm:payRef(d),b:r2(Math.max(0,c.balance)).toFixed(2),cur:ccy(),m:ms};
+}
+function payLink(d){if(!d||d.kind==='estimate')return '';const o=payData(d);if(!o.m.length||+o.b<=0)return '';return new URL('pay.html',location.href).href.split(/[?#]/)[0]+'#'+b64url(JSON.stringify(o))}
+async function sharePayLink(d){const l=payLink(d);if(!l){toast(rt('Agrega un método de pago en Mi cartera','Add a payment method in My wallet'));return}
+  const txt=rt('Paga la factura #','Pay invoice #')+d.number+' · '+money(calc(d).balance);
+  try{if(navigator.share){await navigator.share({title:txt,text:txt,url:l});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(l);toast(rt('Enlace copiado','Link copied'))}catch(e){}}
 function productsSheet(){return{live:true,render(){
   const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
   return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+ ${rt('Nuevo','New')}</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row" style="align-items:center;gap:12px">${p.photo?`<img src="${p.photo}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none">`:`<div style="width:56px;height:56px;border-radius:10px;border:1px dashed var(--line);flex:none"></div>`}<button class="main" style="background:none;border:0;text-align:left;padding:0;color:var(--fg)" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}${p.out?' · '+rt('Agotado','Sold out'):''}</div></button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="font-size:22px;min-width:44px;min-height:44px">⋮</button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
@@ -1635,8 +1649,8 @@ async function buildPDF(d){
       need(52);doc.setFont('helvetica','bold');doc.text('Pay with / Pagar con',M,y);y+=14;doc.setFontSize(9);doc.text('Memo / Referencia: '+payRef(d),M,y);doc.setFont('helvetica','normal');doc.text('  (escríbelo en la nota de tu pago / write it in your payment note)',M+doc.getTextWidth('Memo / Referencia: '+payRef(d))+6,y);y+=13;
       const crypto=ms.filter(m=>!PRESETS[m.type]?.fiat);
       ms.forEach(m=>{const pr=PRESETS[m.type]||{};const lk=pr.link?payURI(m,d,null):null;const a=pr.ach?achText(m).replace(/\n/g,' · '):lk?'Pay now / Pagar ahora (card or bank / tarjeta o banco): '+lk:payAddress(m,d);const tl=doc.splitTextToSize(`${m.name||pr.label}${m.network?' ('+m.network+')':''}: ${a}`,W-2*M);need(tl.length*11+4);if(lk){doc.setTextColor(0,0,200);doc.text(tl,M,y);doc.link(M,y-9,W-2*M,tl.length*11,{url:lk});doc.setTextColor(0)}else doc.text(tl,M,y);y+=tl.length*11+3});
-      const qrs=[...ms.filter(m=>PRESETS[m.type]?.link),...crypto].filter(m=>payURI(m,d,null)).slice(0,2);
-      if(qrs.length){y+=6;need(130);qrs.forEach((m,k)=>{const pr=PRESETS[m.type]||{};const amt=coinAmount(m,c.balance);const uri=payURI(m,d,amt);const x=M+k*170;doc.setDrawColor(200);doc.rect(x,y,110,110);drawQR(doc,uri,x+5,y+5,100);doc.setFontSize(8);doc.text(pr.link?`${m.name||pr.label} · ${money(c.balance)}`:`${m.name||pr.label}${amt?' · '+amt+' '+(pr.sym||''):''}`,x,y+122)});y+=148}
+      const pl=payLink(d);
+      if(pl){y+=6;need(176);doc.setDrawColor(200);doc.rect(M,y,160,160);drawQR(doc,pl,M+5,y+5,150,'L');doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text('Escanea para pagar / Scan to pay',M+178,y+26);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(doc.splitTextToSize('Tarjeta, banco o cripto. El monto en cripto se calcula al momento de pagar. / Card, bank or crypto. Crypto amounts are calculated when you pay.',W-2*M-178),M+178,y+44);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(money(c.balance)+'   ·   Memo: '+payRef(d),M+178,y+92);doc.setFont('helvetica','normal');y+=172}
       doc.setFontSize(10);
     }
   }
@@ -1873,6 +1887,7 @@ const A={
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
   chainConfirm:e=>chainConfirm(e.dataset.id),
   storeBsv:()=>storeBsvStart(),
+  sharePayLink:e=>sharePayLink(S.docs[e.dataset.id]),
   receipt:e=>receiptPDF(S.docs[e.dataset.id],e.dataset.p),
   guide:()=>showSheet(guideSheet()),
   guideStep:e=>showSheet(guideStepSheet(e.dataset.k)),

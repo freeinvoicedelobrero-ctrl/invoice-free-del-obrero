@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>Pagar factura</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:15px;font-weight:600;color:#9AA0AB;margin:4px 0 2px;overflow-wrap:anywhere}
+.due{font-size:40px;font-weight:800;margin:4px 0;font-variant-numeric:tabular-nums}
+.sub{color:#9AA0AB;font-size:14px;margin:0 0 6px}
+.memo{display:inline-flex;align-items:center;gap:8px;border:1px solid #26292F;border-radius:999px;padding:6px 12px;font-size:14px;margin:6px 0 18px}
+.memo b{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.5px}
+.opt{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;margin-bottom:10px;padding:12px 16px;border-radius:14px;border:1px solid #26292F;background:#0E0F12;color:#fff;font-size:17px;font-weight:600;text-align:left;cursor:pointer}
+.opt.main{background:#4D6BFF;border-color:#4D6BFF}
+.opt small{display:block;font-weight:400;font-size:13px;color:#C9CDD6}
+.opt[aria-expanded="true"]{border-color:#4D6BFF}
+.panel{background:#0E0F12;border:1px solid #26292F;border-radius:14px;padding:14px;margin:-4px 0 14px}
+.qr{background:#fff;border-radius:12px;padding:10px;width:220px;max-width:100%;margin:0 auto 12px}
+.qr svg{display:block;width:100%;height:auto}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #1c1f24;font-variant-numeric:tabular-nums}
+.kv span:first-child{color:#9AA0AB}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;overflow-wrap:anywhere;white-space:pre-wrap;margin:10px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn{flex:1;min-width:140px;min-height:46px;border-radius:12px;border:1px solid #26292F;background:#17191E;color:#fff;font-size:15px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;cursor:pointer}
+.btn.p{background:#4D6BFF;border-color:#4D6BFF}
+.note{color:#E0A83A;font-size:13px;margin:10px 0 0}
+.small{color:#9AA0AB;font-size:13px;margin:8px 0 0}
+.bad{border:1px solid #E0A83A;color:#E0A83A;border-radius:12px;padding:14px}
+.foot{color:#9AA0AB;font-size:12px;text-align:center;margin-top:22px}
+:focus-visible{outline:2px solid #4D6BFF;outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+/* Pay page for one invoice. Everything travels in the link (after #): seller, invoice number, memo, balance and payment methods.
+   Money goes straight from the customer to the seller; this page never touches it. Crypto amounts use the price at the moment of paying. */
+(function(){
+  var es=(navigator.language||'es').toLowerCase().indexOf('es')===0;
+  var T=es?{title:'Pagar factura',inv:'Factura',to:'Para',memo:'Memo',memoHow:'Escríbelo en la nota de tu pago.',bad:'Este enlace de pago no es válido o está incompleto. Pide uno nuevo.',none:'Esta factura no tiene métodos de pago.',card:'Pagar con tarjeta o banco',cardSub:'Tarjeta de débito, crédito o cuenta de banco (ACH)',cardHow:'En la página de pago escribe este monto exacto:',open:'Abrir página de pago',copyAddr:'Copiar dirección',copyAmt:'Copiar monto',copy:'Copiar',copied:'Copiado',openWallet:'Abrir billetera',amount:'Monto',price:'Precio al momento',noPrice:'No pude obtener el precio ahora. Revisa tu Internet o pregunta el monto al vendedor.',loading:'Calculando monto…',sendOnly:'Envía solo por la red ',details:'Datos',payTo:'Paga a',crypto:'Cripto',stableNote:'1 a 1 con el dólar.',paid:'Ya pagué',paidHow:'Gracias. Avísale al vendedor y comparte el número de transacción o el comprobante.',foot:'Pagos directos al vendedor. Invoice Free del Obrero no recibe ni guarda tu dinero.'}
+           :{title:'Pay invoice',inv:'Invoice',to:'To',memo:'Memo',memoHow:'Write it in your payment note.',bad:'This payment link is not valid or is incomplete. Ask for a new one.',none:'This invoice has no payment methods.',card:'Pay with card or bank',cardSub:'Debit, credit card or bank account (ACH)',cardHow:'On the payment page, enter this exact amount:',open:'Open payment page',copyAddr:'Copy address',copyAmt:'Copy amount',copy:'Copy',copied:'Copied',openWallet:'Open wallet',amount:'Amount',price:'Price right now',noPrice:'Could not get the price right now. Check your connection or ask the seller for the amount.',loading:'Calculating amount…',sendOnly:'Send only on the network ',details:'Details',payTo:'Pay to',crypto:'Crypto',stableNote:'1 to 1 with the dollar.',paid:'I already paid',paidHow:'Thank you. Let the seller know and share the transaction number or receipt.',foot:'Payments go directly to the seller. Invoice Free del Obrero never receives or holds your money.'};
+  document.documentElement.lang=es?'es':'en';document.title=T.title;
+  var app=document.getElementById('app');
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function fail(msg){app.textContent='';app.appendChild(el('h1',null,T.title));app.appendChild(el('div','bad',msg))}
+  var o=null;
+  try{var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';o=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){o=null}
+  if(!o||o.v!==1||!o.n||!Array.isArray(o.m)||!/^\d+(\.\d{1,2})?$/.test(String(o.b))){fail(T.bad);return}
+  var cur=/^[A-Z]{3}$/.test(o.cur)?o.cur:'USD',bal=+o.b,memo=String(o.mm||'').replace(/[^A-Za-z0-9-]/g,'').slice(0,24),seller=String(o.s||'').slice(0,80);
+  function money(v){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:cur}).format(v)}catch(e){return cur+' '+(+v).toFixed(2)}}
+  /* what this page knows about each method: label, coin symbol, price id, decimals */
+  var P={stripe:{l:'Stripe',k:'card'},zelle:{l:'Zelle',k:'fiat'},cashapp:{l:'Cash App',k:'fiat'},venmo:{l:'Venmo',k:'fiat'},paypal:{l:'PayPal',k:'fiat'},ach:{l:es?'Transferencia bancaria (ACH)':'Bank transfer (ACH)',k:'fiat'},
+    btc:{l:'Bitcoin',s:'BTC',cg:'bitcoin',dp:8},bsv:{l:'Bitcoin SV',s:'BSV',cg:'bitcoin-cash-sv',dp:8},ln:{l:'Bitcoin Lightning',s:'BTC'},xmr:{l:'Monero',s:'XMR',cg:'monero',dp:6},eth:{l:'Ethereum',s:'ETH',cg:'ethereum',dp:6},
+    ltc:{l:'Litecoin',s:'LTC',cg:'litecoin',dp:6},sol:{l:'Solana',s:'SOL',cg:'solana',dp:6},usdc:{l:'USDC',s:'USDC',st:1},usdt:{l:'USDT',s:'USDT',st:1},custom:{l:es?'Otra moneda':'Other coin'}};
+  var ms=o.m.filter(function(r){return Array.isArray(r)&&P[r[0]]&&typeof r[2]==='string'&&r[2].trim()}).map(function(r){return{t:r[0],nm:String(r[1]||'').slice(0,40),v:r[2].trim().slice(0,600),net:String(r[3]||'').slice(0,20)}});
+  function uri(m,amt){var a=m.v,n=encodeURIComponent(memo);
+    switch(m.t){case 'btc':return 'bitcoin:'+a+(amt?'?amount='+amt+'&label='+n:'');case 'ln':return 'lightning:'+a;case 'xmr':return 'monero:'+a+(amt?'?tx_amount='+amt+'&tx_description='+n:'');
+      case 'eth':return 'ethereum:'+a;case 'ltc':return 'litecoin:'+a+(amt?'?amount='+amt:'');case 'sol':return 'solana:'+a+(amt?'?amount='+amt:'');case 'bsv':return a;
+      case 'stripe':return /^https:\/\/buy\.stripe\.com\/[A-Za-z0-9_]+\/?$/.test(a)?a+'?client_reference_id='+n:null;
+      case 'cashapp':return 'https://cash.app/$'+encodeURIComponent(a.replace(/^\$/,''))+'/'+bal.toFixed(2);
+      case 'venmo':return 'https://venmo.com/u/'+encodeURIComponent(a.replace(/^@/,''));
+      case 'paypal':{var u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'').replace(/[^A-Za-z0-9_.-]/g,'');return u?'https://paypal.me/'+u+'/'+bal.toFixed(2)+cur:null}
+      default:return null}}
+  function qr(text){if(!window.qrcode||!text)return null;try{var q=qrcode(0,'M');q.addData(text);q.make();var d=el('div','qr');d.innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true});return d}catch(e){return null}}
+  function copyBtn(label,val){var b=el('button','btn',label);b.type='button';b.onclick=function(){var done=function(){b.textContent=T.copied;setTimeout(function(){b.textContent=label},1500)};if(navigator.clipboard)navigator.clipboard.writeText(val).then(done,function(){});};return b}
+  function kv(k,v){var d=el('div','kv');d.appendChild(el('span',null,k));d.appendChild(el('span',null,v));return d}
+  var prices=null,priceTried=false,priceCbs=[];
+  function getPrices(cb){if(prices||priceTried){cb(prices);if(!prices&&!priceTried)priceCbs.push(cb);return}priceCbs.push(cb);if(priceCbs.length>1)return;
+    var ids=ms.map(function(m){return P[m.t].cg}).filter(Boolean).join(',');if(!ids){priceTried=true;priceCbs.forEach(function(f){f(null)});return}
+    fetch('https://api.coingecko.com/api/v3/simple/price?vs_currencies='+cur.toLowerCase()+'&ids='+ids).then(function(r){return r.ok?r.json():null}).then(function(j){prices=j}).catch(function(){prices=null}).then(function(){priceTried=true;var c=priceCbs;priceCbs=[];c.forEach(function(f){f(prices)})})}
+  /* header */
+  app.textContent='';
+  app.appendChild(el('h1',null,(seller?T.payTo+' '+seller+' · ':'')+T.inv+' #'+String(o.n).slice(0,20)));
+  app.appendChild(el('div','due',money(bal)));
+  if(memo){var mp=el('div','memo');mp.appendChild(el('span',null,T.memo));mp.appendChild(el('b',null,memo));app.appendChild(mp)}
+  if(!ms.length){app.appendChild(el('div','bad',T.none));return}
+  var open=null;
+  function panelFor(m){var p=el('div','panel'),pr=P[m.t];
+    if(m.t==='stripe'){var u=uri(m);p.appendChild(el('p','small',T.cardHow));p.appendChild(kv(T.amount,money(bal)));var row=el('div','row');row.appendChild(copyBtn(T.copyAmt,bal.toFixed(2)));if(u){var a=el('a','btn p',T.open);a.href=u;a.target='_blank';a.rel='noopener';row.appendChild(a)}p.appendChild(row);return p}
+    if(pr.k==='fiat'){p.appendChild(kv(T.amount,money(bal)));p.appendChild(el('div','mono',m.v));var u2=uri(m);var r2=el('div','row');r2.appendChild(copyBtn(m.t==='ach'?T.copy:T.copyAddr,m.v));r2.appendChild(copyBtn(T.copyAmt,bal.toFixed(2)));if(u2){var a2=el('a','btn p',(es?'Abrir ':'Open ')+pr.l);a2.href=u2;a2.target='_blank';a2.rel='noopener';r2.appendChild(a2)}p.appendChild(r2);if(memo)p.appendChild(el('p','small',T.memo+': '+memo+'. '+T.memoHow));return p}
+    /* crypto */
+    var box=el('div');p.appendChild(box);
+    function draw(amt,px){box.textContent='';var u=uri(m,amt);var q=qr(u||m.v);if(q)box.appendChild(q);
+      box.appendChild(kv(cur,money(bal)));box.appendChild(kv(pr.s||T.crypto,amt||'—'));if(px)box.appendChild(kv(T.price,money(px)+' / '+pr.s));
+      if(pr.st)box.appendChild(el('p','small',T.stableNote));if(m.net)box.appendChild(el('p','note',T.sendOnly+m.net+'.'));
+      if(!amt&&!pr.st&&pr.cg)box.appendChild(el('p','note',T.noPrice));
+      box.appendChild(el('div','mono',m.v));var row=el('div','row');row.appendChild(copyBtn(T.copyAddr,m.v));if(amt)row.appendChild(copyBtn(T.copyAmt,amt));
+      if(u&&!/^https?:/.test(u)&&m.t!=='bsv'){var a=el('a','btn p',T.openWallet);a.href=u;row.appendChild(a)}box.appendChild(row);
+      if(memo)box.appendChild(el('p','small',T.memo+': '+memo+'. '+T.memoHow))}
+    if(pr.st){draw(cur==='USD'?bal.toFixed(2):null)}
+    else if(pr.cg){box.appendChild(el('p','small',T.loading));getPrices(function(j){var px=j&&j[pr.cg]&&j[pr.cg][cur.toLowerCase()];draw(px?(bal/px).toFixed(pr.dp):null,px||null)})}
+    else draw(null);
+    return p}
+  ms.forEach(function(m,i){var pr=P[m.t];var b=el('button','opt'+(m.t==='stripe'?' main':''));b.type='button';b.setAttribute('aria-expanded','false');
+    var lab=el('span');lab.appendChild(document.createTextNode(m.t==='stripe'?T.card:(m.nm||pr.l)));if(m.t==='stripe')lab.appendChild(el('small',null,T.cardSub));else if(pr.s)lab.appendChild(el('small',null,pr.s+(m.net?' · '+m.net:'')));
+    b.appendChild(lab);b.appendChild(el('span',null,'›'));var holder=el('div');
+    b.onclick=function(){var was=b.getAttribute('aria-expanded')==='true';if(open){open.b.setAttribute('aria-expanded','false');open.h.textContent=''}open=null;if(was)return;b.setAttribute('aria-expanded','true');holder.appendChild(panelFor(m));open={b:b,h:holder}};
+    app.appendChild(b);app.appendChild(holder)});
+  if(ms.length===1)app.querySelector('.opt').click();
+  var paid=el('button','btn',T.paid);paid.type='button';paid.style.marginTop='8px';paid.style.width='100%';paid.onclick=function(){paid.replaceWith(el('p','small',T.paidHow))};app.appendChild(paid);
+  app.appendChild(el('p','foot',T.foot));
+})();
+</script>
+</body>
+</html>
