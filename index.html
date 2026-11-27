@@ -189,6 +189,20 @@ textarea.in{min-height:84px;resize:vertical}
 .paper .ptot .pbig{font-weight:800;font-size:15px}
 .btns .row2{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}.btns .row2 .btn{display:flex;align-items:center;justify-content:center;gap:8px}.btns .row2 svg{width:20px;height:20px}
 .hero{padding:18px 0 6px}
+.steps{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 10px 12px;margin:12px 0 4px}
+.steps .sr{display:flex;align-items:flex-start}
+.steps .st{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;min-width:0}
+.steps .st::before{content:"";position:absolute;top:17px;right:50%;width:100%;height:3px;background:var(--line);z-index:0}
+.steps .st:first-child::before{display:none}
+.steps .st.on::before{background:#2E7D5B}
+.steps .dot{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--bg,#000);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;color:var(--muted)}
+.steps .st.on .dot{background:#163d2c;border-color:#2E7D5B;color:#3ddc97}
+.steps .st.now .dot{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 4px rgba(77,107,255,.18)}
+.steps .dot svg{width:18px;height:18px}
+.steps .sl{font-size:11.5px;font-weight:600;margin-top:6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.steps .sd{font-size:10.5px;color:var(--muted);text-align:center;white-space:nowrap}
+.steps .sh{font-size:17px;font-weight:700;margin:12px 4px 0}
+.steps .sh small{display:block;font-size:12.5px;font-weight:400;color:var(--muted);margin-top:2px}
 .hero .no{font-family:var(--display);font-weight:700;font-size:34px;line-height:1}
 .hero .due{color:var(--muted);margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
@@ -697,6 +711,23 @@ function methodEditor(m){M=JSON.parse(JSON.stringify(m||{id:uid(),type:'btc',nam
 }}}
 
 /* ---------- invoice / estimate detail ---------- */
+/* status line: 5 steps that turn green with their date, like a wallet's transaction tracker */
+function stepDate(v){if(!v)return '';const dt=typeof v==='number'?new Date(v):new Date(String(v).length<=10?v+'T12:00:00':v);if(isNaN(dt))return '';return dt.toLocaleDateString(lang==='es'?'es-MX':'en-US',{month:'short',day:'numeric'})}
+function docSteps(d){
+  const c=calc(d),isEst=d.kind==='estimate',pays=(d.payments||[]).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const ok='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  let st;
+  if(isEst)st=[[rt('Creado','Created'),d.date],[rt('Enviado','Sent'),d.sent&&(d.sentAt||true)],[rt('Firmado','Signed'),d.sig&&d.sig.at],[rt('Aceptado','Accepted'),(d.accepted||d.convertedTo)&&(d.acceptedAt||true)],[rt('Factura','Invoiced'),d.convertedTo&&(S.docs[d.convertedTo]?S.docs[d.convertedTo].date:true)]];
+  else{const full=c.total>0&&c.balance<=0.005;st=[[rt('Creada','Created'),d.date],[rt('Enviada','Sent'),d.sent&&(d.sentAt||true)]];
+    if(menuCloudOK())st.push([rt('Sellada','Sealed'),sealOk(d)&&d.seal.at]);
+    st.push([rt('Abono','Deposit'),pays.length&&pays[0].date],[rt('Pagada','Paid'),full&&(pays.length?pays[pays.length-1].date:true)])}
+  const done=st.map(x=>!!x[1]);let last=-1;done.forEach((v,i)=>{if(v)last=i});
+  const now=last+1<st.length?last+1:-1;
+  const s=status(d);
+  const head=isEst?(d.convertedTo?[rt('Convertido en factura','Converted to invoice'),'']:d.accepted?[rt('Aceptado por el cliente','Accepted by the customer'),rt('Listo para hacer la factura','Ready to invoice')]:d.sig?[rt('Firmado por el cliente','Signed by the customer'),'']:d.sent?[rt('Esperando respuesta','Waiting for the customer'),'']:[rt('Borrador','Draft'),rt('Toca Enviar cuando esté listo','Tap Send when ready')])
+   :s==='paid'?[rt('Pago completado','Payment completed'),money(c.total)]:s==='overdue'?[rt('Pago vencido','Payment overdue'),rt('Saldo','Balance')+' '+money(c.balance)]:s==='partial'?[rt('Pago parcial recibido','Partial payment received'),rt('Falta','Remaining')+' '+money(c.balance)]:s==='unsent'?[rt('Sin enviar','Not sent yet'),rt('Toca Enviar para mandarla','Tap Send to deliver it')]:[rt('Esperando pago','Waiting for payment'),money(c.balance)];
+  return `<div class="steps" role="list" aria-label="${rt('Estado','Status')}"><div class="sr">${st.map(([l,v],i)=>`<div class="st${done[i]?' on':''}${i===now?' now':''}" role="listitem" aria-label="${esc(l)}${done[i]?' ✓':''}"><div class="dot">${done[i]?ok:`<span style="font-size:13px;font-weight:700">${i+1}</span>`}</div><div class="sl">${esc(l)}</div><div class="sd">${done[i]&&v!==true?stepDate(v):'&nbsp;'}</div></div>`).join('')}</div><div class="sh">${esc(head[0])}${head[1]?`<small>${esc(head[1])}</small>`:''}</div></div>`;
+}
 function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&d.sig){const k=d.id+':'+(d.updatedAt||0);if(SIGCHK[k]===undefined){SIGCHK[k]='?';docHash(d).then(h=>{SIGCHK[k]=h!==d.sig.hash;if(SIGCHK[k])redrawSheet()})}}},render(){
   const d=S.docs[id];if(!d)return sheetHead('')+`<div class="wrap"><div class="empty">${t('noData')}</div></div>`;
   const c=calc(d),s=status(d),cl=S.clients[d.clientId]||{},j=jobOf(d);
@@ -704,6 +735,7 @@ function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&
   const title=(isEst?t('estimate')+' EST ':t('invoice')+' #')+d.number;
   return sheetHead(title,{right:`<button class="textbtn" data-act="editDoc" data-id="${id}">${t('edit')}</button>`})+`<div class="wrap sheet-b">
   <div class="hero"><div class="no num">${money(isEst?c.total:c.balance)}</div><div class="due">${isEst?t('total'):t('balance')} ${badge(s)} ${dueText(d)}</div></div>
+  ${docSteps(d)}
   <div class="group"><div class="kv"><span>${t('billTo')}</span><span>${esc(cl.name||'—')}</span></div>
   ${j?`<div class="kv"><span>${t('job')}</span><span>${esc(j.name)}</span></div>`:''}
   ${j&&j.address?`<div class="kv"><span>${t('jobSite')}</span><span>${esc(j.address)}<br><a class="linkbtn" style="padding:4px 0" href="${mapsURL(j.address)}" target="_blank" rel="noopener">${ic('pin')} ${t('openMaps')}</a></span></div>`:''}
@@ -914,7 +946,7 @@ function saveDocFromEditor(){
   const isNew=D._new;delete D._new;
   D.items=D.items.filter(i=>i.desc||+i.rate);
   D.discountValue=+D.discountValue||0;D.taxRate=+D.taxRate||0;D.dueDays=+D.dueDays||0;D.updatedAt=Date.now();
-  const keepS=S.docs[D.id];if(keepS){D.sent=!!keepS.sent;D.payments=keepS.payments||D.payments;if(keepS.seal)D.seal=keepS.seal}
+  const keepS=S.docs[D.id];if(keepS){D.sent=!!keepS.sent;if(keepS.sentAt)D.sentAt=keepS.sentAt;D.payments=keepS.payments||D.payments;if(keepS.seal)D.seal=keepS.seal}
   S.docs[D.id]=D;
   const n=parseInt(D.number);if(!isNaN(n)){const key=D.kind==='estimate'?'nextEstimate':'nextInvoice';if(n>=(+S.profile[key]||0))S.profile[key]=n+1}
   const id=D.id;D=null;closeSheet();if(isNew)showSheet(docDetail(id));commit();toast(t('saved'));
@@ -1752,14 +1784,14 @@ async function downloadPDF(d){const doc=await buildPDF(d);if(doc)doc.save(pdfNam
 async function sharePDF(d){
   const doc=await buildPDF(d);if(!doc)return;
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
-  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:pdfName(d),text:docText(d).split('\n').slice(0,2).join(' · ')});if(!d.sent){d.sent=true;commit()}return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:pdfName(d),text:docText(d).split('\n').slice(0,2).join(' · ')});if(!d.sent){d.sent=true;d.sentAt=d.sentAt||Date.now();commit()}return}}catch(e){if(e&&e.name==='AbortError')return}
   doc.save(pdfName(d));
 }
 
 /* save right now: the mail / SMS / WhatsApp app takes over the screen, so the normal delayed save could be lost */
 function flushSave(){clearTimeout(saveT);try{S.meta=S.meta||{};S.meta.savedAt=Date.now();localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){}}
 
-function markSent(d){d.sent=true;const r=S.docs[d.id];if(r&&r!==d)r.sent=true;flushSave();render();sealDoc(r||d,true)}
+function markSent(d){d.sent=true;d.sentAt=d.sentAt||Date.now();const r=S.docs[d.id];if(r&&r!==d){r.sent=true;r.sentAt=r.sentAt||d.sentAt}flushSave();render();sealDoc(r||d,true)}
 /* send by email / text: share the PDF where the phone allows it, otherwise download it and open the mail or SMS app with the message ready */
 async function sendDoc(d,how,o){
   o=o||{};const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
@@ -1780,7 +1812,7 @@ async function sendDoc(d,how,o){
     markSent(d)
     window.open('https://wa.me/'+full+'?text='+encodeURIComponent(body),'_blank');
     setTimeout(()=>toast(t('attachNote')),600);
-    if(!d.sent){d.sent=true;commit()}
+    if(!d.sent){d.sent=true;d.sentAt=d.sentAt||Date.now();commit()}
     return;
   }
   doc.save(pdfName(d));
@@ -1793,7 +1825,7 @@ async function sendDoc(d,how,o){
     else{location.href='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body)}
     setTimeout(()=>toast(t('attachNote')),600)}
   else{if(!to)toast(t('noPhone'));location.href='sms:'+to+(/iPhone|iPad/i.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(o.body?body:subj+'\n'+body)}
-  if(!d.sent){d.sent=true;commit()}
+  if(!d.sent){d.sent=true;d.sentAt=d.sentAt||Date.now();commit()}
 }
 
 /* ---------- backup ---------- */
@@ -1904,15 +1936,15 @@ const A={
   clientFilter:e=>{clientFilter=e.dataset.v;redrawSheet()},
   groupJob:e=>{groupJob=e.checked;redrawSheet()},
   pay:e=>showSheet(paySheet(e.dataset.id)),
-  savePay:e=>{const d=S.docs[e.dataset.id];const amt=r2(+$('#p-amt').value);if(!amt)return;d.payments=d.payments||[];d.payments.push({id:uid(),amount:amt,date:$('#p-date').value||todayISO(),method:$('#p-m').value,ref:$('#p-ref').value.trim(),coin:$('#p-coin').value.trim(),txid:$('#p-tx').value.trim(),note:$('#p-note').value.trim(),proof:$('#p-proof').value.trim().slice(0,800),memo:payRef(d),addr:(()=>{const mm=methods().find(x=>(x.name||PRESETS[x.type]?.label)===$('#p-m').value);return mm&&!PRESETS[mm.type]?.fiat?(payAddress(mm,d)||'').trim():''})()});d.sent=true;d.updatedAt=Date.now();closeSheet();commit();toast(t('saved'))},
+  savePay:e=>{const d=S.docs[e.dataset.id];const amt=r2(+$('#p-amt').value);if(!amt)return;d.payments=d.payments||[];d.payments.push({id:uid(),amount:amt,date:$('#p-date').value||todayISO(),method:$('#p-m').value,ref:$('#p-ref').value.trim(),coin:$('#p-coin').value.trim(),txid:$('#p-tx').value.trim(),note:$('#p-note').value.trim(),proof:$('#p-proof').value.trim().slice(0,800),memo:payRef(d),addr:(()=>{const mm=methods().find(x=>(x.name||PRESETS[x.type]?.label)===$('#p-m').value);return mm&&!PRESETS[mm.type]?.fiat?(payAddress(mm,d)||'').trim():''})()});d.sent=true;d.sentAt=d.sentAt||Date.now();d.updatedAt=Date.now();closeSheet();commit();toast(t('saved'))},
   delPay:e=>{const d=S.docs[e.dataset.id];d.payments=(d.payments||[]).filter(p=>p.id!==e.dataset.p);commit()},
-  toggleSent:e=>{const d=S.docs[e.dataset.id];d.sent=!d.sent;commit()},
+  toggleSent:e=>{const d=S.docs[e.dataset.id];d.sent=!d.sent;if(d.sent)d.sentAt=d.sentAt||Date.now();else delete d.sentAt;commit()},
   clientSign:e=>{SIG={mode:'client',id:e.dataset.id};showSheet(sigSheet())},
   mySign:()=>{SIG={mode:'me'};showSheet(sigSheet())},
   sigClear:()=>initPad(),
   sigSave:()=>saveSig(),
   clearClientSig:e=>{const d=S.docs[e.dataset.id];if(!confirm(t('removeClientSig')+'?'))return;delete d.sig;commit()},
-  accept:e=>{S.docs[e.dataset.id].accepted=true;commit()},
+  accept:e=>{const d=S.docs[e.dataset.id];d.accepted=true;d.acceptedAt=d.acceptedAt||Date.now();commit()},
   copyDoc:e=>copyText(docText(S.docs[e.dataset.id])),
   copy:e=>copyText(e.dataset.v),
   pdf:e=>downloadPDF(S.docs[e.dataset.id]),

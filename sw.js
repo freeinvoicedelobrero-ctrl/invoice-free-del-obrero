@@ -1,5 +1,5 @@
 /* Invoice Free del Obrero — offline support. Bump VERSION when you change files. */
-const VERSION = 'obrero-v68';
+const VERSION = 'obrero-v69';
 const SHELL = ['./', './index.html', './menu.html', './recibo.html', './pay.html', './sello.html', './manifest.webmanifest', './roofer.png', './cloud.js', './config.js', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
