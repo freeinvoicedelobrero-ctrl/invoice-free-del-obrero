@@ -133,6 +133,15 @@ svg:not([width]):not([class]){max-width:100%}
 .in:focus{border-color:var(--accent);outline:none}
 textarea.in{min-height:84px;resize:vertical}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#prodPop{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:12px}
+#prodPop[hidden]{display:none}
+#prodPop .pp-card{width:100%;max-width:420px;max-height:92dvh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px 14px;box-shadow:0 12px 36px rgba(0,0,0,.5)}
+#prodPop .pp-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:18px}
+#prodPop .pp-ph{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+#prodPop .pp-ph img,#prodPop .pp-noimg{width:72px;height:72px;border-radius:12px;object-fit:cover;flex:none}
+#prodPop .pp-noimg{border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:24px;opacity:.6}
+#prodPop .pp-noimg[hidden],#prodPop img[hidden]{display:none}
+.card.pedit{border-color:var(--accent)}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
 .item .foot{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
@@ -1097,7 +1106,7 @@ function recurEditor(p){const it=p||{id:uid(),clientId:'',desc:'',unit:'',qty:1,
   <button class="btn primary" data-act="saveRecur" data-id="${it.id}">${t('save')}</button></div>`}}}
 
 /* ---------- store mode: quick sales, price only, no stock. Fully on the phone. ---------- */
-let cart={};
+let cart={},storeEdit=false;
 function cartLines(){return Object.entries(cart).filter(([id,q])=>q>0&&S.products[id])}
 function storeSheet(){return{live:true,store:true,render(){
   const today=todayISO();const sales=Object.values(S.sales||{});
@@ -1105,12 +1114,13 @@ function storeSheet(){return{live:true,store:true,render(){
   const dayTot=todays.reduce((a,s)=>a+s.total,0);
   const products=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
   const lines=cartLines();const total=r2(lines.reduce((a,[id,q])=>a+S.products[id].price*q,0));
-  return sheetHead(esc(storeTitle()),{close:true,right:`<button class="textbtn" data-act="productsOpen">${rt('Productos','Products')}</button>`})+`<div class="wrap sheet-b">
+  return sheetHead(esc(storeTitle()),{close:true,right:`<button class="textbtn" data-act="storeEditToggle">${storeEdit?rt('Listo','Done'):'✎ '+rt('Editar','Edit')}</button>`})+`<div class="wrap sheet-b">
   <div class="btns" style="margin:12px 0 0"><button class="btn" data-act="storeName">✎ ${rt('Nombre y horario','Name and hours')}</button><button class="btn" data-act="menuOpen">${rt('Menú con QR','Menu with QR')}</button></div>
   ${menuCloudOK()&&S.profile.menuId?`<button class="btn ${newOrders()?'primary':''}" style="margin-top:10px" data-act="ordersOpen">${rt('Pedidos','Orders')}${newOrders()?' ('+newOrders()+' '+rt('nuevos','new')+')':''}</button>`:''}
   ${storeHours().mode==='hours'?`<p class="small" style="margin:10px 0 0">${storeOpenNow()?rt('Abierto ahora','Open now'):rt('Cerrado ahora','Closed now')} · ${esc(storeHours().open)}–${esc(storeHours().close)}</p>`:''}
   <div class="cards" style="margin-top:12px"><div class="card good"><span class="lbl">${rt('Vendido hoy','Sold today')}</span><span class="val num">${money(dayTot)}</span></div><div class="card"><span class="lbl">${rt('Ventas hoy','Sales today')}</span><span class="val num">${todays.length}</span></div></div>
-  ${products.length?`<div class="grid2" style="margin-top:12px">${products.map(p=>{const q=cart[p.id]||0;return `<div style="position:relative"><button class="card" data-act="addCart" data-id="${p.id}">${p.photo?`<img src="${p.photo}" alt="" style="width:100%;height:84px;object-fit:cover;border-radius:10px">`:''}<span class="lbl">${esc(p.name)}</span><span class="val num">${money(p.price)}</span>${p.out?`<span class="small" style="color:var(--warn,#E0A83A)">${rt('Agotado','Sold out')}</span>`:''}${q?`<span class="small num">× ${q}</span>`:''}</button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="position:absolute;top:6px;right:6px;background:var(--surface-2);border-radius:50%;width:36px;height:36px;font-size:20px">⋮</button></div>`}).join('')}</div>`:`<div class="empty" style="margin-top:20px">${rt('Agrega tus productos con el botón Productos.','Add your products with the Products button.')}</div>`}
+  ${storeEdit?`<p class="small" style="margin:12px 0 0">${rt('Toca un producto para cambiarlo o borrarlo. Toca Listo para volver a vender.','Tap a product to change or delete it. Tap Done to go back to selling.')}</p>`:''}
+  ${products.length||storeEdit?`<div class="grid2" style="margin-top:12px">${storeEdit?`<button class="card" data-act="newProduct" style="align-items:center;justify-content:center;border-style:dashed;min-height:96px"><span style="font-size:28px;line-height:1">＋</span><span class="lbl">${rt('Nuevo producto','New product')}</span></button>`:''}${products.map(p=>{const q=cart[p.id]||0;return `<button class="card${storeEdit?' pedit':''}" data-act="${storeEdit?'editProduct':'addCart'}" data-id="${p.id}">${p.photo?`<img src="${p.photo}" alt="" style="width:100%;height:84px;object-fit:cover;border-radius:10px">`:''}<span class="lbl">${esc(p.name)}</span><span class="val num">${money(p.price)}</span>${p.out?`<span class="small" style="color:var(--warn,#E0A83A)">${rt('Agotado','Sold out')}</span>`:''}${q&&!storeEdit?`<span class="small num">× ${q}</span>`:''}${storeEdit?`<span class="small" style="color:var(--accent)">✎ ${rt('Cambiar','Change')}</span>`:''}</button>`}).join('')}</div>`:`<div class="empty" style="margin-top:20px">${rt('Todavía no tienes productos.','No products yet.')}<button class="btn primary" style="margin-top:12px" data-act="newProduct">＋ ${rt('Agregar producto','Add product')}</button></div>`}
   ${lines.length?`<div class="group" style="margin-top:14px">${lines.map(([id,q])=>`<div class="kv"><span>${esc(S.products[id].name)} × ${q}</span><span class="num">${money(S.products[id].price*q)}</span></div>`).join('')}<div class="kv"><b>${t('total')}</b><b class="num">${money(total)}</b></div><div class="grid2" style="margin-top:10px"><button class="btn outline" data-act="clearCart">${rt('Limpiar','Clear')}</button><button class="btn primary" data-act="checkout">${rt('Cobrar','Charge')}</button></div></div>`:''}
   <div class="group" style="margin-top:14px"><div class="gl">${rt('Últimas ventas','Recent sales')}</div>${sales.slice().sort((a,b)=>(b.at||0)-(a.at||0)).slice(0,8).map(s=>`<div class="kv"><span>${s.date} · ${esc(s.method)}</span><span class="num">${money(s.total)}</span></div>`).join('')||`<div class="small">${rt('Sin ventas todavía','No sales yet')}</div>`}</div>
   </div>`}}}
@@ -1135,13 +1145,45 @@ async function shareReceipt(id){
 }
 /* product photo: shrink to 240px so it stays light on the phone */
 function shrinkImage(file,max){return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*s));c.height=Math.max(1,Math.round(img.height*s));c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',0.7))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('image'))};img.src=url})}
-document.addEventListener('change',async e=>{const el=e.target;if(el.id!=='p-f'||!el.files||!el.files[0])return;try{pendingPhoto=await shrinkImage(el.files[0],240);const pv=document.getElementById('p-prev');if(pv){pv.src=pendingPhoto;pv.hidden=false}}catch(err){toast(rt('No se pudo leer la foto','Could not read the photo'))}});
-/* product options (⋮): share, edit, delete with a confirm step */
-function prodMenuSheet(id,confirmDel){return{live:false,render(){
-  const p=S.products[id]||{name:''};
-  if(confirmDel)return sheetHead(rt('Borrar producto','Delete product'),{close:true})+`<div class="wrap sheet-b"><p style="margin:14px 0">${rt('¿Borrar','Delete')} <b>${esc(p.name)}</b>?</p><button class="btn bad" data-act="delProduct" data-id="${id}">${rt('Sí, borrar','Yes, delete')}</button></div>`;
-  return sheetHead(esc(p.name),{close:true})+`<div class="wrap sheet-b"><button class="btn outline" style="margin:14px 0 10px" data-act="shareProduct" data-id="${id}">${rt('Compartir','Share')}</button><button class="btn outline" style="margin-bottom:10px" data-act="editProductMenu" data-id="${id}">${rt('Editar','Edit')}</button><button class="btn outline" data-act="askDelProd" data-id="${id}">${rt('Borrar','Delete')}</button></div>`;
-}}}
+/* product popup: small card over the store, add / change / delete in one place */
+let PE=null;
+function parsePrice(v){v=String(v||'').replace(/[^0-9.,]/g,'');if(v.includes(',')&&v.includes('.'))v=v.replace(/,/g,'');else v=v.replace(',','.');return r2(parseFloat(v)||0)}
+function openProdPop(p){
+  PE={id:p?p.id:uid(),isNew:!p,photo:(p&&p.photo)||null,busy:false,confirm:false};
+  let w=document.getElementById('prodPop');if(!w){w=document.createElement('div');w.id='prodPop';document.body.appendChild(w)}
+  const it=p||{name:'',price:''};
+  w.innerHTML=`<div class="pp-card" role="dialog" aria-modal="true" aria-label="${rt('Producto','Product')}">
+  <div class="pp-h"><b>${PE.isNew?rt('Nuevo producto','New product'):rt('Cambiar producto','Change product')}</b><button class="iconbtn" data-act="closeProdPop" aria-label="${rt('Cerrar','Close')}">${ic('close',2.2)}</button></div>
+  <div class="pp-ph"><img id="pp-img" alt="" ${PE.photo?`src="${PE.photo}"`:'hidden'}><div id="pp-noimg" class="pp-noimg" ${PE.photo?'hidden':''}>📷</div>
+   <div style="display:flex;flex-direction:column;gap:6px;flex:1"><button class="btn outline" data-act="pickProdPhoto" id="pp-fb">${PE.photo?rt('Cambiar foto','Change photo'):rt('Poner foto (opcional)','Add photo (optional)')}</button><button class="linkbtn" data-act="rmProdPhoto" id="pp-rm" style="padding:2px 0" ${PE.photo?'':'hidden'}>${rt('Quitar foto','Remove photo')}</button></div>
+   <input id="pp-f" type="file" accept="image/*" hidden></div>
+  <div class="field"><label for="pp-n">${rt('Nombre','Name')}</label><input class="in" id="pp-n" value="${esc(it.name)}" placeholder="${rt('Agua 16 oz','Water 16 oz')}" enterkeyhint="next" autocomplete="off"></div>
+  <div class="field"><label for="pp-p">${rt('Precio','Price')}</label><input class="in num" id="pp-p" type="text" inputmode="decimal" value="${it.price===''?'':esc(it.price)}" placeholder="0.00" enterkeyhint="done" autocomplete="off"></div>
+  <label style="display:flex;align-items:center;gap:10px;min-height:40px;margin-bottom:10px"><input type="checkbox" id="pp-out" ${it.out?'checked':''} style="width:22px;height:22px"><span>${rt('Agotado','Sold out')}</span></label>
+  ${PE.isNew?`<div class="grid2"><button class="btn outline" data-act="saveProduct" data-next="1">${rt('Guardar y otro','Save + next')}</button><button class="btn primary" data-act="saveProduct">${t('save')}</button></div>`
+  :`<button class="btn primary" data-act="saveProduct">${t('save')}</button><div class="grid2" style="margin-top:10px"><button class="btn outline" data-act="shareProduct" data-id="${PE.id}">${rt('Compartir','Share')}</button><button class="btn outline" data-act="delProduct" id="pp-del">${t('del')}</button></div>`}
+  </div>`;
+  w.hidden=false;
+  if(PE.isNew)setTimeout(()=>{const n=document.getElementById('pp-n');if(n)n.focus()},60);
+}
+function closeProdPop(){PE=null;const w=document.getElementById('prodPop');if(w){w.hidden=true;w.innerHTML=''}}
+function setProdPhoto(src){if(!PE)return;PE.photo=src;const im=document.getElementById('pp-img'),no=document.getElementById('pp-noimg'),rm=document.getElementById('pp-rm'),fb=document.getElementById('pp-fb');
+  if(im){if(src){im.src=src;im.hidden=false}else{im.removeAttribute('src');im.hidden=true}}if(no)no.hidden=!!src;if(rm)rm.hidden=!src;if(fb)fb.textContent=src?rt('Cambiar foto','Change photo'):rt('Poner foto (opcional)','Add photo (optional)')}
+document.addEventListener('change',async e=>{const el=e.target;if(el.id!=='pp-f'||!el.files||!el.files[0]||!PE)return;const me=PE;me.busy=true;const fb=document.getElementById('pp-fb');if(fb)fb.textContent=rt('Cargando foto…','Loading photo…');
+  try{const src=await shrinkImage(el.files[0],240);if(PE===me)setProdPhoto(src)}catch(err){toast(rt('No se pudo leer la foto','Could not read the photo'));if(PE===me)setProdPhoto(me.photo)}finally{me.busy=false;el.value=''}});
+document.addEventListener('keydown',e=>{if(!PE)return;if(e.key==='Escape'){closeProdPop();return}if(e.key!=='Enter')return;if(e.target.id==='pp-n'){e.preventDefault();$('#pp-p').focus()}else if(e.target.id==='pp-p'){e.preventDefault();A.saveProduct({dataset:{}})}});
+document.addEventListener('click',e=>{const w=document.getElementById('prodPop');if(PE&&e.target===w)closeProdPop()});
+function saveProductPop(next){
+  if(!PE)return;if(PE.busy){toast(rt('Espera, la foto se está cargando','Wait, the photo is loading'));return}
+  const n=$('#pp-n').value.trim();if(!n){toast(rt('Escribe el nombre','Write the name'));$('#pp-n').focus();return}
+  S.products[PE.id]={id:PE.id,name:n,price:parsePrice($('#pp-p').value),photo:PE.photo||undefined,out:$('#pp-out').checked||undefined};
+  closeProdPop();commit();republish();toast(rt('Guardado','Saved'));if(next)openProdPop();
+}
+function delProductPop(){
+  if(!PE)return;const b=document.getElementById('pp-del');
+  if(!PE.confirm){PE.confirm=true;if(b){b.textContent=rt('¿Seguro? Toca otra vez','Sure? Tap again');b.classList.add('bad')}setTimeout(()=>{if(PE&&PE.confirm&&b&&b.isConnected){PE.confirm=false;b.textContent=t('del');b.classList.remove('bad')}},4000);return}
+  delete S.products[PE.id];delete cart[PE.id];closeProdPop();commit();republish();toast(rt('Borrado','Deleted'));
+}
 async function shareProduct(id){
   const p=S.products[id];if(!p)return;
   const text=`${p.name} — ${money(p.price)}`;
@@ -1331,8 +1373,8 @@ const GUIDE=[
    se:['Toca los productos que te compraron.','Toca Cobrar.','Elige cómo te pagaron: efectivo, débito u otro.','Si quieres, manda el recibo por WhatsApp o mensaje.'],
    sn:['Tap the products the customer bought.','Tap Charge.','Choose how you were paid: cash, debit or other.','If you want, send the receipt by WhatsApp or text.']},
   {k:'products',es:'Agregar mis productos',en:'Add my products',go:()=>{A.storeOpen();A.productsOpen()},
-   se:['Toca + Nuevo.','Escribe el nombre y el precio.','Si quieres, ponle una foto.','Toca Guardar. Repite con cada producto.'],
-   sn:['Tap + New.','Type the name and the price.','If you want, add a photo.','Tap Save. Repeat for each product.']},
+   se:['Toca ✎ Editar arriba y luego + Nuevo producto.','Escribe el nombre y el precio. Foto si quieres.','Toca Guardar y otro para seguir agregando, o Guardar.','Para cambiar o borrar: en Editar, toca el producto.'],
+   sn:['Tap ✎ Edit at the top, then + New product.','Type the name and the price. Photo if you want.','Tap Save + next to keep adding, or Save.','To change or delete: in Edit, tap the product.']},
   {k:'menu',es:'Compartir mi menú con clientes',en:'Share my menu with customers',go:()=>{A.storeOpen();A.menuOpen()},
    se:['Primero agrega tus productos.','Toca Publicar menú en vivo.','Comparte el enlace o enseña el código QR.','Tus clientes piden desde su teléfono y el pedido te llega en Pedidos.'],
    sn:['First add your products.','Tap Publish live menu.','Share the link or show the QR code.','Customers order from their phone and the order arrives in Orders.']},
@@ -1429,17 +1471,6 @@ async function sealDoc(d,quiet){
 function sealRow(d){if(!d||d.kind==='estimate'||!menuCloudOK())return '';
   if(sealOk(d))return `<div class="group"><div class="kv"><span>${rt('Sello BSV','BSV seal')}</span><span style="color:var(--green,#3ddc97)">✓ ${new Date(d.seal.at).toLocaleDateString(lang==='es'?'es-MX':'en-US')}${d.seal.net==='test'?' · testnet':''}</span></div><a class="btn" style="margin-top:8px" href="${esc(sealLink(d))}" target="_blank" rel="noopener">${rt('Verificar sello','Verify seal')}</a></div>`;
   return `<div class="group"><div class="kv"><span>${rt('Sello BSV','BSV seal')}</span><span class="small">${d.seal?rt('Cambió después del sello','Changed after sealing'):rt('Sin sellar','Not sealed')}</span></div><button class="btn" style="margin-top:8px" data-act="sealNow" data-id="${d.id}">${rt('Sellar en BSV','Seal on BSV')}</button></div>`}
-function productsSheet(){return{live:true,render(){
-  const list=Object.values(S.products||{}).sort((a,b)=>a.name.localeCompare(b.name));
-  return sheetHead(rt('Productos','Products'),{close:true,right:`<button class="textbtn" data-act="newProduct">+ ${rt('Nuevo','New')}</button>`})+`<div class="wrap sheet-b">${list.length?`<div class="list" style="margin-top:10px">${list.map(p=>`<div class="row" style="align-items:center;gap:12px">${p.photo?`<img src="${p.photo}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex:none">`:`<div style="width:56px;height:56px;border-radius:10px;border:1px dashed var(--line);flex:none"></div>`}<button class="main" style="background:none;border:0;text-align:left;padding:0;color:var(--fg)" data-act="editProduct" data-id="${p.id}"><div class="t1">${esc(p.name)}</div><div class="t2 num">${money(p.price)}${p.out?' · '+rt('Agotado','Sold out'):''}</div></button><button class="iconbtn" data-act="prodMenu" data-id="${p.id}" aria-label="${rt('Opciones','Options')}" style="font-size:22px;min-width:44px;min-height:44px">⋮</button></div>`).join('')}</div>`:`<div class="empty">${rt('Todavía no tienes productos.','No products yet.')}</div>`}</div>`}}}
-let pendingPhoto=null;
-function productEditor(p){const it=p||{id:uid(),name:'',price:0};pendingPhoto=(p&&p.photo)||null;return{live:false,render(){return sheetHead(rt('Producto','Product'),{close:true})+`<div class="wrap sheet-b">
-  <div class="field" style="margin-top:14px"><label for="p-f">${rt('Foto (opcional)','Photo (optional)')}</label><img id="p-prev" src="${it.photo||''}" alt="" ${it.photo?'':'hidden'} style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-bottom:8px"><input class="in" id="p-f" type="file" accept="image/*"></div>
-  <div class="field" style="margin-top:14px"><label for="p-n">${t('desc')}</label><input class="in" id="p-n" value="${esc(it.name)}" placeholder="${rt('Agua 16 oz','Water 16 oz')}"></div>
-  <div class="field"><label for="p-p">${t('rate')}</label><input class="in num" id="p-p" type="number" step="0.01" inputmode="decimal" value="${esc(it.price)}"></div>
-  <label style="display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:10px"><input type="checkbox" id="p-out" ${it.out?'checked':''} style="width:22px;height:22px"><span>${rt('Agotado (no se puede pedir en el menú)','Sold out (cannot be ordered on the menu)')}</span></label>
-  <button class="btn primary" data-act="saveProduct" data-id="${it.id}">${t('save')}</button>${p?`<button class="btn outline" style="margin-top:10px" data-act="delProduct" data-id="${it.id}">${t('del')}</button>`:''}</div>`}}}
-
 /* ---------- reports ---------- */
 function jobsSheet(){return{live:true,render(){
   const m={};invoicesAll().forEach(d=>{const k=d.clientId+'|'+(d.jobId||'_');const c=calc(d);const j=jobOf(d);m[k]=m[k]||{client:clientName(d.clientId),job:j?j.name:t('noJob'),addr:j?j.address:'',b:0,p:0,n:0};m[k].b+=c.total;m[k].p+=c.paid;m[k].n++;m[k].jobId=d.jobId});
@@ -1904,17 +1935,21 @@ const A={
   saveRecur:e=>{const c=$('#r-c').value,d=$('#r-d').value.trim();if(!c||!d){toast(rt('Elige cliente y descripción','Choose a client and a description'));return}const old=S.recur[e.dataset.id]||{};S.recur[e.dataset.id]={id:e.dataset.id,clientId:c,desc:d,unit:$('#r-u').value.trim(),qty:+$('#r-q').value||1,rate:+$('#r-r').value||0,freq:$('#r-f').value,next:$('#r-n').value||todayISO(),active:old.active!==false};closeSheet();commit()},
   recurToggle:e=>{const p=S.recur[e.dataset.id];if(p){p.active=!p.active;commit()}},
   recurDel:e=>{delete S.recur[e.dataset.id];commit()},
-  storeOpen:()=>{showSheet(storeSheet());if(menuCloudOK()&&S.profile.menuId){loadOrders();ordersWatch()}},
+  storeOpen:()=>{storeEdit=false;showSheet(storeSheet());if(menuCloudOK()&&S.profile.menuId){loadOrders();ordersWatch()}},
   addCart:e=>{cart[e.dataset.id]=(cart[e.dataset.id]||0)+1;commit()},
   clearCart:()=>{cart={};commit()},
   checkout:()=>{if(!cartLines().length){toast(rt('Agrega productos primero','Add products first'));return}showSheet(payPickSheet())},
   pickMethod:e=>recordSale(e.dataset.m),
   shareReceipt:e=>shareReceipt(e.dataset.id),
-  productsOpen:()=>showSheet(productsSheet()),
-  newProduct:()=>showSheet(productEditor()),
-  editProduct:e=>showSheet(productEditor(S.products[e.dataset.id])),
-  saveProduct:e=>{const n=$('#p-n').value.trim(),p=+$('#p-p').value||0;if(!n){toast(rt('Escribe el nombre','Write the name'));return}S.products[e.dataset.id]={id:e.dataset.id,name:n,price:p,photo:pendingPhoto||undefined,out:$('#p-out').checked||undefined};closeSheet();commit();republish()},
-  delProduct:e=>{delete S.products[e.dataset.id];delete cart[e.dataset.id];closeSheet();commit();republish()},
+  productsOpen:()=>{storeEdit=true;redrawSheet()},
+  storeEditToggle:()=>{storeEdit=!storeEdit;redrawSheet()},
+  closeProdPop:()=>closeProdPop(),
+  pickProdPhoto:()=>{const f=document.getElementById('pp-f');if(f)f.click()},
+  rmProdPhoto:()=>setProdPhoto(null),
+  newProduct:()=>openProdPop(),
+  editProduct:e=>{const p=S.products[e.dataset.id];if(p)openProdPop(p)},
+  saveProduct:e=>saveProductPop(!!(e.dataset&&e.dataset.next)),
+  delProduct:()=>delProductPop(),
   chainCheck:e=>chainCheckStart(e.dataset.id),
   chainRetry:e=>runChainCheck(e.dataset.id),
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
@@ -1938,10 +1973,7 @@ const A={
   storeBsvCheck:()=>storeBsvCheck(),
   storeBsvConfirm:()=>storeBsvConfirm(),
   storeBsvSkip:e=>{if(storeBsv){storeBsv.skip=[...(storeBsv.skip||[]),e.dataset.tx];storeBsv.s='waiting';storeBsv.tx=null;redrawSheet()}},
-  prodMenu:e=>showSheet(prodMenuSheet(e.dataset.id,false)),
-  askDelProd:e=>{closeSheet();showSheet(prodMenuSheet(e.dataset.id,true))},
   shareProduct:e=>shareProduct(e.dataset.id),
-  editProductMenu:e=>{closeSheet();showSheet(productEditor(S.products[e.dataset.id]))},
   newSaved:()=>showSheet(savedEditor()),
   editSaved:e=>showSheet(savedEditor(S.saved[e.dataset.id])),
   saveSaved:e=>{const d=$('#s-d').value.trim();if(!d)return;S.saved[e.dataset.id]={id:e.dataset.id,desc:d,unit:$('#s-u').value.trim(),rate:+$('#s-r').value||0};closeSheet();commit()},
