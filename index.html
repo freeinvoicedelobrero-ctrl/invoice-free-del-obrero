@@ -765,7 +765,7 @@ function docMore(id){const d=S.docs[id];if(!d)return;const c=calc(d),isEst=d.kin
    !p.sig?it('mySign',t('addMySig')):'',
    isEst&&!d.accepted&&!d.convertedTo?it('accept',t('markAccepted')):'',
    isEst&&!d.convertedTo&&prim!=='convert'?it('convert',t('convert')):'',
-   !isEst&&menuCloudOK()?(sealOk(d)?`<a class="mi" href="${esc(sealLink(d))}" target="_blank" rel="noopener">✓ ${rt('Verificar sello BSV','Verify BSV seal')}</a>`:it('sealNow',rt('Sellar en BSV','Seal on BSV'))):'',
+   !isEst&&menuCloudOK()?(sealOk(d)?`<a class="mi" href="${esc(sealLink(d,true))}" target="_blank" rel="noopener">✓ ${rt('Verificar sello BSV','Verify BSV seal')}</a>`:it('sealNow',rt('Sellar en BSV','Seal on BSV'))):'',
    it('copyDoc',t('copyText')),it('duplicate',t('duplicate')),
    `<button class="mi bad" data-act="docDelAsk" data-id="${id}" data-keep="1">${t('del')}</button>`];
   popCard(rows.filter(Boolean).join(''))}
@@ -1618,7 +1618,13 @@ const normAmt=x=>(Math.round((+String(x||'').replace(/[^0-9.]/g,'')||0)*100)/100
 function sealTagOf(r,i,a){return sha256hex(JSON.stringify(['obrero-ref-1',normRef(r),normNum(i),normAmt(a)]))}
 function sealLink(d,full){const s=d.seal;let u=new URL('sello.html',location.href).href.split(/[?#]/)[0]+'#n='+s.net+'&t='+s.txid+'&h='+s.h;
   if(s.r)u+='&r='+encodeURIComponent(s.r)+'&i='+encodeURIComponent(s.i)+'&a='+s.a;
-  if(full&&s.c)u+='&c='+b64url(s.c);return u}
+  if(s.dt)u+='&d='+s.dt;else if(full&&s.c)u+='&c='+b64url(s.c);return u}
+/* the sealed invoice text waits in the cloud under a random code, so even a printed QR opens the full invoice
+   (from, to, total, items); the verify page re-checks it against the fingerprint on the chain */
+const sealDocUp={};
+async function ensureSealDoc(d){if(!d||!sealOk(d)||d.seal.dt||!menuCloudOK())return;if(sealDocUp[d.id])return sealDocUp[d.id];
+  sealDocUp[d.id]=(async()=>{try{const tok=newTok(),sec=newTok();await menuRpc('sign_offer',{p_tok:tok,p_secret:sec,p_doc:JSON.stringify({v:1,c:d.seal.c})});const real=S.docs[d.id]||d;if(real.seal&&real.seal.h===d.seal.h){real.seal.dt=tok;persist()}}catch(e){}finally{delete sealDocUp[d.id]}})();
+  return sealDocUp[d.id]}
 let sealOff=false,sealBusy={};
 async function sealDoc(d,quiet){
   if(!d||d.kind==='estimate'||!menuCloudOK())return null;
@@ -1631,7 +1637,7 @@ async function sealDoc(d,quiet){
     const r=await fetch(MCFG.supabaseUrl+'/functions/v1/seal',{method:'POST',headers:{'Content-Type':'application/json',apikey:MCFG.supabaseAnonKey},body:JSON.stringify({hash:hh,tag:tg,kind:'inv'})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!/^[0-9a-f]{64}$/.test(j.txid||'')){const er=new Error(j.error||('http '+r.status));er.info=j;throw er}
-    const seal={h:hh,c,txid:j.txid,net:j.net==='main'?'main':'test',at:Date.now(),...(j.existing?{}:ref)};
+    const seal={h:hh,c,txid:j.txid,net:j.net==='main'?'main':'test',at:Date.now(),...(j.existing?{}:ref)};setTimeout(()=>ensureSealDoc(S.docs[d.id]),500);
     const real=S.docs[d.id]||d;real.seal=seal;if(real!==d)d.seal=seal;commit();
     if(!quiet)toast(rt('Factura sellada en BSV','Invoice sealed on BSV'));return seal;
   }catch(e){if(quiet)sealOff=true;else sealErrPop(e);return null}
@@ -1842,7 +1848,7 @@ function docText(d){
   return s;
 }
 function drawQR(doc,text,x,y,size,lvl){if(!window.qrcode||!text)return;try{const q=qrcode(0,lvl||'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=size/n;doc.setFillColor(0,0,0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))doc.rect(x+c*cell,y+r*cell,cell+0.15,cell+0.15,'F')}catch(e){}}
-async function buildPDF(d){try{await ensurePayShort(d)}catch(e){}
+async function buildPDF(d){try{await ensurePayShort(d)}catch(e){}try{await Promise.race([ensureSealDoc(d),new Promise(r=>setTimeout(r,3000))])}catch(e){}
   if(!window.jspdf){toast('PDF library did not load. Check your connection.');return null}
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
   const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate',j=jobOf(d),dl=docLang(d),T2=(e,x)=>dl==='es'?x:e,loc=dl==='es'?'es-MX':'en-US';
@@ -2031,7 +2037,7 @@ const A={
   newClient:()=>openClientEditor(),
   newInvoiceFor:e=>openEditor(newDoc('invoice',{clientId:e.dataset.id})),
   newEstimateFor:e=>openEditor(newDoc('estimate',{clientId:e.dataset.id})),
-  openDoc:e=>{payTab=null;showSheet(docDetail(e.dataset.id));pullRemoteSig(S.docs[e.dataset.id]);ensurePayShort(S.docs[e.dataset.id])},
+  openDoc:e=>{payTab=null;showSheet(docDetail(e.dataset.id));pullRemoteSig(S.docs[e.dataset.id]);ensurePayShort(S.docs[e.dataset.id]);ensureSealDoc(S.docs[e.dataset.id])},
   openClient:e=>{clientFilter='all';clientQuery='';showSheet(clientDetail(e.dataset.id))},
   editDoc:e=>openEditor(S.docs[e.dataset.id]),
   editClient:e=>openClientEditor(S.clients[e.dataset.id]),
@@ -2153,7 +2159,7 @@ const A={
   alertOpen:e=>{const x=alertsList()[+e.dataset.i];if(!x)return;if(x.docId&&S.docs[x.docId]){A.openDoc({dataset:{id:x.docId}})}else if(x.key.startsWith('order:')){A.storeOpen();if(A.ordersOpen)A.ordersOpen()}},
   closeMore:()=>closeMore(),
   docDelAsk:e=>{if(e.dataset.sure){closeMore();A.delDoc(e);return}e.dataset.sure='1';e.textContent=t('confirmDel')+' '+t('yesDel');},
-  sealStep:e=>{const d=S.docs[e.dataset.id];if(d&&sealOk(d)){window.open(sealLink(d),'_blank','noopener');return}A.sealNow(e)},
+  sealStep:e=>{const d=S.docs[e.dataset.id];if(d&&sealOk(d)){window.open(sealLink(d,true),'_blank','noopener');ensureSealDoc(d);return}A.sealNow(e)},
   sealNow:async e=>{const d=S.docs[e.dataset.id];sealOff=false;await sealDoc(d,false);redrawSheet()},
   sharePayLink:e=>sharePayLink(S.docs[e.dataset.id]),
   receipt:e=>receiptPDF(S.docs[e.dataset.id],e.dataset.p),
