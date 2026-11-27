@@ -50,13 +50,24 @@ button.btn[disabled]{opacity:.6}
   var app=document.getElementById('app'),CFG=window.OBRERO_CONFIG||{};
   function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
   function fail(t){app.textContent='';app.appendChild(el('h1',null,T.title));app.appendChild(el('div','card warn',t||T.bad))}
+  function rpc(fn,args){return fetch(CFG.supabaseUrl+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.supabaseAnonKey,Authorization:'Bearer '+CFG.supabaseAnonKey},body:JSON.stringify(args)}).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.status===204?null:r.json()})}
+  function valid(o){return o&&o.v===1&&/^[0-9a-f]{32}$/.test(o.t||'')&&/^[0-9a-f]{64}$/.test(o.h||'')&&window.crypto&&crypto.subtle}
+  var raw=location.hash.slice(1),short=/^t=([0-9a-f]{32})$/.exec(raw);
+  if(short){
+    /* short link: the document waits in the cloud under the token */
+    if(!CFG.supabaseUrl){fail();return}
+    app.textContent=es?'Cargando…':'Loading…';
+    rpc('sign_doc',{p_tok:short[1]}).then(function(rows){var r=rows&&rows[0];var o=r?JSON.parse(r.doc):null;if(!valid(o)||o.t!==short[1]){fail();return}app.textContent='';start(o)}).catch(function(){fail(es?'No pude cargar el documento. Revisa tu internet y abre el link otra vez.':'Could not load the document. Check your internet and open the link again.')});
+    return;
+  }
   var o=null;
-  try{var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';o=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){o=null}
-  if(!o||o.v!==1||!/^[0-9a-f]{32}$/.test(o.t||'')||!/^[0-9a-f]{64}$/.test(o.h||'')||!window.crypto||!crypto.subtle){fail();return}
+  try{var s=raw.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';o=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){o=null}
+  if(!valid(o)){fail();return}
+  start(o);
+  function start(o){
   var cur=/^[A-Z]{3}$/.test(o.cur)?o.cur:'USD';
   function money(v){try{return new Intl.NumberFormat(es?'es-MX':'en-US',{style:'currency',currency:cur}).format(+v||0)}catch(e){return cur+' '+v}}
   function sha(str){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2)}).join('')})}
-  function rpc(fn,args){return fetch(CFG.supabaseUrl+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.supabaseAnonKey,Authorization:'Bearer '+CFG.supabaseAnonKey},body:JSON.stringify(args)}).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.status===204?null:r.json()})}
   var KEY='obrero-signed-'+o.t;
   var kindLbl=o.k==='estimate'?T.est+' EST ':T.inv+' #';
   app.appendChild(el('h1',null,T.title));
@@ -106,6 +117,7 @@ button.btn[disabled]{opacity:.6}
       return rpc('sign_put',{p_tok:o.t,p_data:JSON.stringify({img:img,name:name,at:at,h:o.h,ua:navigator.userAgent.slice(0,120),seal:seal})})
     }).then(function(){done(seal)}).catch(function(e){go.disabled=false;msg.textContent=/already/.test(String(e))?T.already:T.err});
   };
+  }
 })();
 </script>
 </body>

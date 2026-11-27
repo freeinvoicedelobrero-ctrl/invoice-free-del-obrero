@@ -782,13 +782,16 @@ async function sealSig(d,quiet){const sg=d&&d.sig;if(!sg||(sg.seal&&sg.seal.txid
     const real=S.docs[d.id]||d;if(real.sig){real.sig.seal={h,txid:j.txid,net:j.net==='main'?'main':'test',at:Date.now()};commit();if(!quiet)toast(rt('Firma sellada en BSV','Signature sealed on BSV'))}return real.sig&&real.sig.seal}
   catch(e){if(!quiet)sealErrPop(e);return null}}
 function newTok(){const a=new Uint8Array(16);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function signLink(d){if(!d.signTok){d.signTok=newTok();commit()}const c=calc(d),cl=S.clients[d.clientId]||{},p=S.profile;
+async function signLink(d){if(!d.signTok){d.signTok=newTok();commit()}if(!d.signSecret){d.signSecret=newTok();commit()}const c=calc(d),cl=S.clients[d.clientId]||{},p=S.profile;
   const o={v:1,t:d.signTok,k:d.kind,n:String(d.number),s:(p.company||'').slice(0,80),sp:(p.phone||'').slice(0,30),c:(cl.name||'').slice(0,80),dt:d.date||'',cur:ccy(),
     it:(d.items||[]).filter(i=>i.desc||+i.rate).slice(0,60).map(i=>[String(i.desc||'').slice(0,140),+i.qty||0,String(i.unit||''),r2(+i.rate||0)]),tot:r2(c.total),
     terms:String(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'')).slice(0,6000),acc:t('acceptText',p.company||''),h:await docHash(d)};
-  return new URL('firma.html',location.href).href.split(/[?#]/)[0]+'#'+b64url(JSON.stringify(o))}
+  d.signHash=o.h;commit();
+  /* the document waits in the cloud under the token, so the link stays short and WhatsApp does not cut it */
+  await menuRpc('sign_offer',{p_tok:d.signTok,p_secret:d.signSecret,p_doc:JSON.stringify(o)});
+  return new URL('firma.html',location.href).href.split(/[?#]/)[0]+'#t='+d.signTok}
 async function sendSignLink(d){if(!menuCloudOK()){toast(rt('Falta conectar la nube','Cloud is not connected'));return}
-  const l=await signLink(d);const txt=rt('Firma aquí ','Sign here ')+(d.kind==='estimate'?rt('el presupuesto EST ','estimate EST '):rt('la factura #','invoice #'))+d.number;
+  let l;try{l=await signLink(d)}catch(e){toast(rt('No se pudo crear el link. Revisa tu internet.','Could not create the link. Check your internet.'));return}const txt=rt('Firma aquí ','Sign here ')+(d.kind==='estimate'?rt('el presupuesto EST ','estimate EST '):rt('la factura #','invoice #'))+d.number;
   redrawSheet();
   try{if(navigator.share){await navigator.share({title:txt,text:txt,url:l});toast(rt('Te aviso cuando firme','I will tell you when they sign'));return}}catch(e){if(e&&e.name==='AbortError')return}
   try{await navigator.clipboard.writeText(l);toast(rt('Enlace para firmar copiado','Signing link copied'))}catch(e){}}
@@ -796,7 +799,8 @@ const sigPulling={};
 async function pullRemoteSig(d){if(!d||!d.signTok||d.sig||!menuCloudOK()||sigPulling[d.id])return;sigPulling[d.id]=1;
   try{const rows=await menuRpc('sign_get',{p_tok:d.signTok});const r=rows&&rows[0];if(!r)return;const o=JSON.parse(r.data);
     if(!o||!/^data:image\/png;base64,/.test(o.img||'')||!o.name)return;const real=S.docs[d.id];if(!real||real.sig)return;
-    real.sig={img:o.img,name:String(o.name).slice(0,80),at:o.at,hash:o.h,ua:String(o.ua||'').slice(0,120),remote:true};
+    if(real.signHash&&o.h!==real.signHash)return;
+    real.sig={img:o.img,name:String(o.name).slice(0,80),at:o.at,hash:real.signHash||o.h,ua:String(o.ua||'').slice(0,120),remote:true};
     if(o.seal&&/^[0-9a-f]{64}$/.test(o.seal.txid||''))real.sig.seal={h:o.seal.h,txid:o.seal.txid,net:o.seal.net==='main'?'main':'test',at:o.seal.at||Date.now()};
     if(real.kind==='estimate'){real.accepted=true;real.acceptedAt=real.acceptedAt||Date.now()}real.updatedAt=Date.now();commit();
     toast('✍ '+real.sig.name+rt(' firmó ',' signed ')+(real.kind==='estimate'?'EST ':'#')+real.number);if(!real.sig.seal)sealSig(real,true)}
