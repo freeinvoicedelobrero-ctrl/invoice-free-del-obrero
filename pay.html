@@ -47,12 +47,13 @@ h2{font-size:15px;margin:0 0 8px}
 <body>
 <div class="wrap" id="app"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="config.js"></script>
 <script>
 /* Pay page for one invoice. Everything travels in the link (after #): seller, invoice, memo, balance, payment methods, and the
    customer's contact (to prefill where the receipt goes). Money goes straight from customer to seller; this page never touches it. */
 (function(){
   /* the seller chooses the customer's language on the invoice; otherwise use the phone's language */
-  var es=(function(){try{var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var o=JSON.parse(decodeURIComponent(escape(atob(s))));if(o&&(o.l==='es'||o.l==='en'))return o.l==='es'}catch(e){}return (navigator.language||'es').toLowerCase().indexOf('es')===0})();
+  var es=(function(){try{var m=/^t=([0-9a-f]{32})$/.exec(location.hash.slice(1));if(m){var v=localStorage.getItem('obrero-pl-'+m[1]);if(v==='es'||v==='en')return v==='es';throw 0}var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var o=JSON.parse(decodeURIComponent(escape(atob(s))));if(o&&(o.l==='es'||o.l==='en'))return o.l==='es'}catch(e){}return (navigator.language||'es').toLowerCase().indexOf('es')===0})();
   var T=es?{title:'Pagar factura',inv:'Factura',payTo:'Paga a',memo:'Memo',memoHow:'Escríbelo en la nota de tu pago.',bad:'Este enlace de pago no es válido o está incompleto. Pide uno nuevo.',none:'Esta factura no tiene métodos de pago.',
       card:'Pagar con tarjeta o banco',cardSub:'Tarjeta de débito, crédito o cuenta de banco (ACH)',cardHow:'En la página de pago escribe este monto exacto:',open:'Abrir página de pago',copyAddr:'Copiar dirección',copyAmt:'Copiar monto',copy:'Copiar',copied:'Copiado',openWallet:'Abrir billetera',amount:'Monto',price:'Precio al momento',noPrice:'No pude obtener el precio ahora. Revisa tu Internet o pregunta el monto al vendedor.',loading:'Calculando monto…',sendOnly:'Envía solo por la red ',crypto:'Cripto',stableNote:'1 a 1 con el dólar.',
       rTitle:'Tu recibo',rSub:'¿A dónde te mandamos el recibo?',wa:'WhatsApp',sms:'Mensaje',mail:'Email',phone:'Tu número de teléfono',email:'Tu correo',stripeRcpt:'Stripe te mandará su comprobante a ',stripeNo:'Elige Email arriba para que Stripe te mande su comprobante.',
@@ -71,9 +72,23 @@ h2{font-size:15px;margin:0 0 8px}
   var app=document.getElementById('app');
   function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
   function fail(msg){app.textContent='';app.appendChild(el('h1',null,T.title));app.appendChild(el('div','bad',msg))}
-  var o=null;
-  try{var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';o=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){o=null}
-  if(!o||o.v!==1||!o.n||!Array.isArray(o.m)||!/^\d+(\.\d{1,2})?$/.test(String(o.b))){fail(T.bad);return}
+  function valid(o){return o&&o.v===1&&o.n&&Array.isArray(o.m)&&/^\d+(\.\d{1,2})?$/.test(String(o.b))}
+  var raw=location.hash.slice(1),short=/^t=([0-9a-f]{32})$/.exec(raw),CFG=window.OBRERO_CONFIG||{};
+  if(short){
+    /* short link: the invoice's payment details wait in the cloud under the token, so WhatsApp or texts cannot cut the link */
+    if(!CFG.supabaseUrl){fail(T.bad);return}
+    app.textContent=es?'Cargando…':'Loading…';
+    fetch(CFG.supabaseUrl+'/rest/v1/rpc/sign_doc',{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.supabaseAnonKey,Authorization:'Bearer '+CFG.supabaseAnonKey},body:JSON.stringify({p_tok:short[1]})})
+      .then(function(r){if(!r.ok)throw new Error('http');return r.json()}).then(function(rows){var o=rows&&rows[0]?JSON.parse(rows[0].doc):null;if(!valid(o)){fail(T.bad);return}
+        if((o.l==='es'||o.l==='en')&&(o.l==='es')!==es){try{localStorage.setItem('obrero-pl-'+short[1],o.l);location.reload();return}catch(e){}}main(o)})
+      .catch(function(){fail(es?'No pude cargar la factura. Revisa tu internet y abre el link otra vez.':'Could not load the invoice. Check your internet and open the link again.')});
+    return;
+  }
+  var o0=null;
+  try{var s=raw.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';o0=JSON.parse(decodeURIComponent(escape(atob(s))))}catch(e){o0=null}
+  if(!valid(o0)){fail(T.bad);return}
+  main(o0);
+  function main(o){
   var EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var cur=/^[A-Z]{3}$/.test(o.cur)?o.cur:'USD',bal=+o.b,memo=String(o.mm||'').replace(/[^A-Za-z0-9-]/g,'').slice(0,24),seller=String(o.s||'').slice(0,80);
   var sPhone=String(o.p||'').replace(/[^\d+]/g,'').slice(0,16),sMail=EMAIL.test(o.e||'')?String(o.e).slice(0,120):'';
@@ -190,6 +205,7 @@ h2{font-size:15px;margin:0 0 8px}
   app.appendChild(paid);
   app.appendChild(el('p','foot',T.foot));
   paintRc();
+  }
 })();
 </script>
 </body>
