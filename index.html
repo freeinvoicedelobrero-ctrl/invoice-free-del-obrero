@@ -744,8 +744,8 @@ function docActions(d){const isEst=d.kind==='estimate',c=calc(d);const [act,labe
   const cobrar=!isEst&&c.balance>0.005;
   return `<button class="btn primary" style="margin:12px 0 10px;display:flex;align-items:center;justify-content:center;gap:8px" data-act="${act}" data-id="${esc(did||d.id)}"${pid?` data-p="${esc(pid)}"`:''}>${label}</button>
   <div class="dacts">${cobrar?`<button class="btn" data-act="payOpen" data-id="${d.id}">$ ${rt('Cobrar','Get paid')}</button>`:`<button class="btn" data-act="sharePdf" data-id="${d.id}">${t('sharePdf')}</button>`}<button class="btn" data-act="openPreview" data-id="${d.id}">${t('tab_preview')}</button><button class="btn" data-act="docMore" data-id="${d.id}" aria-label="${rt('Más opciones','More options')}">⋯ ${t('more')}</button></div>`}
-function sigLine(d){const sg=d.sig;if(!sg)return '';const when=new Date(sg.at).toLocaleString(lang==='es'?'es-MX':'en-US',{dateStyle:'medium',timeStyle:'short'});const changed=SIGCHK[d.id+':'+(d.updatedAt||0)]===true;
-  return `<div class="group"><div class="gl">${t('signatures')}</div><div style="display:flex;gap:12px;align-items:center"><img src="${sg.img}" alt="" style="height:44px;max-width:45%;background:#fff;border-radius:8px;padding:2px"><div class="small">✓ ${esc(sg.name)}<br>${esc(when)}</div></div>${changed?`<p class="small red">${t('changedAfterSign')}</p>`:''}</div>`}
+function sigLine(d){const sg=d.sig;if(!sg)return d.signTok&&menuCloudOK()?`<div class="group"><div class="gl">${t('signatures')}</div><p class="small" style="margin:0">✍ ${rt('Link para firmar enviado. Esperando la firma del cliente.','Signing link sent. Waiting for the customer to sign.')}</p></div>`:'';const when=new Date(sg.at).toLocaleString(lang==='es'?'es-MX':'en-US',{dateStyle:'medium',timeStyle:'short'});const changed=SIGCHK[d.id+':'+(d.updatedAt||0)]===true;
+  return `<div class="group"><div class="gl">${t('signatures')}</div><div style="display:flex;gap:12px;align-items:center"><img src="${sg.img}" alt="" style="height:44px;max-width:45%;background:#fff;border-radius:8px;padding:2px"><div class="small">✓ ${esc(sg.name)}<br>${esc(when)}</div></div>${changed?`<p class="small red">${t('changedAfterSign')}</p>`:''}${sg.seal&&sg.seal.txid?`<a class="btn" style="margin-top:8px" href="${esc(sigSealLink(sg.seal))}" target="_blank" rel="noopener">✓ ${rt('Firma sellada en BSV · Verificar','Signature sealed on BSV · Verify')}</a>`:menuCloudOK()?`<button class="btn" style="margin-top:8px" data-act="sealSigNow" data-id="${d.id}">${rt('Sellar firma en BSV','Seal signature on BSV')}</button>`:''}</div>`}
 const MORE_CSS=`#morePop{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding:10px}
 #morePop .mc{width:100%;max-width:420px;max-height:80dvh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:6px 0;box-shadow:0 12px 36px rgba(0,0,0,.5);margin-bottom:env(safe-area-inset-bottom,0px)}
 #morePop .mi{display:block;width:100%;text-align:left;background:none;border:0;padding:14px 18px;font:inherit;color:inherit;text-decoration:none}#morePop .mi+.mi{border-top:1px solid var(--line)}#morePop .mi:active{background:var(--line)}#morePop .mi.bad{color:var(--bad)}`;
@@ -759,7 +759,7 @@ function docMore(id){const d=S.docs[id];if(!d)return;const c=calc(d),isEst=d.kin
    !isEst&&d.sent&&c.balance>0.005?it('openReminder',t('sendReminder')):'',
    prim!=='sharePdf'?it('sharePdf',t('sharePdf')):'',it('pdf',t('downloadPdf')),
    it('toggleSent',d.sent?t('markUnsent'):t('markSent')),
-   !d.sig&&prim!=='clientSign'?it('clientSign','✍ '+t('clientSigns')):'',d.sig?it('clearClientSig',t('removeClientSig')):'',
+   !d.sig&&prim!=='clientSign'?it('clientSign','✍ '+t('clientSigns')):'',!d.sig&&menuCloudOK()?it('signRemote',rt('✍ Mandar link para firmar','✍ Send signing link')):'',d.sig?it('clearClientSig',t('removeClientSig')):'',
    !p.sig?it('mySign',t('addMySig')):'',
    isEst&&!d.accepted&&!d.convertedTo?it('accept',t('markAccepted')):'',
    isEst&&!d.convertedTo&&prim!=='convert'?it('convert',t('convert')):'',
@@ -772,6 +772,37 @@ function sealErrPop(e){const j=(e&&e.info)||{};const msg=String(e&&e.message||''
   const why=/fund empty/.test(msg)?rt('La función no encontró monedas en el fondo, o el explorador (WhatsOnChain) no le respondió.','The function found no coins in the fund, or the explorer (WhatsOnChain) did not answer.'):/not configured/.test(msg)?rt('Falta la llave del fondo (SEAL_WIF) en Supabase.','The fund key (SEAL_WIF) is missing in Supabase.'):/daily limit/.test(msg)?rt('Se llegó al límite de sellos de hoy.','Today\'s seal limit was reached.'):rt('No se pudo sellar ahora.','Could not seal right now.');
   const info=[j.address?rt('Dirección que usa la función','Address the function uses')+': '+j.address:'',j.net?rt('Red','Network')+': '+j.net:'',j.detail?rt('Detalle','Detail')+': '+j.detail:'',!j.address&&!j.detail?msg:''].filter(Boolean).join('\n');
   popCard(`<div style="padding:14px 18px"><b style="font-size:17px">${rt('No se pudo sellar','Could not seal')}</b><p class="small" style="margin:8px 0">${esc(why)}</p><pre class="mono" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;margin:0;padding:10px;border-radius:10px">${esc(info)}</pre></div><button class="mi" data-act="copy" data-v="${esc(info)}">${rt('Copiar detalle','Copy detail')}</button><button class="mi" data-act="closeMore">${rt('Cerrar','Close')}</button>`)}
+
+/* ---------- signatures sealed on BSV: in person or by link (firma.html) ---------- */
+function sigSealLink(sl){return new URL('sello.html',location.href).href.split(/[?#]/)[0]+'#n='+sl.net+'&t='+sl.txid+'&h='+sl.h+'&k=sig'}
+async function sealSig(d,quiet){const sg=d&&d.sig;if(!sg||(sg.seal&&sg.seal.txid)||!menuCloudOK())return null;
+  try{const h=await sha256hex(JSON.stringify(['obrero-sig-1',sg.hash,sg.name,sg.at,await sha256hex(sg.img)]));
+    const r=await fetch(MCFG.supabaseUrl+'/functions/v1/seal',{method:'POST',headers:{'Content-Type':'application/json',apikey:MCFG.supabaseAnonKey},body:JSON.stringify({hash:h,kind:'sig'})});
+    const j=await r.json().catch(()=>({}));if(!r.ok||!/^[0-9a-f]{64}$/.test(j.txid||'')){const er=new Error(j.error||('http '+r.status));er.info=j;throw er}
+    const real=S.docs[d.id]||d;if(real.sig){real.sig.seal={h,txid:j.txid,net:j.net==='main'?'main':'test',at:Date.now()};commit();if(!quiet)toast(rt('Firma sellada en BSV','Signature sealed on BSV'))}return real.sig&&real.sig.seal}
+  catch(e){if(!quiet)sealErrPop(e);return null}}
+function newTok(){const a=new Uint8Array(16);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function signLink(d){if(!d.signTok){d.signTok=newTok();commit()}const c=calc(d),cl=S.clients[d.clientId]||{},p=S.profile;
+  const o={v:1,t:d.signTok,k:d.kind,n:String(d.number),s:(p.company||'').slice(0,80),sp:(p.phone||'').slice(0,30),c:(cl.name||'').slice(0,80),dt:d.date||'',cur:ccy(),
+    it:(d.items||[]).filter(i=>i.desc||+i.rate).slice(0,60).map(i=>[String(i.desc||'').slice(0,140),+i.qty||0,String(i.unit||''),r2(+i.rate||0)]),tot:r2(c.total),
+    terms:String(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'')).slice(0,6000),acc:t('acceptText',p.company||''),h:await docHash(d)};
+  return new URL('firma.html',location.href).href.split(/[?#]/)[0]+'#'+b64url(JSON.stringify(o))}
+async function sendSignLink(d){if(!menuCloudOK()){toast(rt('Falta conectar la nube','Cloud is not connected'));return}
+  const l=await signLink(d);const txt=rt('Firma aquí ','Sign here ')+(d.kind==='estimate'?rt('el presupuesto EST ','estimate EST '):rt('la factura #','invoice #'))+d.number;
+  redrawSheet();
+  try{if(navigator.share){await navigator.share({title:txt,text:txt,url:l});toast(rt('Te aviso cuando firme','I will tell you when they sign'));return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(l);toast(rt('Enlace para firmar copiado','Signing link copied'))}catch(e){}}
+const sigPulling={};
+async function pullRemoteSig(d){if(!d||!d.signTok||d.sig||!menuCloudOK()||sigPulling[d.id])return;sigPulling[d.id]=1;
+  try{const rows=await menuRpc('sign_get',{p_tok:d.signTok});const r=rows&&rows[0];if(!r)return;const o=JSON.parse(r.data);
+    if(!o||!/^data:image\/png;base64,/.test(o.img||'')||!o.name)return;const real=S.docs[d.id];if(!real||real.sig)return;
+    real.sig={img:o.img,name:String(o.name).slice(0,80),at:o.at,hash:o.h,ua:String(o.ua||'').slice(0,120),remote:true};
+    if(o.seal&&/^[0-9a-f]{64}$/.test(o.seal.txid||''))real.sig.seal={h:o.seal.h,txid:o.seal.txid,net:o.seal.net==='main'?'main':'test',at:o.seal.at||Date.now()};
+    if(real.kind==='estimate'){real.accepted=true;real.acceptedAt=real.acceptedAt||Date.now()}real.updatedAt=Date.now();commit();
+    toast('✍ '+real.sig.name+rt(' firmó ',' signed ')+(real.kind==='estimate'?'EST ':'#')+real.number);if(!real.sig.seal)sealSig(real,true)}
+  catch(e){}finally{delete sigPulling[d.id]}}
+function pullAllSigs(){Object.values(S.docs||{}).filter(d=>d.signTok&&!d.sig).slice(0,25).forEach(pullRemoteSig)}
+function signChoice(id){popCard(`<div style="padding:14px 18px 6px"><b style="font-size:17px">✍ ${t('clientSigns')}</b><p class="small" style="margin:6px 0 0">${rt('La firma queda sellada en BSV.','The signature is sealed on BSV.')}</p></div><button class="mi" data-act="signHere" data-id="${id}">${rt('Firmar aquí, en mi teléfono','Sign here, on my phone')}</button>${menuCloudOK()?`<button class="mi" data-act="signRemote" data-id="${id}">${rt('Mandar link para que firme desde su teléfono','Send a link to sign from their phone')}</button>`:''}<button class="mi" data-act="closeMore">${t('cancel')}</button>`)}
 function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&d.sig){const k=d.id+':'+(d.updatedAt||0);if(SIGCHK[k]===undefined){SIGCHK[k]='?';docHash(d).then(h=>{SIGCHK[k]=h!==d.sig.hash;if(SIGCHK[k])redrawSheet()})}}},render(){
   const d=S.docs[id];if(!d)return sheetHead('')+`<div class="wrap"><div class="empty">${t('noData')}</div></div>`;
   const c=calc(d),s=status(d),cl=S.clients[d.clientId]||{},j=jobOf(d);
@@ -1025,7 +1056,7 @@ async function saveSig(){
   const d=S.docs[SIG.id];
   d.sig={img,name,at:new Date().toISOString(),hash:await docHash(d),ua:navigator.userAgent.slice(0,120)};
   if(d.kind==='estimate')d.accepted=true;
-  d.updatedAt=Date.now();commit();closeSheet();toast(t('signedOk'));
+  d.updatedAt=Date.now();commit();closeSheet();toast(t('signedOk'));setTimeout(()=>sealSig(d,true),300);
 }
 function sigBlock(d){
   const p=S.profile,sg=d.sig;
@@ -1925,7 +1956,7 @@ const A={
   newClient:()=>openClientEditor(),
   newInvoiceFor:e=>openEditor(newDoc('invoice',{clientId:e.dataset.id})),
   newEstimateFor:e=>openEditor(newDoc('estimate',{clientId:e.dataset.id})),
-  openDoc:e=>{payTab=null;showSheet(docDetail(e.dataset.id))},
+  openDoc:e=>{payTab=null;showSheet(docDetail(e.dataset.id));pullRemoteSig(S.docs[e.dataset.id])},
   openClient:e=>{clientFilter='all';clientQuery='';showSheet(clientDetail(e.dataset.id))},
   editDoc:e=>openEditor(S.docs[e.dataset.id]),
   editClient:e=>openClientEditor(S.clients[e.dataset.id]),
@@ -1973,7 +2004,10 @@ const A={
   savePay:e=>{const d=S.docs[e.dataset.id];const amt=r2(+$('#p-amt').value);if(!amt)return;d.payments=d.payments||[];d.payments.push({id:uid(),amount:amt,date:$('#p-date').value||todayISO(),method:$('#p-m').value,ref:$('#p-ref').value.trim(),coin:$('#p-coin').value.trim(),txid:$('#p-tx').value.trim(),note:$('#p-note').value.trim(),proof:$('#p-proof').value.trim().slice(0,800),memo:payRef(d),addr:(()=>{const mm=methods().find(x=>(x.name||PRESETS[x.type]?.label)===$('#p-m').value);return mm&&!PRESETS[mm.type]?.fiat?(payAddress(mm,d)||'').trim():''})()});d.sent=true;d.sentAt=d.sentAt||Date.now();d.updatedAt=Date.now();closeSheet();commit();toast(t('saved'))},
   delPay:e=>{const d=S.docs[e.dataset.id];d.payments=(d.payments||[]).filter(p=>p.id!==e.dataset.p);commit()},
   toggleSent:e=>{const d=S.docs[e.dataset.id];d.sent=!d.sent;if(d.sent)d.sentAt=d.sentAt||Date.now();else delete d.sentAt;commit()},
-  clientSign:e=>{SIG={mode:'client',id:e.dataset.id};showSheet(sigSheet())},
+  clientSign:e=>signChoice(e.dataset.id),
+  signHere:e=>{SIG={mode:'client',id:e.dataset.id};showSheet(sigSheet())},
+  signRemote:e=>sendSignLink(S.docs[e.dataset.id]),
+  sealSigNow:e=>{const d=S.docs[e.dataset.id];if(d)sealSig(d,false).then(()=>redrawSheet())},
   mySign:()=>{SIG={mode:'me'};showSheet(sigSheet())},
   sigClear:()=>initPad(),
   sigSave:()=>saveSig(),
@@ -2151,7 +2185,7 @@ $('#fileIn').addEventListener('change',async e=>{
 
 /* ---------- boot ---------- */
 /* when the phone brings the app back from the share sheet, redraw so the list shows the current Sent state */
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)render()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();pullAllSigs()}});setTimeout(()=>{try{pullAllSigs()}catch(e){}},2500);
 window.addEventListener("pageshow",()=>render());
 window.addEventListener("storage",e=>{if(e.key===LKEY&&!D){load();render()}});
 load();

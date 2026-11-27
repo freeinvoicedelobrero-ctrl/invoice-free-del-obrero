@@ -38,6 +38,7 @@ a.btn{display:flex;align-items:center;justify-content:center;min-height:46px;bor
   function kv(k,v){var d=el('div','kv');d.appendChild(el('span',null,k));d.appendChild(el('span',null,v));return d}
   var q=new URLSearchParams(location.hash.slice(1));
   var h=(q.get('h')||'').toLowerCase(),tx=(q.get('t')||'').toLowerCase(),net=q.get('n')==='main'?'main':'test';
+  if(q.get('k')==='sig'){T.okSub=es?'La huella de esta firma está grabada en la cadena de BSV. Prueba que el cliente firmó este documento en esa fecha, y nadie puede cambiarla ni borrarla.':'This signature fingerprint is written on the BSV blockchain. It proves the customer signed this document at that time, and nobody can change or delete it.';T.noSub=es?'La transacción existe, pero no contiene esta huella. La firma o el documento pudieron haber sido modificados.':'The transaction exists but does not contain this fingerprint. The signature or document may have been changed.'}
   app.appendChild(el('h1',null,T.title));
   if(!/^[0-9a-f]{64}$/.test(h)||!/^[0-9a-f]{64}$/.test(tx)){app.appendChild(el('div','card warn',T.bad));return}
   var explorer=(net==='main'?'https://whatsonchain.com/tx/':'https://test.whatsonchain.com/tx/')+tx;
