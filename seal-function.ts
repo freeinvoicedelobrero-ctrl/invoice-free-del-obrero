@@ -1,6 +1,8 @@
 // Invoice Free del Obrero: "seal" Edge Function.
 // Writes a 32-byte fingerprint (SHA-256 of an invoice or receipt) on the BSV blockchain, paid by the fund key.
-// The output is: OP_FALSE OP_RETURN "obrero" <hash>. No customer data ever goes on chain.
+// The output is: OP_FALSE OP_RETURN "obrero" <hash> [<tag>]. No customer data ever goes on chain.
+// <tag> (optional, 32 bytes) = SHA-256 of ["obrero-ref-1", memo, invoice #, total]. Anyone holding the invoice can
+// recompute it from the paper and find/check the seal; nobody else can guess it (the memo has random letters).
 //
 // Secrets (Supabase > Edge Functions > Secrets):
 //   SEAL_WIF  private key of the fund, in WIF format. Never put it in the app or on GitHub.
@@ -49,41 +51,59 @@ async function woc(path: string) {
 // Finds a spendable output of the fund address. Tries the current and the older explorer endpoints.
 // Notes from the last lookup, so the app can show why the fund was not found.
 let lookupNotes: string[] = []
-async function findUtxo(address: string) {
+type Src = { tx: Transaction; vout: number } | { txid: string; vout: number; value: number }
+
+// Looks up a spendable output of the fund address. Skips outputs already spent by a transaction
+// that is still waiting in the mempool, and includes our own unconfirmed change.
+// It does not download the whole transaction, so it needs only one or two requests.
+async function findUtxo(address: string): Promise<Src | null> {
   let list: any[] = []
   lookupNotes = []
-  for (const p of [`address/${address}/confirmed/unspent`, `address/${address}/unconfirmed/unspent`, `address/${address}/unspent`]) {
+  for (const p of [`address/${address}/unconfirmed/unspent`, `address/${address}/confirmed/unspent`]) {
     const short = p.split('/').slice(2).join('/')
     try {
       const j = await woc(p)
       const arr = Array.isArray(j) ? j : Array.isArray(j?.result) ? j.result : []
       lookupNotes.push(`${short}: ok ${arr.length}`)
       list = list.concat(arr)
-      if (arr.length) break // found coins: no need to ask the other endpoints
     } catch (e) { lookupNotes.push(`${short}: ${String(e).replace(/^Error: /, '').replace(/ address\/.*/, '')}`) }
   }
   const best = list
-    .map((x) => ({ tx_hash: x?.tx_hash || x?.txid || x?.hash, tx_pos: x?.tx_pos ?? x?.vout ?? x?.outputIndex, value: Number(x?.value ?? x?.satoshis) }))
-    .filter((x) => x.tx_hash && Number.isFinite(x.value) && x.value >= MIN_INPUT)
+    .filter((x) => !x?.isSpentInMempoolTx)
+    .map((x) => ({ txid: String(x?.tx_hash || x?.txid || x?.hash || ''), vout: Number(x?.tx_pos ?? x?.vout ?? x?.outputIndex), value: Number(x?.value ?? x?.satoshis) }))
+    .filter((x) => /^[0-9a-f]{64}$/.test(x.txid) && Number.isInteger(x.vout) && Number.isFinite(x.value) && x.value >= MIN_INPUT)
     .sort((a, b) => b.value - a.value)[0]
-  if (!best) return null
-  const hex = await woc(`tx/${best.tx_hash}/hex`)
-  if (typeof hex !== 'string') return null
-  return { tx: Transaction.fromHex(hex.trim()), vout: Number(best.tx_pos) }
+  return best || null
 }
 
-async function buildSeal(src: { tx: Transaction; vout: number }, key: PrivateKey, hash: string) {
-  const tag = Utils.toArray('obrero', 'utf8')
-  const data = new LockingScript([
+function sealScript(hash: string, tag = '') {
+  const prefix = Utils.toArray('obrero', 'utf8')
+  return new LockingScript([
     { op: OP.OP_FALSE }, { op: OP.OP_RETURN },
-    { op: tag.length, data: tag },
+    { op: prefix.length, data: prefix },
     { op: 32, data: Utils.toArray(hash, 'hex') },
+    ...(tag ? [{ op: 32, data: Utils.toArray(tag, 'hex') }] : []),
   ])
+}
+
+async function buildSeal(src: Src, key: PrivateKey, hash: string, tag = '') {
+  const mine = new P2PKH().lock(key.toAddress(NET === 'test' ? 'testnet' : undefined))
   const tx = new Transaction()
-  tx.addInput({ sourceTransaction: src.tx, sourceOutputIndex: src.vout, unlockingScriptTemplate: new P2PKH().unlock(key) })
-  tx.addOutput({ lockingScript: data, satoshis: 0 })
-  tx.addOutput({ lockingScript: new P2PKH().lock(key.toAddress(NET === 'test' ? 'testnet' : undefined)), change: true })
-  await tx.fee(new SatoshisPerKilobyte(FEE_RATE))
+  if ('tx' in src) {
+    tx.addInput({ sourceTransaction: src.tx, sourceOutputIndex: src.vout, unlockingScriptTemplate: new P2PKH().unlock(key) })
+    tx.addOutput({ lockingScript: sealScript(hash, tag), satoshis: 0 })
+    tx.addOutput({ lockingScript: mine, change: true })
+    await tx.fee(new SatoshisPerKilobyte(FEE_RATE))
+    await tx.sign()
+    return tx
+  }
+  // Only the txid, output number and amount are known: sign with them and work out the change by size.
+  tx.addInput({ sourceTXID: src.txid, sourceOutputIndex: src.vout, unlockingScriptTemplate: new P2PKH().unlock(key, 'all', false, src.value, mine) })
+  tx.addOutput({ lockingScript: sealScript(hash, tag), satoshis: 0 })
+  tx.addOutput({ lockingScript: mine, satoshis: src.value - 1 })
+  await tx.sign()
+  const fee = Math.max(1, Math.ceil(((tx.toBinary().length + 2) * FEE_RATE) / 1000))
+  tx.outputs[1].satoshis = src.value - fee
   await tx.sign()
   return tx
 }
@@ -101,7 +121,9 @@ Deno.serve(async (req) => {
   let body: any
   try { body = await req.json() } catch { return json({ error: 'bad json' }, 400) }
   const hash = String(body?.hash || '').toLowerCase()
-  const kind = body?.kind === 'rcpt' ? 'rcpt' : 'inv'
+  const kind = ['rcpt', 'sig', 'photo'].includes(body?.kind) ? body.kind : 'inv'
+  const tag = String(body?.tag || '').toLowerCase()
+  if (tag && !/^[0-9a-f]{64}$/.test(tag)) return json({ error: 'bad tag' }, 400)
   if (!/^[0-9a-f]{64}$/.test(hash)) return json({ error: 'bad hash' }, 400)
   const wif = Deno.env.get('SEAL_WIF')
   if (!wif) return json({ error: 'not configured' }, 503)
@@ -125,32 +147,43 @@ Deno.serve(async (req) => {
   const address = key.toAddress(NET === 'test' ? 'testnet' : undefined)
 
   // Spend the last seal's change if we have it; otherwise look up the fund address.
-  let src: { tx: Transaction; vout: number } | null = null
-  const { data: u } = await db.from('seal_utxo').select('rawtx,vout,net').eq('id', 1).maybeSingle()
-  if (u?.rawtx && u.net === NET) {
+  const readStored = async (): Promise<{ src: Src; raw: string } | null> => {
+    const { data: u } = await db.from('seal_utxo').select('rawtx,vout,net').eq('id', 1).maybeSingle()
+    if (!u?.rawtx || u.net !== NET) return null
     try {
       const t = Transaction.fromHex(u.rawtx)
-      if ((t.outputs[u.vout]?.satoshis || 0) >= MIN_INPUT) src = { tx: t, vout: u.vout }
-    } catch { /* fall back to lookup */ }
+      if ((t.outputs[u.vout]?.satoshis || 0) >= MIN_INPUT) return { src: { tx: t, vout: u.vout }, raw: u.rawtx }
+    } catch { /* bad row */ }
+    return null
   }
+  // A spent or missing input means our saved output is stale. Anything else (429, network) is temporary.
+  const isSpent = (m: string) => /missing|spent|conflict|bad-txns|orphan|double|already|unknown input|257|258/i.test(m)
 
   let lastErr = ''
-  for (let attempt = 0; attempt < 2; attempt++) {
+  let triedLookup = false
+  for (let attempt = 0; attempt < 4; attempt++) {
+    let stored = await readStored()
+    let src: Src | null = stored?.src || null
     if (!src) {
+      if (triedLookup && attempt > 1) break
+      triedLookup = true
       try { src = await findUtxo(address) } catch (e) { lastErr = String(e) }
       if (!src) return json({ error: 'fund empty or explorer unavailable', address, net: NET, detail: (lastErr + ' ' + lookupNotes.join(' | ')).trim().slice(0, 300) }, 503)
     }
     try {
-      const tx = await buildSeal(src, key, hash)
+      const tx = await buildSeal(src, key, hash, tag)
       await broadcast(tx.toHex())
       const txid = tx.id('hex') as string
       await db.from('seal_utxo').upsert({ id: 1, rawtx: tx.toHex(), vout: 1, net: NET, updated_at: new Date().toISOString() })
-      await db.from('seals').insert({ hash, txid, net: NET, kind, ip })
+      await db.from('seals').insert({ hash, txid, net: NET, kind, ip, tag: tag || null })
       return json({ txid, net: NET })
     } catch (e) {
       lastErr = String(e)
-      src = null // the stored output may be spent or invalid: look up the fund address on the next try
-      await db.from('seal_utxo').delete().eq('id', 1)
+      if (!isSpent(lastErr)) break // temporary problem: keep the saved output and let the app try again later
+      // Another seal may have spent it a moment ago and saved its new change: wait, then read again.
+      await sleep(400 + Math.floor(Math.random() * 600))
+      const now = await readStored()
+      if (stored && now && now.raw === stored.raw) await db.from('seal_utxo').delete().eq('id', 1)
     }
   }
   return json({ error: 'could not seal', detail: lastErr.slice(0, 300) }, 502)
