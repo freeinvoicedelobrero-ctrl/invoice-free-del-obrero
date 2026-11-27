@@ -171,6 +171,7 @@ textarea.in{min-height:84px;resize:vertical}
 .row .plane .trail{fill:none;stroke:#555;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:3 4}
 .row .plane.on .pl{opacity:1}
 .row .plane.on .trail{stroke:#22d3ee;stroke-dasharray:none;filter:drop-shadow(0 0 3px #22d3ee)}
+.bellbtn{position:relative;width:42px;height:42px;display:flex;align-items:center;justify-content:center}.bellbtn svg{width:24px;height:24px}.bellbtn .bdg{position:absolute;top:3px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--bad,#e5484d);color:#fff;font-size:11px;font-weight:800;line-height:18px;text-align:center}
 #langBtn{display:flex;gap:2px;padding:3px;border:1px solid var(--line,#333);border-radius:999px;font-size:13px;font-weight:700}#langBtn .lp{padding:4px 9px;border-radius:999px;color:var(--muted,#888)}#langBtn .lp.on{background:#fff;color:#000}
 .edtabs{margin-top:12px}
 .btns .btn{display:flex;align-items:center;justify-content:center;gap:8px}.btns .btn svg{width:20px;height:20px;flex:none}
@@ -260,7 +261,7 @@ button.card:active{transform:perspective(600px) rotateX(6deg) rotateY(-4deg) tra
 <body>
 <div id="welcome" hidden></div>
 <div id="appShell" hidden>
-  <header class="top"><div class="wrap"><h1 id="title">Home</h1><button class="iconbtn" data-act="lang" id="langBtn" aria-label="Language">EN</button></div></header>
+  <header class="top"><div class="wrap"><h1 id="title">Home</h1><button class="iconbtn bellbtn" data-act="alerts" id="bellBtn" aria-label="Alerts"></button><button class="iconbtn" data-act="lang" id="langBtn" aria-label="Language">EN</button></div></header>
   <main id="main"><div class="wrap" id="view"></div></main>
   <div class="totalbar" id="totalbar" hidden><div class="wrap"><span id="totalLbl">Total</span><span class="num" id="totalVal"></span></div></div>
   <button class="fab" id="fab" data-act="fab" aria-label="New"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -489,6 +490,7 @@ function render(){
   const w=$('#welcome'),shell=$('#appShell');
   if(showWelcome){w.hidden=false;shell.hidden=true;w.innerHTML=renderWelcome();return}
   w.hidden=true;shell.hidden=false;
+  paintBell();
   $('#langBtn').innerHTML=`<span class="lp${lang==='en'?' on':''}">EN</span><span class="lp${lang==='es'?' on':''}">ES</span>`;
   const tabs=['home','clients','invoices','estimates','more'];
   $('#tabs').innerHTML=tabs.map(k=>`<button class="tab" data-act="tab" data-v="${k}" ${k===tab?'aria-current="page"':''}>${ic(k,1.9)}<span>${t(k)}</span></button>`).join('');
@@ -773,6 +775,21 @@ function sealErrPop(e){const j=(e&&e.info)||{};const msg=String(e&&e.message||''
   const info=[j.address?rt('Dirección que usa la función','Address the function uses')+': '+j.address:'',j.net?rt('Red','Network')+': '+j.net:'',j.detail?rt('Detalle','Detail')+': '+j.detail:'',!j.address&&!j.detail?msg:''].filter(Boolean).join('\n');
   popCard(`<div style="padding:14px 18px"><b style="font-size:17px">${rt('No se pudo sellar','Could not seal')}</b><p class="small" style="margin:8px 0">${esc(why)}</p><pre class="mono" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;margin:0;padding:10px;border-radius:10px">${esc(info)}</pre></div><button class="mi" data-act="copy" data-v="${esc(info)}">${rt('Copiar detalle','Copy detail')}</button><button class="mi" data-act="closeMore">${rt('Cerrar','Close')}</button>`)}
 
+
+/* ---------- alerts bell: signatures received, new orders, invoices that just became overdue ---------- */
+function alertsList(){S.meta=S.meta||{};if(!Array.isArray(S.meta.alerts))S.meta.alerts=[];return S.meta.alerts}
+function addAlert(key,icon,text,docId){const a=alertsList();if(a.some(x=>x.key===key))return false;a.unshift({key,icon,text:String(text).slice(0,140),docId:docId||'',at:Date.now(),read:false});a.length=Math.min(a.length,40);persist();paintBell();return true}
+function unreadAlerts(){return alertsList().filter(x=>!x.read).length}
+function paintBell(){const b=document.getElementById('bellBtn');if(!b)return;const n=unreadAlerts();b.innerHTML=ic('bell',2)+(n?`<span class="bdg">${n>9?'9+':n}</span>`:'');b.setAttribute('aria-label',rt('Alertas','Alerts')+(n?' ('+n+')':''))}
+function checkDueAlerts(){const today=todayISO();invoicesAll().forEach(d=>{const c=calc(d);if(d.sent&&c.balance>0.005&&c.due<today)addAlert('due:'+d.id+':'+c.due,'⏰',rt('Factura #','Invoice #')+d.number+rt(' venció · saldo ',' is overdue · balance ')+money(c.balance)+' · '+clientName(d.clientId),d.id)})}
+function alertsPop(){const a=alertsList();const when=t0=>{const m=Math.round((Date.now()-t0)/60000);return m<1?rt('ahora','now'):m<60?m+' min':m<1440?Math.round(m/60)+' h':new Date(t0).toLocaleDateString(lang==='es'?'es-MX':'en-US',{month:'short',day:'numeric'})};
+  popCard(`<div style="padding:14px 18px 6px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">🔔 ${rt('Alertas','Alerts')}</b>${a.length?`<button class="textbtn" data-act="alertsClear" data-keep="1">${rt('Borrar todo','Clear all')}</button>`:''}</div>
+  ${a.length?a.map((x,i)=>`<button class="mi" data-act="alertOpen" data-i="${i}" style="display:flex;gap:12px;align-items:flex-start${x.read?';opacity:.65':''}"><span style="font-size:20px;line-height:1.2">${x.icon}</span><span style="flex:1;min-width:0">${x.read?'':'<b>'}${esc(x.text)}${x.read?'':'</b>'}<br><span class="small">${when(x.at)}</span></span></button>`).join(''):`<p class="small" style="padding:4px 18px 16px;margin:0">${rt('No hay alertas. Aquí te avisamos cuando un cliente firme, llegue un pedido o venza una factura.','No alerts. You will see here when a customer signs, an order arrives or an invoice becomes overdue.')}</p>`}`);
+  a.forEach(x=>x.read=true);persist();paintBell()}
+let ordersSeen=null;
+async function checkOrderAlerts(){if(!menuCloudOK()||!S.profile.menuId)return;try{await loadOrders()}catch(e){return}(ordersState.list||[]).filter(o=>o.status==='new').forEach(o=>{let d={};try{d=typeof o.data==='string'?JSON.parse(o.data):(o.data||{})}catch(e){}
+  addAlert('order:'+o.id,'🛒',rt('Pedido nuevo #','New order #')+(o.num||o.id)+(d.name?' · '+String(d.name).slice(0,40):''),'')})}
+function checkAlerts(){try{checkDueAlerts()}catch(e){}try{pullAllSigs()}catch(e){}checkOrderAlerts()}
 /* ---------- signatures sealed on BSV: in person or by link (firma.html) ---------- */
 function sigSealLink(sl){return new URL('sello.html',location.href).href.split(/[?#]/)[0]+'#n='+sl.net+'&t='+sl.txid+'&h='+sl.h+'&k=sig'}
 async function sealSig(d,quiet){const sg=d&&d.sig;if(!sg||(sg.seal&&sg.seal.txid)||!menuCloudOK())return null;
@@ -803,7 +820,7 @@ async function pullRemoteSig(d){if(!d||!d.signTok||d.sig||!menuCloudOK()||sigPul
     real.sig={img:o.img,name:String(o.name).slice(0,80),at:o.at,hash:real.signHash||o.h,ua:String(o.ua||'').slice(0,120),remote:true};
     if(o.seal&&/^[0-9a-f]{64}$/.test(o.seal.txid||''))real.sig.seal={h:o.seal.h,txid:o.seal.txid,net:o.seal.net==='main'?'main':'test',at:o.seal.at||Date.now()};
     if(real.kind==='estimate'){real.accepted=true;real.acceptedAt=real.acceptedAt||Date.now()}real.updatedAt=Date.now();commit();
-    toast('✍ '+real.sig.name+rt(' firmó ',' signed ')+(real.kind==='estimate'?'EST ':'#')+real.number);if(!real.sig.seal)sealSig(real,true)}
+    toast('✍ '+real.sig.name+rt(' firmó ',' signed ')+(real.kind==='estimate'?'EST ':'#')+real.number);addAlert('sig:'+real.id+':'+real.signTok,'✍',real.sig.name+rt(' firmó ',' signed ')+(real.kind==='estimate'?rt('el presupuesto EST ','estimate EST '):rt('la factura #','invoice #'))+real.number+(real.sig.seal?rt(' · sellada en BSV',' · sealed on BSV'):''),real.id);if(!real.sig.seal)sealSig(real,true)}
   catch(e){}finally{delete sigPulling[d.id]}}
 function pullAllSigs(){Object.values(S.docs||{}).filter(d=>d.signTok&&!d.sig).slice(0,25).forEach(pullRemoteSig)}
 function signChoice(id){popCard(`<div style="padding:14px 18px 6px"><b style="font-size:17px">✍ ${t('clientSigns')}</b><p class="small" style="margin:6px 0 0">${rt('La firma queda sellada en BSV.','The signature is sealed on BSV.')}</p></div><button class="mi" data-act="signHere" data-id="${id}">${rt('Firmar aquí, en mi teléfono','Sign here, on my phone')}</button>${menuCloudOK()?`<button class="mi" data-act="signRemote" data-id="${id}">${rt('Mandar link para que firme desde su teléfono','Send a link to sign from their phone')}</button>`:''}<button class="mi" data-act="closeMore">${t('cancel')}</button>`)}
@@ -2076,6 +2093,9 @@ const A={
   storeBsv:()=>storeBsvStart(),
   payOpen:e=>showSheet(cobrarSheet(e.dataset.id)),
   docMore:e=>docMore(e.dataset.id),
+  alerts:()=>alertsPop(),
+  alertsClear:()=>{S.meta.alerts=[];persist();paintBell();closeMore()},
+  alertOpen:e=>{const x=alertsList()[+e.dataset.i];if(!x)return;if(x.docId&&S.docs[x.docId]){A.openDoc({dataset:{id:x.docId}})}else if(x.key.startsWith('order:')){A.storeOpen();if(A.ordersOpen)A.ordersOpen()}},
   closeMore:()=>closeMore(),
   docDelAsk:e=>{if(e.dataset.sure){closeMore();A.delDoc(e);return}e.dataset.sure='1';e.textContent=t('confirmDel')+' '+t('yesDel');},
   sealStep:e=>{const d=S.docs[e.dataset.id];if(d&&sealOk(d)){window.open(sealLink(d),'_blank','noopener');return}A.sealNow(e)},
@@ -2189,7 +2209,7 @@ $('#fileIn').addEventListener('change',async e=>{
 
 /* ---------- boot ---------- */
 /* when the phone brings the app back from the share sheet, redraw so the list shows the current Sent state */
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();pullAllSigs()}});setTimeout(()=>{try{pullAllSigs()}catch(e){}},2500);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();checkAlerts()}});setTimeout(()=>{try{checkAlerts()}catch(e){}},2500);setInterval(()=>{if(!document.hidden)checkAlerts()},60000);
 window.addEventListener("pageshow",()=>render());
 window.addEventListener("storage",e=>{if(e.key===LKEY&&!D){load();render()}});
 load();
