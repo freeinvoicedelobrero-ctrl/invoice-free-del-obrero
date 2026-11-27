@@ -177,7 +177,9 @@ textarea.in{min-height:84px;resize:vertical}
 .paper .ph{background:#222;color:#fff;padding:16px;display:flex;justify-content:space-between;gap:10px}
 .paper .pco{font-weight:700;font-size:17px}.paper .ph .psm{color:#ddd}
 .paper .pr{text-align:right}.paper .pkind{font-weight:800;font-size:20px;letter-spacing:.5px}.paper .pno{font-weight:700}
-.paper .pb{padding:16px}.paper .psm{font-size:12px;color:#444;margin:2px 0}
+.paper .pb{padding:16px}.paper .psm{font-size:12px;color:#444;margin:2px 0;overflow-wrap:anywhere}
+.paper .ppay{display:flex;gap:12px;align-items:flex-start;margin-top:6px}.paper .pqr{flex:none;width:104px;height:104px;border:1px solid #ccc;padding:3px;display:block}.paper .pqr svg{width:100%;height:100%;display:block}
+.paper .pseal{margin-top:12px;display:inline-block;border:2px solid #2E7D5B;color:#1f6b4a;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:800;letter-spacing:.3px}
 .paper .plbl{font-size:10px;font-weight:700;color:#777;letter-spacing:.6px;margin-top:12px}
 .paper .pmeta{display:flex;justify-content:space-between;gap:10px}
 .paper .ptab{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px}
@@ -876,7 +878,11 @@ function previewHTML(d){
   <div class="pbig"><span>Total</span><span>${money(c.total)}</span></div>
   ${isEst?'':`<div><span>Paid</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>Balance due</span><span>${money(c.balance)}</span></div>`}</div>
   ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
-  ${!isEst&&enabledMethods().length?`<div class="plbl">PAY WITH</div><p class="psm"><b>Memo / Referencia:</b> ${esc(payRef(d))}</p>${enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};return `<p class="psm" style="white-space:pre-wrap"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${esc(pr.ach?achText(m).replace(/\n/g,' · '):pr.link?(payURI(m,d,null)||payAddress(m,d)):payAddress(m,d))}</p>`}).join('')}`:''}
+  ${!isEst&&enabledMethods().length?(()=>{const pl=payLink(d),short=v=>{v=String(v||'');return v.length>34?v.slice(0,14)+'…'+v.slice(-8):v};
+   const rows=enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};const lk=pr.link?payURI(m,d,null):null;const v=pr.ach?achText(m).replace(/\n/g,' · '):lk?'':payAddress(m,d);if(!lk&&!v)return '';
+     return `<p class="psm"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${lk?`<a href="${esc(lk)}" target="_blank" rel="noopener" style="color:#1a4dd6;font-weight:600">${rt('Pagar ahora (tarjeta o banco)','Pay now (card or bank)')}</a>`:`<span style="font-family:ui-monospace,Menlo,monospace">${esc(pr.ach?v:short(v))}</span>`}</p>`}).join('');
+   return `<div class="plbl">PAY WITH / PAGAR CON</div><div class="ppay">${pl?`<a class="pqr" href="${esc(pl)}" target="_blank" rel="noopener">${qrSVG(pl)}</a>`:''}<div style="min-width:0"><p class="psm" style="font-weight:700;font-size:13px;margin-top:0">${pl?'Escanea para pagar / Scan to pay':''}</p><p class="psm"><b>Memo / Referencia:</b> ${esc(payRef(d))}</p>${rows}${pl?`<p class="psm" style="color:#666">${rt('El código lleva al cliente a todas las formas de pago con las direcciones completas.','The code takes the customer to every payment option with full addresses.')}</p>`:''}</div></div>`})():''}
+  ${!isEst&&sealOk(d)?`<div class="pseal">✓ SELLADO EN BSV / SEALED ON BSV · <span style="font-family:ui-monospace,Menlo,monospace">${esc(d.seal.txid.slice(0,10))}…</span>${d.seal.net==='test'?' · testnet':''}</div>`:''}
   ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">TERMS & CONDITIONS</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
   <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">${esc(sellerLbl().toUpperCase())}</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
   <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CUSTOMER</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>Llave del fondo</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:24px;margin:6px 0 6px}
+p{margin:8px 0}
+.card{background:#0E0F12;border:1px solid #26292F;border-radius:14px;padding:14px;margin:14px 0}
+.warn{border-color:#E0A83A}.warn b{color:#E0A83A}
+.lbl{color:#9AA0AB;font-size:13px;margin-bottom:4px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;overflow-wrap:anywhere;background:#16181d;border-radius:10px;padding:10px;user-select:all}
+button,a.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;border-radius:12px;border:0;background:#4D6BFF;color:#fff;font:inherit;font-weight:600;text-decoration:none;margin-top:10px}
+button.out{background:none;border:1px solid #26292F}
+.qr{background:#fff;border-radius:10px;padding:8px;width:200px;margin:10px auto 0}.qr svg{display:block;width:100%;height:auto}
+.small{color:#9AA0AB;font-size:13px}
+ol{padding-left:20px;margin:6px 0}li{margin:6px 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Llave del fondo de sellos</h1>
+<p class="small">Esta página crea la llave que paga los sellos en BSV. Se crea aquí mismo, en tu teléfono, y no se manda a ningún lado. Tú la copias a Supabase.</p>
+<div class="card warn"><b>Importante:</b> quien tenga la llave puede gastar el fondo. No la mandes por chat ni la subas a GitHub. Solo va en Supabase (secreto SEAL_WIF) y en un lugar seguro tuyo, como un papel o tu gestor de contraseñas.</div>
+<div id="load" class="card">Cargando…</div>
+<div id="start" hidden><button id="gen">Crear llave nueva</button></div>
+<div id="out" hidden>
+ <div class="card"><div class="lbl">1. Llave privada (va en Supabase como SEAL_WIF)</div><div class="mono" id="wif"></div><button class="out" id="cpw">Copiar llave</button></div>
+ <div class="card"><div class="lbl">2. Dirección del fondo (aquí mandas los BSV)</div><div class="mono" id="addr"></div><div class="qr" id="qr"></div><button class="out" id="cpa">Copiar dirección</button><a class="btn out" id="woc" target="_blank" rel="noopener" style="background:none;border:1px solid #26292F">Ver saldo en WhatsOnChain</a></div>
+ <div class="card"><div class="lbl">3. Pasos</div><ol>
+  <li>Guarda la llave en un lugar seguro.</li>
+  <li>En Supabase → Edge Functions → Secrets: cambia <b>SEAL_WIF</b> por esta llave y <b>SEAL_NET</b> por <b>main</b>. Guarda.</li>
+  <li>Manda una cantidad chica de BSV a la dirección del fondo, por ejemplo 0.05 BSV, que alcanza para miles de sellos.</li>
+  <li>En la app toca <b>Sellar en BSV</b> en una factura.</li></ol>
+  <p class="small">Si cierras esta página sin copiar la llave, se pierde. Solo crea otra.</p></div>
+</div>
+</div>
+<script src="https://unpkg.com/@bsv/sdk@4.1.2/dist/umd/bundle.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var B=window.bsv;
+  if(!B||!B.PrivateKey||!window.crypto||!crypto.getRandomValues){$('load').textContent='No se pudo cargar. Revisa tu conexión y vuelve a abrir la página.';return}
+  $('load').hidden=true;$('start').hidden=false;
+  function copy(text,btn){var old=btn.textContent;(navigator.clipboard?navigator.clipboard.writeText(text):Promise.reject()).then(function(){btn.textContent='Copiado ✓'},function(){btn.textContent='Mantén presionado el texto para copiar'}).finally(function(){setTimeout(function(){btn.textContent=old},2000)})}
+  $('gen').onclick=function(){
+    var k=B.PrivateKey.fromRandom();var wif=k.toWif();var addr=k.toAddress();
+    $('wif').textContent=wif;$('addr').textContent=addr;
+    $('woc').href='https://whatsonchain.com/address/'+addr;
+    try{var q=qrcode(0,'M');q.addData('bitcoin:'+addr);q.make();$('qr').innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){$('qr').hidden=true}
+    $('cpw').onclick=function(){copy(wif,this)};$('cpa').onclick=function(){copy(addr,this)};
+    $('start').hidden=true;$('out').hidden=false;
+  };
+})();
+</script>
+</body>
+</html>
