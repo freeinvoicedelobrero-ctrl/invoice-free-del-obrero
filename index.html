@@ -915,7 +915,8 @@ function editorSheet(){return{live:false,render(){
     <div class="field"><label for="nj-addr">${t('jobSite')}</label><textarea class="in" id="nj-addr" data-nj="address" style="min-height:60px">${esc(NJ.address)}</textarea></div>
     <label class="check"><input type="checkbox" id="nj-same" data-act="sameBilling" ${NJ.same?'checked':''}> ${t('sameAsBilling')}</label>
     <button class="linkbtn" data-act="useLocation">${ic('pin')} ${t('useLocation')}</button></div>`:''}
-  ${cur&&!NJ?`<div class="field"><label for="e-jaddr">${t('jobSite')}</label><textarea class="in" id="e-jaddr" data-jaddr="1" style="min-height:60px">${esc(cur.address)}</textarea>${cur.address?`<a class="linkbtn" href="${mapsURL(cur.address)}" target="_blank" rel="noopener">${ic('pin')} ${t('openMaps')}</a>`:''}</div>`:''}`:''}
+  ${cur&&!NJ?`<div class="field"><label for="e-jname">${rt('Nombre del trabajo / PO','Job name / PO')}</label><input class="in" id="e-jname" data-jname="1" value="${esc(cur.name)}" placeholder="${t('jobPh')}"><div class="small" style="margin-top:4px">${(()=>{const n=Object.values(S.docs||{}).filter(x=>x.jobId===cur.id&&x.id!==D.id).length;return n?rt('Se cambia también en ','Also changes on ')+n+rt(' documento(s) más de este trabajo.',' other document(s) for this job.'):''})()}</div></div>
+  <div class="field"><label for="e-jaddr">${t('jobSite')}</label><textarea class="in" id="e-jaddr" data-jaddr="1" style="min-height:60px">${esc(cur.address)}</textarea>${cur.address?`<a class="linkbtn" href="${mapsURL(cur.address)}" target="_blank" rel="noopener">${ic('pin')} ${t('openMaps')}</a>`:''}</div>`:''}`:''}
   </div>
   <div class="group"><div class="gl">${t('items')}</div><div id="itemsBox">${D.items.map(itemRow).join('')}</div>
   <button class="linkbtn" data-act="addItem">${ic('plus')} ${t('addItem')}</button><br>
@@ -2228,6 +2229,7 @@ document.addEventListener('input',e=>{
   if(D&&el.dataset.cap!==undefined){D.photos[+el.dataset.cap].caption=el.value;return}
   if(D&&NJ&&el.dataset.nj){NJ[el.dataset.nj]=el.value;return}
   if(D&&el.dataset.jaddr){const j=S.jobs[D.jobId];if(j){j.address=el.value;persist()}return}
+  if(D&&el.dataset.jname){const j=S.jobs[D.jobId];if(j){j.name=el.value;persist();const o=document.querySelector('#e-job option[value="'+j.id+'"]');if(o)o.textContent=el.value||t('job')}return}
   if(C&&el.dataset.c){C[el.dataset.c]=el.value;return}
   if(C&&el.dataset.email!==undefined){C.emails[+el.dataset.email]=el.value;return}
   if(el.dataset.pc!==undefined){pickedContacts[+el.dataset.pc].keep=el.checked;return}
