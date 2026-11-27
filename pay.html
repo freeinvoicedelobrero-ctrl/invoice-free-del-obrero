@@ -51,7 +51,8 @@ h2{font-size:15px;margin:0 0 8px}
 /* Pay page for one invoice. Everything travels in the link (after #): seller, invoice, memo, balance, payment methods, and the
    customer's contact (to prefill where the receipt goes). Money goes straight from customer to seller; this page never touches it. */
 (function(){
-  var es=(navigator.language||'es').toLowerCase().indexOf('es')===0;
+  /* the seller chooses the customer's language on the invoice; otherwise use the phone's language */
+  var es=(function(){try{var s=location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var o=JSON.parse(decodeURIComponent(escape(atob(s))));if(o&&(o.l==='es'||o.l==='en'))return o.l==='es'}catch(e){}return (navigator.language||'es').toLowerCase().indexOf('es')===0})();
   var T=es?{title:'Pagar factura',inv:'Factura',payTo:'Paga a',memo:'Memo',memoHow:'Escríbelo en la nota de tu pago.',bad:'Este enlace de pago no es válido o está incompleto. Pide uno nuevo.',none:'Esta factura no tiene métodos de pago.',
       card:'Pagar con tarjeta o banco',cardSub:'Tarjeta de débito, crédito o cuenta de banco (ACH)',cardHow:'En la página de pago escribe este monto exacto:',open:'Abrir página de pago',copyAddr:'Copiar dirección',copyAmt:'Copiar monto',copy:'Copiar',copied:'Copiado',openWallet:'Abrir billetera',amount:'Monto',price:'Precio al momento',noPrice:'No pude obtener el precio ahora. Revisa tu Internet o pregunta el monto al vendedor.',loading:'Calculando monto…',sendOnly:'Envía solo por la red ',crypto:'Cripto',stableNote:'1 a 1 con el dólar.',
       rTitle:'Tu recibo',rSub:'¿A dónde te mandamos el recibo?',wa:'WhatsApp',sms:'Mensaje',mail:'Email',phone:'Tu número de teléfono',email:'Tu correo',stripeRcpt:'Stripe te mandará su comprobante a ',stripeNo:'Elige Email arriba para que Stripe te mande su comprobante.',
@@ -136,6 +137,7 @@ h2{font-size:15px;margin:0 0 8px}
   app.appendChild(el('h1',null,(seller?T.payTo+' '+seller+' · ':'')+T.inv+' #'+String(o.n).slice(0,20)));
   app.appendChild(el('div','due',money(bal)));
   if(memo){var mp=el('div','memo');mp.appendChild(el('span',null,T.memo));mp.appendChild(el('b',null,memo));app.appendChild(mp)}
+  if(/^[0-9a-f]{32}$/.test(o.ph||'')){var fl=el('a','btn',es?'📷 Ver fotos del trabajo':'📷 See job photos');fl.href=new URL('fotos.html',location.href).href.split(/[?#]/)[0]+'#t='+o.ph+'&l='+(es?'es':'en');fl.target='_blank';fl.rel='noopener';fl.style.display='flex';fl.style.margin='10px 0';app.appendChild(fl)}
   if(!ms.length){app.appendChild(el('div','bad',T.none));return}
   app.appendChild(backBox);
 

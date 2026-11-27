@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>Job photos</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:#000;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:24px;margin:4px 0 2px}
+.sub{color:#9AA0AB;font-size:14px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ph{align-self:start;background:#0E0F12;border:1px solid #26292F;border-radius:12px;overflow:hidden;padding:0;cursor:zoom-in;text-align:left;color:inherit;font:inherit}
+.ph img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
+.ph span{display:block;padding:6px 8px;font-size:13px;color:#cfd3da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{background:#0E0F12;border:1px solid #26292F;border-radius:14px;padding:14px}
+.warn{border-color:#E0A83A;color:#E0A83A}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;z-index:9}
+#lb[hidden]{display:none}
+#lb img{max-width:100%;max-height:80dvh;border-radius:8px}
+#lb p{color:#cfd3da;margin:10px 0 0;text-align:center}
+#lb .bar{display:flex;gap:10px;margin-top:12px}
+#lb button{min-width:52px;min-height:48px;border-radius:12px;border:1px solid #26292F;background:#16181d;color:#fff;font:inherit;font-size:20px}
+.foot{color:#9AA0AB;font-size:12px;text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="lb" hidden><img alt=""><p></p><div class="bar"><button id="pv" aria-label="Previous">‹</button><button id="cl" aria-label="Close">✕</button><button id="nx" aria-label="Next">›</button></div></div>
+<script src="config.js"></script>
+<script>
+/* Job photos shared by the seller. The link holds only a random token; photos are read from the cloud. */
+(function(){
+  var app=document.getElementById('app'),CFG=window.OBRERO_CONFIG||{};
+  var m=/^t=([0-9a-f]{32})(?:&l=(en|es))?$/.exec(location.hash.slice(1));
+  var es=m&&m[2]?m[2]==='es':(navigator.language||'en').toLowerCase().indexOf('es')===0;
+  var T=es?{title:'Fotos del trabajo',bad:'Este enlace no es válido.',none:'Todavía no hay fotos aquí.',err:'No pude cargar las fotos. Revisa tu internet y abre el link otra vez.',loading:'Cargando fotos…',inv:'Factura #',est:'Presupuesto EST ',from:'De'}
+           :{title:'Job photos',bad:'This link is not valid.',none:'There are no photos here yet.',err:'Could not load the photos. Check your internet and open the link again.',loading:'Loading photos…',inv:'Invoice #',est:'Estimate EST ',from:'From'};
+  document.documentElement.lang=es?'es':'en';document.title=T.title;
+  function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e}
+  function show(msg,cls){app.textContent='';app.appendChild(el('h1',null,T.title));app.appendChild(el('div','card'+(cls?' '+cls:''),msg))}
+  if(!m||!CFG.supabaseUrl){show(T.bad,'warn');return}
+  show(T.loading);
+  fetch(CFG.supabaseUrl+'/rest/v1/rpc/photos_get',{method:'POST',headers:{'Content-Type':'application/json',apikey:CFG.supabaseAnonKey,Authorization:'Bearer '+CFG.supabaseAnonKey},body:JSON.stringify({p_tok:m[1]})})
+  .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json()}).then(function(rows){
+    rows=(rows||[]).filter(function(r){return /^data:image\/(jpeg|png|webp);base64,/.test(r.data||'')});
+    if(!rows.length){show(T.none);return}
+    var meta={};try{meta=JSON.parse(rows[0].meta||'{}')}catch(e){}
+    app.textContent='';app.appendChild(el('h1',null,T.title));
+    var sub=[meta.s?T.from+' '+String(meta.s).slice(0,80):'',meta.n?(meta.k==='estimate'?T.est:T.inv)+String(meta.n).slice(0,20):''].filter(Boolean).join(' · ');
+    if(sub)app.appendChild(el('p','sub',sub));
+    var g=el('div','grid');app.appendChild(g);
+    rows.forEach(function(r,i){var b=el('button','ph');b.type='button';var im=el('img');im.src=r.data;im.alt=r.caption||(T.title+' '+(i+1));im.loading='lazy';b.appendChild(im);if(r.caption)b.appendChild(el('span',null,r.caption));b.onclick=function(){open(i)};g.appendChild(b)});
+    /* fingerprint of these exact photos, sealed on BSV by the seller: recompute it here and compare */
+    var sl=meta.seal;
+    if(sl&&/^[0-9a-f]{64}$/.test(sl.txid||'')&&/^[0-9a-f]{64}$/.test(sl.h||'')&&window.crypto&&crypto.subtle){
+      var box=el('div','card');box.style.marginTop='14px';box.textContent=es?'Revisando el sello…':'Checking the seal…';app.appendChild(box);
+      var sha=function(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2)}).join('')})};
+      Promise.all(rows.map(function(r){return sha(r.data)})).then(function(hs){return sha(JSON.stringify(['obrero-photos-1',hs]))}).then(function(h){
+        box.textContent='';var ok=h===sl.h;box.style.borderColor=ok?'#2E7D5B':'#E0A83A';
+        box.appendChild(el('b',null,ok?(es?'✓ Fotos selladas en BSV':'✓ Photos sealed on BSV'):(es?'⚠ Las fotos no coinciden con el sello':'⚠ The photos do not match the seal')));
+        box.appendChild(el('p',null,ok?(es?'Su huella quedó grabada en la cadena de BSV: prueba que estas fotos existían así, sin cambios, en esa fecha.':'Their fingerprint is written on the BSV blockchain: proof that these photos existed like this, unchanged, on that date.'):(es?'Alguna foto cambió después de sellarse.':'A photo changed after it was sealed.')));
+        var a=el('a',null,es?'Verificar en la cadena ↗':'Verify on chain ↗');a.href=new URL('sello.html',location.href).href.split(/[?#]/)[0]+'#n='+(sl.net==='main'?'main':'test')+'&t='+sl.txid+'&h='+sl.h+'&k=photo';a.target='_blank';a.rel='noopener';a.style.color='#7f96ff';box.appendChild(a)})}
+    app.appendChild(el('p','foot','Invoice Free del Obrero'));
+    var lb=document.getElementById('lb'),li=lb.querySelector('img'),lp=lb.querySelector('p'),cur=0;
+    function open(i){cur=(i+rows.length)%rows.length;li.src=rows[cur].data;li.alt=rows[cur].caption||'';lp.textContent=rows[cur].caption||((cur+1)+' / '+rows.length);lb.hidden=false}
+    document.getElementById('cl').onclick=function(){lb.hidden=true};document.getElementById('pv').onclick=function(){open(cur-1)};document.getElementById('nx').onclick=function(){open(cur+1)};
+    lb.onclick=function(e){if(e.target===lb)lb.hidden=true};
+    document.addEventListener('keydown',function(e){if(lb.hidden)return;if(e.key==='Escape')lb.hidden=true;if(e.key==='ArrowLeft')open(cur-1);if(e.key==='ArrowRight')open(cur+1)});
+  }).catch(function(){show(T.err,'warn')});
+})();
+</script>
+</body>
+</html>

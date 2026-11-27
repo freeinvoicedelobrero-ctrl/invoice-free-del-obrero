@@ -43,7 +43,10 @@ button.btn[disabled]{opacity:.6}
 /* Remote signature. The document travels in the link (after #). The customer signs with a finger.
    The signature fingerprint is sealed on BSV and the signature goes back to the seller's app. */
 (function(){
-  var es=(navigator.language||'es').toLowerCase().indexOf('es')===0;
+  /* language chosen by the seller for this customer; otherwise the phone's language */
+  var es=(function(){var raw=location.hash.slice(1),m=/^t=([0-9a-f]{32})$/.exec(raw);
+    try{if(m){var v=localStorage.getItem('obrero-fl-'+m[1]);if(v==='es'||v==='en')return v==='es'}else{var s=raw.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var o=JSON.parse(decodeURIComponent(escape(atob(s))));if(o&&(o.l==='es'||o.l==='en'))return o.l==='es'}}catch(e){}
+    return (navigator.language||'es').toLowerCase().indexOf('es')===0})();
   var T=es?{title:'Firmar documento',bad:'Este enlace no es válido o está incompleto.',from:'De',est:'Presupuesto',inv:'Factura',total:'Total',terms:'Términos y condiciones',name:'Tu nombre completo',sign:'Firma con tu dedo',clear:'Borrar',agree:'Acepto el trabajo, el precio y los términos de arriba',btn:'Firmar y aceptar',signFirst:'Primero firma en el cuadro blanco.',nameFirst:'Escribe tu nombre.',agreeFirst:'Marca la casilla para aceptar.',sending:'Guardando y sellando en BSV…',done:'Firmado',doneSub:'Tu firma quedó guardada y su huella quedó grabada en la cadena de BSV. Nadie la puede cambiar.',noSeal:'Tu firma quedó guardada. El sello en BSV se hará en un momento.',verify:'Verificar sello',tell:'Avisar por WhatsApp',tellSms:'Avisar por mensaje',already:'Este documento ya fue firmado.',err:'No se pudo guardar la firma. Revisa tu internet y toca otra vez.',msg:function(n,k){return 'Ya firmé el '+(k==='estimate'?'presupuesto':'documento')+' #'+n+'.'}}
            :{title:'Sign document',bad:'This link is not valid or is incomplete.',from:'From',est:'Estimate',inv:'Invoice',total:'Total',terms:'Terms & conditions',name:'Your full name',sign:'Sign with your finger',clear:'Clear',agree:'I accept the work, price and terms above',btn:'Sign and accept',signFirst:'Please sign in the white box first.',nameFirst:'Please type your name.',agreeFirst:'Check the box to accept.',sending:'Saving and sealing on BSV…',done:'Signed',doneSub:'Your signature was saved and its fingerprint is written on the BSV blockchain. Nobody can change it.',noSeal:'Your signature was saved. The BSV seal will be added shortly.',verify:'Verify seal',tell:'Tell them on WhatsApp',tellSms:'Tell them by text',already:'This document was already signed.',err:'Could not save the signature. Check your internet and tap again.',msg:function(n,k){return 'I signed '+(k==='estimate'?'estimate':'document')+' #'+n+'.'}};
   document.documentElement.lang=es?'es':'en';document.title=T.title;
@@ -57,7 +60,7 @@ button.btn[disabled]{opacity:.6}
     /* short link: the document waits in the cloud under the token */
     if(!CFG.supabaseUrl){fail();return}
     app.textContent=es?'Cargando…':'Loading…';
-    rpc('sign_doc',{p_tok:short[1]}).then(function(rows){var r=rows&&rows[0];var o=r?JSON.parse(r.doc):null;if(!valid(o)||o.t!==short[1]){fail();return}app.textContent='';start(o)}).catch(function(){fail(es?'No pude cargar el documento. Revisa tu internet y abre el link otra vez.':'Could not load the document. Check your internet and open the link again.')});
+    rpc('sign_doc',{p_tok:short[1]}).then(function(rows){var r=rows&&rows[0];var o=r?JSON.parse(r.doc):null;if(!valid(o)||o.t!==short[1]){fail();return}if((o.l==='es'||o.l==='en')&&(o.l==='es')!==es){try{localStorage.setItem('obrero-fl-'+o.t,o.l);location.reload();return}catch(e){}}app.textContent='';start(o)}).catch(function(){fail(es?'No pude cargar el documento. Revisa tu internet y abre el link otra vez.':'Could not load the document. Check your internet and open the link again.')});
     return;
   }
   var o=null;
