@@ -26,8 +26,21 @@ const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: 
 const WOC_KEY = Deno.env.get('WOC_KEY') || ''
 const WOC_HEADERS: Record<string, string> = WOC_KEY ? { Authorization: WOC_KEY, 'woc-api-key': WOC_KEY } : {}
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// The free explorer allows only a few requests per second. On 429 (too many requests) wait and try again.
+async function wocFetch(url: string, init?: RequestInit) {
+  let r: Response | null = null
+  for (let i = 0; i < 4; i++) {
+    r = await fetch(url, init)
+    if (r.status !== 429) return r
+    await sleep(1200 * (i + 1))
+  }
+  return r!
+}
+
 async function woc(path: string) {
-  const r = await fetch(WOC + path, { headers: WOC_HEADERS })
+  const r = await wocFetch(WOC + path, { headers: WOC_HEADERS })
   if (!r.ok) throw new Error(`whatsonchain ${r.status} ${path}`)
   const t = await r.text()
   try { return JSON.parse(t) } catch { return t }
@@ -46,6 +59,7 @@ async function findUtxo(address: string) {
       const arr = Array.isArray(j) ? j : Array.isArray(j?.result) ? j.result : []
       lookupNotes.push(`${short}: ok ${arr.length}`)
       list = list.concat(arr)
+      if (arr.length) break // found coins: no need to ask the other endpoints
     } catch (e) { lookupNotes.push(`${short}: ${String(e).replace(/^Error: /, '').replace(/ address\/.*/, '')}`) }
   }
   const best = list
@@ -75,7 +89,7 @@ async function buildSeal(src: { tx: Transaction; vout: number }, key: PrivateKey
 }
 
 async function broadcast(hex: string) {
-  const r = await fetch(WOC + 'tx/raw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txhex: hex }) })
+  const r = await wocFetch(WOC + 'tx/raw', { method: 'POST', headers: { ...WOC_HEADERS, 'Content-Type': 'application/json' }, body: JSON.stringify({ txhex: hex }) })
   const t = await r.text()
   if (!r.ok) throw new Error(`broadcast ${r.status} ${t.slice(0, 200)}`)
   return t
