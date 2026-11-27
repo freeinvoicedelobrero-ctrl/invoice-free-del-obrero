@@ -384,10 +384,10 @@ function rooferSVG(cls){
 }
 
 /* ---------- state & storage ---------- */
-const DEFAULT_PROFILE={company:'',address:'',phone:'',email:'',license:'',nextInvoice:1001,nextEstimate:1001,defDue:30,payInstr:'',terms:'Thank you for your business. / Gracias por su preferencia.',lang:'es',started:false,sortKey:'due',sortDir:'asc',lastBackup:''};
+const DEFAULT_PROFILE={company:'',address:'',phone:'',email:'',license:'',nextInvoice:1001,nextEstimate:1001,defDue:30,payInstr:'',terms:'Thank you for your business. / Gracias por su preferencia.',lang:'',started:false,sortKey:'due',sortDir:'asc',lastBackup:''};
 const S={profile:{...DEFAULT_PROFILE},clients:{},jobs:{},docs:{},saved:{},wallet:{},expenses:{},recur:{},products:{},sales:{},meta:{}};
 const LKEY='invoice-free-del-obrero-v1';
-function load(){try{const r=localStorage.getItem(LKEY);if(r){const o=JSON.parse(r);for(const k of Object.keys(S)){if(o[k])S[k]=k==='profile'?{...DEFAULT_PROFILE,...o.profile}:o[k]}}}catch(e){}lang=S.profile.lang||'es'}
+function load(){try{const r=localStorage.getItem(LKEY);if(r){const o=JSON.parse(r);for(const k of Object.keys(S)){if(o[k])S[k]=k==='profile'?{...DEFAULT_PROFILE,...o.profile}:o[k]}}}catch(e){}lang=S.profile.lang||((navigator.language||'').toLowerCase().startsWith('es')?'es':'en')}
 let saveT;function persist(){if(!window.cloudApplying){S.meta=S.meta||{};S.meta.savedAt=Date.now();if(window.cloudSchedule)window.cloudSchedule()}clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(LKEY,JSON.stringify(S))}catch(e){toast(t('storageFull'))}},120)}
 function commit(){persist();render();const top=stack[stack.length-1];if(top&&top.live)redrawSheet()}
 
@@ -802,7 +802,7 @@ function newTok(){const a=new Uint8Array(16);crypto.getRandomValues(a);return [.
 async function signLink(d){if(!d.signTok){d.signTok=newTok();commit()}if(!d.signSecret){d.signSecret=newTok();commit()}const c=calc(d),cl=S.clients[d.clientId]||{},p=S.profile;
   const o={v:1,t:d.signTok,k:d.kind,n:String(d.number),s:(p.company||'').slice(0,80),sp:(p.phone||'').slice(0,30),c:(cl.name||'').slice(0,80),dt:d.date||'',cur:ccy(),
     it:(d.items||[]).filter(i=>i.desc||+i.rate).slice(0,60).map(i=>[String(i.desc||'').slice(0,140),+i.qty||0,String(i.unit||''),r2(+i.rate||0)]),tot:r2(c.total),
-    terms:String(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'')).slice(0,6000),acc:t('acceptText',p.company||''),h:await docHash(d)};
+    terms:String(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'')).slice(0,6000),acc:docLang(d)==='es'?`Al firmar, el cliente acepta el trabajo, el precio y los términos de este documento y autoriza a ${p.company||'el contratista'} a comenzar.`:`By signing, the customer accepts the work, price and terms of this document and authorizes ${p.company||'the contractor'} to proceed.`,l:docLang(d),h:await docHash(d)};
   d.signHash=o.h;commit();
   /* the document waits in the cloud under the token, so the link stays short and WhatsApp does not cut it */
   await menuRpc('sign_offer',{p_tok:d.signTok,p_secret:d.signSecret,p_doc:JSON.stringify(o)});
@@ -941,49 +941,54 @@ function updTotals(){
 
 /* ---------- preview (looks like the PDF) ---------- */
 function previewHTML(d){
-  const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},j=jobOf(d),isEst=d.kind==='estimate';
+  const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},j=jobOf(d),isEst=d.kind==='estimate',dl=docLang(d),T2=(e,x)=>dl==='es'?x:e;
   const lines=a=>a.filter(Boolean).map(x=>esc(x).replace(/\n/g,'<br>')).join('<br>');
   const pm=Object.values(S.wallet||{});
   return `<div class="paper">
   <div class="ph"><div style="display:flex;gap:12px;align-items:center">${p.logo&&(p.logoPlace||'header')!=='watermark'?`<img src="${p.logo}" alt="" style="width:56px;height:56px;object-fit:contain;background:#fff;border-radius:6px;padding:3px">`:''}<div><div class="pco">${esc(p.company||t('yourCompany'))}</div><div class="psm">${lines([p.address,p.phone,p.email,p.license])}</div></div></div>
-  <div class="pr"><div class="pkind">${isEst?'ESTIMATE':'INVOICE'}</div><div class="pno">${isEst?'EST ':'#'}${esc(d.number)}</div></div></div>
-  <div class="pb" style="position:relative">${p.logo&&(p.logoPlace||'header')!=='header'?`<img src="${p.logo}" alt="" style="position:absolute;inset:0;margin:auto;width:70%;max-height:80%;object-fit:contain;opacity:.07;pointer-events:none">`:''}<div class="pmeta"><div><div class="plbl">BILL TO</div><b>${esc(cl.name||'—')}</b><div class="psm">${lines([cl.address,cl.mobile,(cl.emails||[])[0]])}</div>
-  ${j?`<div class="plbl" style="margin-top:8px">JOB SITE</div><div class="psm">${lines([j.name,j.address])}</div>`:''}</div>
-  <div style="text-align:right"><div class="plbl">${isEst?'DATE':'DATE / DUE'}</div><div class="psm">${fdate(d.date)}${isEst?'':' / '+fdate(c.due)}</div></div></div>
-  <table class="ptab"><thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Rate</th><th>Amount</th></tr></thead><tbody>
+  <div class="pr"><div class="pkind">${isEst?T2('ESTIMATE','PRESUPUESTO'):T2('INVOICE','FACTURA')}</div><div class="pno">${isEst?'EST ':'#'}${esc(d.number)}</div></div></div>
+  <div class="pb" style="position:relative">${p.logo&&(p.logoPlace||'header')!=='header'?`<img src="${p.logo}" alt="" style="position:absolute;inset:0;margin:auto;width:70%;max-height:80%;object-fit:contain;opacity:.07;pointer-events:none">`:''}<div class="pmeta"><div><div class="plbl">${T2('BILL TO','FACTURAR A')}</div><b>${esc(cl.name||'—')}</b><div class="psm">${lines([cl.address,cl.mobile,(cl.emails||[])[0]])}</div>
+  ${j?`<div class="plbl" style="margin-top:8px">${T2('JOB SITE','OBRA')}</div><div class="psm">${lines([j.name,j.address])}</div>`:''}</div>
+  <div style="text-align:right"><div class="plbl">${isEst?T2('DATE','FECHA'):T2('DATE / DUE','FECHA / VENCE')}</div><div class="psm">${dateIn(d.date,dl)}${isEst?'':' / '+dateIn(c.due,dl)}</div></div></div>
+  <table class="ptab"><thead><tr><th>${T2('Description','Descripción')}</th><th>${T2('Qty','Cant.')}</th><th>${T2('Unit','Unidad')}</th><th>${T2('Rate','Precio')}</th><th>${T2('Amount','Importe')}</th></tr></thead><tbody>
   ${(d.items||[]).filter(i=>i.desc||+i.rate).map(i=>`<tr><td>${esc(i.desc)}</td><td>${esc(i.qty)}</td><td>${esc(i.unit||'')}</td><td>${money(i.rate)}</td><td>${money((+i.qty||0)*(+i.rate||0))}</td></tr>`).join('')||`<tr><td colspan="5" style="color:#888">—</td></tr>`}
   </tbody></table>
   <div class="ptot"><div><span>Subtotal</span><span>${money(c.sub)}</span></div>
-  ${c.disc?`<div><span>Discount</span><span>−${money(c.disc)}</span></div>`:''}${c.tax?`<div><span>Tax</span><span>${money(c.tax)}</span></div>`:''}
+  ${c.disc?`<div><span>${T2('Discount','Descuento')}</span><span>−${money(c.disc)}</span></div>`:''}${c.tax?`<div><span>${T2('Tax','Impuesto')}</span><span>${money(c.tax)}</span></div>`:''}
   <div class="pbig"><span>Total</span><span>${money(c.total)}</span></div>
-  ${isEst?'':`<div><span>Paid</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>Balance due</span><span>${money(c.balance)}</span></div>`}</div>
-  ${d.payInstr?`<div class="plbl">PAYMENT</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
+  ${isEst?'':`<div><span>${T2('Paid','Pagado')}</span><span>−${money(c.paid)}</span></div><div class="pbig"><span>${T2('Balance due','Saldo pendiente')}</span><span>${money(c.balance)}</span></div>`}</div>
+  ${d.payInstr?`<div class="plbl">${T2('PAYMENT','PAGO')}</div><p class="psm" style="white-space:pre-wrap">${esc(d.payInstr)}</p>`:''}
   ${!isEst&&enabledMethods().length?(()=>{const pl=payLink(d),short=v=>{v=String(v||'');return v.length>34?v.slice(0,14)+'…'+v.slice(-8):v};
    const rows=enabledMethods().map(m=>{const pr=PRESETS[m.type]||{};const lk=pr.link?payURI(m,d,null):null;const v=pr.ach?achText(m).replace(/\n/g,' · '):lk?'':payAddress(m,d);if(!lk&&!v)return '';
-     return `<p class="psm"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${lk?`<a href="${esc(lk)}" target="_blank" rel="noopener" style="color:#1a4dd6;font-weight:600">${rt('Pagar ahora (tarjeta o banco)','Pay now (card or bank)')}</a>`:`<span style="font-family:ui-monospace,Menlo,monospace">${esc(pr.ach?v:short(v))}</span>`}</p>`}).join('');
-   return `<div class="plbl">PAY WITH / PAGAR CON</div><div class="ppay">${pl?`<a class="pqr" href="${esc(pl)}" target="_blank" rel="noopener">${qrSVG(pl)}</a>`:''}<div style="min-width:0"><p class="psm" style="font-weight:700;font-size:13px;margin-top:0">${pl?'Escanea para pagar / Scan to pay':''}</p><p class="psm"><b>Memo / Referencia:</b> ${esc(payRef(d))}</p>${rows}${pl?`<p class="psm" style="color:#666">${rt('El código lleva al cliente a todas las formas de pago con las direcciones completas.','The code takes the customer to every payment option with full addresses.')}</p>`:''}</div></div>`})():''}
-  ${!isEst&&sealOk(d)?`<div class="pseal">✓ SELLADO EN BSV / SEALED ON BSV · <span style="font-family:ui-monospace,Menlo,monospace">${esc(d.seal.txid.slice(0,10))}…</span>${d.seal.net==='test'?' · testnet':''}</div>`:''}
-  ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">TERMS & CONDITIONS</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
-  <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">${esc(sellerLbl().toUpperCase())}</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
-  <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">CUSTOMER</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>
-  ${d.notes?`<div class="plbl">NOTES</div><p class="psm" style="white-space:pre-wrap">${esc(d.notes)}</p>`:''}
+     return `<p class="psm"><b>${esc(m.name||pr.label)}</b>${m.network?' ('+esc(m.network)+')':''}: ${lk?`<a href="${esc(lk)}" target="_blank" rel="noopener" style="color:#1a4dd6;font-weight:600">${T2('Pay now (card or bank)','Pagar ahora (tarjeta o banco)')}</a>`:`<span style="font-family:ui-monospace,Menlo,monospace">${esc(pr.ach?v:short(v))}</span>`}</p>`}).join('');
+   return `<div class="plbl">${T2('PAY WITH','PAGAR CON')}</div><div class="ppay">${pl?`<a class="pqr" href="${esc(pl)}" target="_blank" rel="noopener">${qrSVG(pl)}</a>`:''}<div style="min-width:0"><p class="psm" style="font-weight:700;font-size:13px;margin-top:0">${pl?T2('Scan to pay','Escanea para pagar'):''}</p><p class="psm"><b>${T2('Memo','Referencia')}:</b> ${esc(payRef(d))}</p>${rows}${pl?`<p class="psm" style="color:#666">${T2('The code takes you to every payment option with full addresses.','El código te lleva a todas las formas de pago con las direcciones completas.')}</p>`:''}</div></div>`})():''}
+  ${!isEst&&sealOk(d)?`<div class="pseal">✓ ${T2('SEALED ON BSV','SELLADO EN BSV')} · <span style="font-family:ui-monospace,Menlo,monospace">${esc(d.seal.txid.slice(0,10))}…</span>${d.seal.net==='test'?' · testnet':''}</div>`:''}
+  ${(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||''))?`<div class="plbl">${T2('TERMS & CONDITIONS','TÉRMINOS Y CONDICIONES')}</div><p class="psm" style="white-space:pre-wrap;font-size:11px">${esc(d.contractTerms!==undefined?d.contractTerms:p.contractTerms)}</p>`:''}
+  <div class="psig"><div><div class="psl">${p.sig?`<img src="${p.sig}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">${esc(((S.profile.sellerLabel||'').trim()||T2('Seller','Vendedor')).toUpperCase())}</div><div class="psm">${esc(p.sigName||p.company||'')}</div></div>
+  <div><div class="psl">${d.sig?`<img src="${d.sig.img}" alt="">`:''}</div><div class="plbl" style="margin-top:2px">${T2('CUSTOMER','CLIENTE')}</div><div class="psm">${d.sig?esc(d.sig.name)+' · '+new Date(d.sig.at).toLocaleDateString():''}</div></div></div>
+  ${d.notes?`<div class="plbl">${T2('NOTES','NOTAS')}</div><p class="psm" style="white-space:pre-wrap">${esc(d.notes)}</p>`:''}
   ${(d.photos||[]).length&&d.includePhotos!==false?`<p class="psm">📷 ${t('photosInPdf',d.photos.length)}</p>`:''}
   </div></div>`;
 }
 /* ---------- send pane ---------- */
 function defaultMsg(d){
   const c=calc(d),p=S.profile,isEst=d.kind==='estimate',cl=S.clients[d.clientId]||{};
+  if(docLang(d)==='es'){const hi=cl.name?`Hola ${cl.name},`:'Hola,';const sig=`${p.company||''}${p.phone?'\n'+p.phone:''}`;
+    return isEst?`${hi}\n\nTe envío el presupuesto EST ${d.number} por ${money(c.total)}.\n\nGracias,\n${sig}`
+    :`${hi}\n\nTe envío la factura #${d.number} por ${money(c.total)}. Saldo pendiente: ${money(c.balance)}, vence el ${dateIn(c.due,'es')}.${payLink(d)?'\n\nPaga aquí: '+payLink(d):''}${d.payInstr?'\n\nPago: '+d.payInstr:''}\n\nGracias por tu preferencia,\n${sig}`}
   const hi=cl.name?`Hi ${cl.name},`:'Hi,';
   return isEst?`${hi}\n\nAttached is estimate EST ${d.number} for ${money(c.total)}.\n\nThank you,\n${p.company||''}${p.phone?'\n'+p.phone:''}`
-  :`${hi}\n\nAttached is invoice #${d.number} for ${money(c.total)}. Balance due: ${money(c.balance)} by ${enDate(c.due)}.${payLink(d)?'\n\nPay here / Paga aquí: '+payLink(d):''}${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nThank you for your business,\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
+  :`${hi}\n\nAttached is invoice #${d.number} for ${money(c.total)}. Balance due: ${money(c.balance)} by ${enDate(c.due)}.${payLink(d)?'\n\nPay here: '+payLink(d):''}${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nThank you for your business,\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
 }
 let smMode='invoice';
 const enDate=iso=>{try{return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch(e){return iso}};
 function reminderMsg(d){
   const c=calc(d),p=S.profile,cl=S.clients[d.clientId]||{};
   const n=daysBetween(todayISO(),c.due);
+  if(docLang(d)==='es'){const cu=dateIn(c.due,'es');const when=n<0?`venció el ${cu} (hace ${-n} día${-n===1?'':'s'})`:n===0?'vence hoy':`vence el ${cu}`;
+    return `${cl.name?'Hola '+cl.name+',':'Hola,'}\n\nTe recuerdo amablemente que la factura #${d.number} por ${money(c.total)} ${when}. Saldo pendiente: ${money(c.balance)}.${payLink(d)?'\n\nPaga aquí: '+payLink(d):''}${d.payInstr?'\n\nPago: '+d.payInstr:''}\n\nSi ya hiciste el pago, muchas gracias y no hagas caso de este mensaje.\n\n${p.company||''}${p.phone?'\n'+p.phone:''}`}
   const when=n<0?`was due on ${enDate(c.due)} (${-n} day${-n===1?'':'s'} ago)`:n===0?'is due today':`is due on ${enDate(c.due)}`;
-  return `${cl.name?'Hi '+cl.name+',':'Hi,'}\n\nThis is a friendly reminder that invoice #${d.number} for ${money(c.total)} ${when}. Balance due: ${money(c.balance)}.${payLink(d)?'\n\nPay here / Paga aquí: '+payLink(d):''}${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nIf you already sent the payment, thank you and please disregard this message.\n\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
+  return `${cl.name?'Hi '+cl.name+',':'Hi,'}\n\nThis is a friendly reminder that invoice #${d.number} for ${money(c.total)} ${when}. Balance due: ${money(c.balance)}.${payLink(d)?'\n\nPay here: '+payLink(d):''}${d.payInstr?'\n\nPayment: '+d.payInstr:''}\n\nIf you already sent the payment, thank you and please disregard this message.\n\n${p.company||''}${p.phone?'\n'+p.phone:''}`;
 }
 function sendPane(){
   const d=D,cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
@@ -1103,6 +1108,7 @@ function clientEditor(){return{live:false,render(){
   ${C.emails.map((e,k)=>`<div class="field"><label for="c-em${k}">${t('email')}</label><input class="in" id="c-em${k}" type="email" data-email="${k}" value="${esc(e)}"></div>`).join('')}
   <button class="linkbtn" data-act="addEmail">${ic('plus')} ${t('addEmail')}</button>
   <div class="field"><label for="c-addr">${t('address')}</label><textarea class="in" id="c-addr" data-c="address">${esc(C.address)}</textarea></div>
+  <div class="field"><label for="c-lang">${rt('Idioma de sus facturas y mensajes','Language for their invoices and messages')}</label><select class="in" id="c-lang" data-c="lang"><option value="" ${!C.lang?'selected':''}>English (${rt('predeterminado','default')})</option><option value="es" ${C.lang==='es'?'selected':''}>Español</option></select></div>
   <div class="field"><label for="c-notes">${t('note')}</label><textarea class="in" id="c-notes" data-c="notes">${esc(C.notes)}</textarea></div>
   <button class="btn primary" data-act="saveClient">${t('save')}</button>
   ${C._new?'':`<div id="delZone" style="margin-top:10px"><button class="btn bad" data-act="askDelClient">${t('del')}</button></div>`}</div>`;
@@ -1553,7 +1559,7 @@ function payData(d){
   const ms=enabledMethods().filter(m=>PRESETS[m.type]?.ach||(payAddress(m,d)||'').trim()).sort((a,b)=>rank(a)-rank(b)||(a.order||0)-(b.order||0)).map(m=>{
     const pr=PRESETS[m.type]||{};const v=pr.ach?achText(m):m.type==='stripe'?(m.address||'').trim().replace(/[?#].*$/,''):(payAddress(m,d)||'').trim();
     const nm=(m.name||'').trim();const row=[m.type,nm&&nm!==pr.label?nm:'',v];if(m.network)row.push(m.network);return row});
-  const o={v:1,s:(S.profile.company||'').trim(),n:String(d.number),mm:payRef(d),b:r2(Math.max(0,c.balance)).toFixed(2),cur:ccy(),m:ms};
+  const o={v:1,s:(S.profile.company||'').trim(),n:String(d.number),mm:payRef(d),b:r2(Math.max(0,c.balance)).toFixed(2),cur:ccy(),m:ms,l:docLang(d)};
   const ph=(S.profile.phone||'').replace(/[^\d+]/g,'');if(ph)o.p=ph;
   /* the customer's own contact, to prefill where the receipt goes */
   const cl=S.clients[d.clientId]||{};const ce=(cl.emails||[]).map(x=>(x||'').trim()).find(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));if(ce)o.ce=ce;const cp=(cl.mobile||'').trim();if(cp.replace(/\D/g,'').length>=7)o.cp=cp;const em=(S.profile.email||'').trim();if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))o.e=em;
@@ -1778,22 +1784,25 @@ function importCSV(text){
 const csvCell=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
 
 /* ---------- PDF & text ---------- */
+/* ---------- document language: each client can get documents in their own language (no mixing) ---------- */
+function docLang(d){const c=S.clients[d&&d.clientId]||{};return c.lang==='es'||c.lang==='en'?c.lang:(S.profile.docLang==='es'?'es':'en')} /* English first: documents are in English unless the client (or the business) chooses Spanish */
+function dateIn(iso,dl){try{return new Date(String(iso).length<=10?iso+'T12:00:00':iso).toLocaleDateString(dl==='es'?'es-MX':'en-US',{month:'short',day:'numeric',year:'numeric'})}catch(e){return iso}}
 function docText(d){
-  const c=calc(d),p=S.profile,isEst=d.kind==='estimate',j=jobOf(d);
-  let s=`${p.company}\n${isEst?'Estimate EST':'Invoice #'}${d.number} · ${fdate(d.date)}\n${t('billTo')}: ${clientName(d.clientId)}${j?`\n${t('job')}: ${j.name}${j.address?' — '+j.address:''}`:''}\n\n`;
+  const c=calc(d),p=S.profile,isEst=d.kind==='estimate',j=jobOf(d),dl=docLang(d),T2=(e,x)=>dl==='es'?x:e;
+  let s=`${p.company}\n${isEst?T2('Estimate EST','Presupuesto EST'):T2('Invoice #','Factura #')}${d.number} · ${dateIn(d.date,dl)}\n${T2('Bill to','Facturar a')}: ${clientName(d.clientId)}${j?`\n${T2('Job','Obra')}: ${j.name}${j.address?' — '+j.address:''}`:''}\n\n`;
   (d.items||[]).forEach(i=>s+=`${i.desc} — ${i.qty} ${i.unit||''} × ${money(i.rate)} = ${money((+i.qty||0)*(+i.rate||0))}\n`);
-  s+=`\n${t('total')}: ${money(c.total)}`;
-  if(!isEst)s+=`\n${t('paidSoFar')}: ${money(c.paid)}\n${t('balance')}: ${money(c.balance)}\n${t('dueDate')}: ${fdate(c.due)}`;
-  if(d.payInstr)s+=`\n\n${t('payInstr')}:\n${d.payInstr}`;
+  s+=`\n${T2('Total','Total')}: ${money(c.total)}`;
+  if(!isEst)s+=`\n${T2('Paid','Pagado')}: ${money(c.paid)}\n${T2('Balance due','Saldo pendiente')}: ${money(c.balance)}\n${T2('Due date','Vence')}: ${dateIn(c.due,dl)}`;
+  if(d.payInstr)s+=`\n\n${T2('Payment instructions','Instrucciones de pago')}:\n${d.payInstr}`;
   return s;
 }
 function drawQR(doc,text,x,y,size,lvl){if(!window.qrcode||!text)return;try{const q=qrcode(0,lvl||'M');q.addData(text);q.make();const n=q.getModuleCount(),cell=size/n;doc.setFillColor(0,0,0);for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))doc.rect(x+c*cell,y+r*cell,cell+0.15,cell+0.15,'F')}catch(e){}}
 async function buildPDF(d){
   if(!window.jspdf){toast('PDF library did not load. Check your connection.');return null}
   const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:'pt',format:'letter'});
-  const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate',j=jobOf(d);
+  const p=S.profile,c=calc(d),cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate',j=jobOf(d),dl=docLang(d),T2=(e,x)=>dl==='es'?x:e,loc=dl==='es'?'es-MX':'en-US';
   const W=612,H=792,M=48;
-  const hdr=[...(p.address||'').split('\n'),[p.phone,p.email].filter(Boolean).join('  ·  '),p.license?'License # '+p.license:''].map(x=>(x||'').trim()).filter(Boolean);
+  const hdr=[...(p.address||'').split('\n'),[p.phone,p.email].filter(Boolean).join('  ·  '),p.license?T2('License # ','Licencia # ')+p.license:''].map(x=>(x||'').trim()).filter(Boolean);
   const hH=Math.max(100,60+hdr.length*13+10);
   doc.setFillColor(0,0,0);doc.rect(0,0,W,hH,'F');
   let tx=M;
@@ -1803,51 +1812,51 @@ async function buildPDF(d){
   doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);doc.text(p.company||'',tx,44);
   doc.setFont('helvetica','normal');doc.setFontSize(9);
   if(hdr.length)doc.text(hdr,tx,60,{lineHeightFactor:1.2});
-  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(isEst?'ESTIMATE':'INVOICE',W-M,44,{align:'right'});
+  doc.setFont('helvetica','bold');doc.setFontSize(22);doc.text(isEst?T2('ESTIMATE','PRESUPUESTO'):T2('INVOICE','FACTURA'),W-M,44,{align:'right'});
   doc.setFontSize(11);doc.text((isEst?'EST ':'#')+d.number,W-M,62,{align:'right'});
   doc.setTextColor(0,0,0);let y=hH+34;
-  doc.setFontSize(9);doc.setTextColor(110);doc.text('BILL TO',M,y);doc.text(isEst?'DATE':'DATE / DUE',W-M,y,{align:'right'});
+  doc.setFontSize(9);doc.setTextColor(110);doc.text(T2('BILL TO','FACTURAR A'),M,y);doc.text(isEst?T2('DATE','FECHA'):T2('DATE / DUE','FECHA / VENCE'),W-M,y,{align:'right'});
   doc.setTextColor(0);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text(cl.name||'',M,y+16);
   doc.setFont('helvetica','normal');doc.setFontSize(10);
   const addr=[cl.address,cl.mobile,(cl.emails||[]).filter(Boolean).join(', ')].filter(Boolean).join('\n');
   let ly=y+31;if(addr){const tl=doc.splitTextToSize(addr,260);doc.text(tl,M,ly);ly+=tl.length*12}
-  doc.text(fdate(d.date)+(isEst?'':'  /  '+fdate(c.due)),W-M,y+16,{align:'right'});
+  doc.text(dateIn(d.date,dl)+(isEst?'':'  /  '+dateIn(c.due,dl)),W-M,y+16,{align:'right'});
   let ry=y+31;
-  if(j){doc.setFontSize(9);doc.setTextColor(110);doc.text('JOB SITE',W-M,ry,{align:'right'});doc.setTextColor(0);doc.setFontSize(10);const jl=doc.splitTextToSize([j.name,j.address].filter(Boolean).join('\n'),230);doc.text(jl,W-M,ry+14,{align:'right'});ry+=14+jl.length*12}
+  if(j){doc.setFontSize(9);doc.setTextColor(110);doc.text(T2('JOB SITE','OBRA'),W-M,ry,{align:'right'});doc.setTextColor(0);doc.setFontSize(10);const jl=doc.splitTextToSize([j.name,j.address].filter(Boolean).join('\n'),230);doc.text(jl,W-M,ry+14,{align:'right'});ry+=14+jl.length*12}
   y=Math.max(ly,ry)+18;
-  doc.autoTable({startY:y,margin:{left:M,right:M},head:[['Description','Qty','Unit','Rate','Amount']],body:(d.items||[]).map(i=>[i.desc,String(i.qty),i.unit||'',money(i.rate),money((+i.qty||0)*(+i.rate||0))]),headStyles:{fillColor:[0,0,0],textColor:255},styles:{fontSize:10,cellPadding:6},columnStyles:{1:{halign:'right'},3:{halign:'right'},4:{halign:'right'}}});
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[[T2('Description','Descripción'),T2('Qty','Cant.'),T2('Unit','Unidad'),T2('Rate','Precio'),T2('Amount','Importe')]],body:(d.items||[]).map(i=>[i.desc,String(i.qty),i.unit||'',money(i.rate),money((+i.qty||0)*(+i.rate||0))]),headStyles:{fillColor:[0,0,0],textColor:255},styles:{fontSize:10,cellPadding:6},columnStyles:{1:{halign:'right'},3:{halign:'right'},4:{halign:'right'}}});
   y=doc.lastAutoTable.finalY+20;
   var sealBottom=0;
-  if(!isEst&&sealOk(d)){sealBottom=y+96;const cx=M+46,cy=y+36,rr=42,g=[46,125,91];doc.setDrawColor(...g);doc.setLineWidth(1.6);doc.circle(cx,cy,rr);doc.setLineWidth(0.6);doc.circle(cx,cy,rr-5);doc.setTextColor(...g);doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.text('SELLADO EN BSV',cx,cy-11,{align:'center'});doc.setFontSize(6);doc.text('SEALED ON BSV',cx,cy-3,{align:'center'});doc.setFont('courier','bold');doc.setFontSize(6.5);doc.text('tx '+d.seal.txid.slice(0,12),cx,cy+7,{align:'center'});doc.setFont('helvetica','normal');doc.text(new Date(d.seal.at).toISOString().slice(0,10)+(d.seal.net==='test'?' testnet':''),cx,cy+15,{align:'center'});doc.setTextColor(0);doc.setDrawColor(200);doc.setLineWidth(0.5);doc.rect(M+100,y+2,68,68);drawQR(doc,sealLink(d),M+102,y+4,64,'L');doc.setFontSize(6.5);doc.setTextColor(90);doc.text('Verificar / Verify',M+134,y+80,{align:'center'});doc.setTextColor(0);doc.setDrawColor(0);doc.setLineWidth(1)}
+  if(!isEst&&sealOk(d)){sealBottom=y+96;const cx=M+46,cy=y+36,rr=42,g=[46,125,91];doc.setDrawColor(...g);doc.setLineWidth(1.6);doc.circle(cx,cy,rr);doc.setLineWidth(0.6);doc.circle(cx,cy,rr-5);doc.setTextColor(...g);doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.text(T2('SEALED','SELLADO'),cx,cy-11,{align:'center'});doc.setFontSize(6.5);doc.text(T2('ON BSV','EN BSV'),cx,cy-3,{align:'center'});doc.setFont('courier','bold');doc.setFontSize(6.5);doc.text('tx '+d.seal.txid.slice(0,12),cx,cy+7,{align:'center'});doc.setFont('helvetica','normal');doc.text(new Date(d.seal.at).toISOString().slice(0,10)+(d.seal.net==='test'?' testnet':''),cx,cy+15,{align:'center'});doc.setTextColor(0);doc.setDrawColor(200);doc.setLineWidth(0.5);doc.rect(M+100,y+2,68,68);drawQR(doc,sealLink(d),M+102,y+4,64,'L');doc.setFontSize(6.5);doc.setTextColor(90);doc.text(T2('Verify','Verificar'),M+134,y+80,{align:'center'});doc.setTextColor(0);doc.setDrawColor(0);doc.setLineWidth(1)}
   const line=(l,v,b)=>{doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(b?12:10);doc.text(l,W-M-160,y);doc.text(v,W-M,y,{align:'right'});y+=b?20:16};
-  line('Subtotal',money(c.sub));if(c.disc)line('Discount','-'+money(c.disc));if(c.tax)line('Tax',money(c.tax));line('Total',money(c.total),true);
-  if(!isEst){line('Paid','-'+money(c.paid));line('Balance due',money(c.balance),true)}
+  line('Subtotal',money(c.sub));if(c.disc)line(T2('Discount','Descuento'),'-'+money(c.disc));if(c.tax)line(T2('Tax','Impuesto'),money(c.tax));line('Total',money(c.total),true);
+  if(!isEst){line(T2('Paid','Pagado'),'-'+money(c.paid));line(T2('Balance due','Saldo pendiente'),money(c.balance),true)}
   y+=8;if(sealBottom&&y<sealBottom)y=sealBottom;doc.setFont('helvetica','normal');doc.setFontSize(10);
   const need=h=>{if(y+h>H-50){doc.addPage();y=M}};
-  if(d.payInstr){const tl=doc.splitTextToSize(d.payInstr,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text('Payment instructions',M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13+10}
+  if(d.payInstr){const tl=doc.splitTextToSize(d.payInstr,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text(T2('Payment instructions','Instrucciones de pago'),M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13+10}
   if(!isEst&&c.balance>0.005){
     const ms=enabledMethods().filter(m=>PRESETS[m.type]?.ach||(payAddress(m,d)||'').trim());
     if(ms.length){
-      need(52);doc.setFont('helvetica','bold');doc.text('Pay with / Pagar con',M,y);y+=14;doc.setFontSize(9);doc.text('Memo / Referencia: '+payRef(d),M,y);doc.setFont('helvetica','normal');doc.text('  (escríbelo en la nota de tu pago / write it in your payment note)',M+doc.getTextWidth('Memo / Referencia: '+payRef(d))+6,y);y+=13;
+      need(52);doc.setFont('helvetica','bold');doc.text(T2('Pay with','Pagar con'),M,y);y+=14;doc.setFontSize(9);const mref=T2('Memo: ','Referencia: ')+payRef(d);doc.text(mref,M,y);doc.setFont('helvetica','normal');doc.text(T2('  (write it in your payment note)','  (escríbela en la nota de tu pago)'),M+doc.getTextWidth(mref)+6,y);y+=13;
       const crypto=ms.filter(m=>!PRESETS[m.type]?.fiat);
-      ms.forEach(m=>{const pr=PRESETS[m.type]||{};const lk=pr.link?payURI(m,d,null):null;const a=pr.ach?achText(m).replace(/\n/g,' · '):lk?'Pagar ahora / Pay now (tarjeta o banco / card or bank)':payAddress(m,d);const tl=doc.splitTextToSize(`${m.name||pr.label}${m.network?' ('+m.network+')':''}: ${a}`,W-2*M);need(tl.length*11+4);if(lk){doc.setTextColor(0,0,200);doc.text(tl,M,y);doc.link(M,y-9,W-2*M,tl.length*11,{url:lk});doc.setTextColor(0)}else doc.text(tl,M,y);y+=tl.length*11+3});
+      ms.forEach(m=>{const pr=PRESETS[m.type]||{};const lk=pr.link?payURI(m,d,null):null;const a=pr.ach?achText(m).replace(/\n/g,' · '):lk?T2('Pay now (card or bank)','Pagar ahora (tarjeta o banco)'):payAddress(m,d);const tl=doc.splitTextToSize(`${m.name||pr.label}${m.network?' ('+m.network+')':''}: ${a}`,W-2*M);need(tl.length*11+4);if(lk){doc.setTextColor(0,0,200);doc.text(tl,M,y);doc.link(M,y-9,W-2*M,tl.length*11,{url:lk});doc.setTextColor(0)}else doc.text(tl,M,y);y+=tl.length*11+3});
       const pl=payLink(d);
-      if(pl){y+=6;need(176);doc.setDrawColor(200);doc.rect(M,y,160,160);drawQR(doc,pl,M+5,y+5,150,'L');doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text('Escanea para pagar / Scan to pay',M+178,y+26);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(doc.splitTextToSize('Tarjeta, banco o cripto. El monto en cripto se calcula al momento de pagar. / Card, bank or crypto. Crypto amounts are calculated when you pay.',W-2*M-178),M+178,y+44);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(money(c.balance)+'   ·   Memo: '+payRef(d),M+178,y+92);doc.setFont('helvetica','normal');y+=172}
+      if(pl){y+=6;need(176);doc.setDrawColor(200);doc.rect(M,y,160,160);drawQR(doc,pl,M+5,y+5,150,'L');doc.setFont('helvetica','bold');doc.setFontSize(13);doc.text(T2('Scan to pay','Escanea para pagar'),M+178,y+26);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.text(doc.splitTextToSize(T2('Card, bank or crypto. Crypto amounts are calculated when you pay.','Tarjeta, banco o cripto. El monto en cripto se calcula al momento de pagar.'),W-2*M-178),M+178,y+44);doc.setFont('helvetica','bold');doc.setFontSize(11);doc.text(money(c.balance)+T2('   ·   Memo: ','   ·   Referencia: ')+payRef(d),M+178,y+92);doc.setFont('helvetica','normal');y+=172}
       doc.setFontSize(10);
     }
   }
-  if(d.notes){const tl=doc.splitTextToSize(d.notes,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text('Notes',M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13}
+  if(d.notes){const tl=doc.splitTextToSize(d.notes,W-2*M);need(20+tl.length*13);doc.setFont('helvetica','bold');doc.text(T2('Notes','Notas'),M,y);y+=14;doc.setFont('helvetica','normal');doc.text(tl,M,y);y+=tl.length*13}
   {const ct=d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'');
-   if(ct){y+=10;doc.setFontSize(9);const tl=doc.splitTextToSize(ct,W-2*M);need(20+Math.min(tl.length,40)*11);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Terms & Conditions',M,y);y+=13;doc.setFont('helvetica','normal');doc.setFontSize(8.5);for(const ln of tl){need(11);doc.text(ln,M,y);y+=11}}
+   if(ct){y+=10;doc.setFontSize(9);const tl=doc.splitTextToSize(ct,W-2*M);need(20+Math.min(tl.length,40)*11);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(T2('Terms & Conditions','Términos y condiciones'),M,y);y+=13;doc.setFont('helvetica','normal');doc.setFontSize(8.5);for(const ln of tl){need(11);doc.text(ln,M,y);y+=11}}
    const sg=d.sig;y+=16;need(140);doc.setFontSize(9);doc.setFont('helvetica','normal');
-   doc.text(doc.splitTextToSize(`By signing below, the customer accepts the work, price and terms described in this ${isEst?'estimate':'invoice'} and authorizes ${p.company||'the contractor'} to proceed.`,W-2*M),M,y);y+=26;
+   doc.text(doc.splitTextToSize(dl==='es'?`Al firmar abajo, el cliente acepta el trabajo, el precio y los términos de ${isEst?'este presupuesto':'esta factura'} y autoriza a ${p.company||'el contratista'} a comenzar.`:`By signing below, the customer accepts the work, price and terms described in this ${isEst?'estimate':'invoice'} and authorizes ${p.company||'the contractor'} to proceed.`,W-2*M),M,y);y+=26;
    const cw=(W-2*M-30)/2,boxH=60;
-   const col=(x,label,img,name,date)=>{if(img){try{doc.addImage(img,'PNG',x,y,Math.min(cw,180),boxH)}catch(e){}}doc.setDrawColor(0);doc.line(x,y+boxH+4,x+cw,y+boxH+4);doc.setFontSize(8);doc.setTextColor(110);doc.text(label,x,y+boxH+15);doc.setTextColor(0);doc.setFontSize(9.5);doc.text(name||'Printed name: ______________________',x,y+boxH+28);doc.text(date?('Date: '+date):'Date: ____________',x,y+boxH+41)};
-   col(M,sellerLbl().toUpperCase(),p.sig,p.sigName||p.company||'',p.sig&&sg?new Date(sg.at).toLocaleDateString('en-US'):'');
-   col(M+cw+30,'CUSTOMER SIGNATURE',sg&&sg.img,sg?sg.name:'',sg?new Date(sg.at).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short'}):'');
-   y+=boxH+52;if(sg){doc.setFontSize(7);doc.setTextColor(130);doc.text('Signed electronically on '+new Date(sg.at).toISOString()+' · Document ID '+sg.hash,M,y);doc.setTextColor(0);y+=12}}
+   const col=(x,label,img,name,date)=>{if(img){try{doc.addImage(img,'PNG',x,y,Math.min(cw,180),boxH)}catch(e){}}doc.setDrawColor(0);doc.line(x,y+boxH+4,x+cw,y+boxH+4);doc.setFontSize(8);doc.setTextColor(110);doc.text(label,x,y+boxH+15);doc.setTextColor(0);doc.setFontSize(9.5);doc.text(name||T2('Printed name: ','Nombre: ')+'______________________',x,y+boxH+28);doc.text(date?(T2('Date: ','Fecha: ')+date):T2('Date: ','Fecha: ')+'____________',x,y+boxH+41)};
+   col(M,((S.profile.sellerLabel||'').trim()||T2('Seller','Vendedor')).toUpperCase(),p.sig,p.sigName||p.company||'',p.sig&&sg?new Date(sg.at).toLocaleDateString(loc):'');
+   col(M+cw+30,T2('CUSTOMER SIGNATURE','FIRMA DEL CLIENTE'),sg&&sg.img,sg?sg.name:'',sg?new Date(sg.at).toLocaleString(loc,{dateStyle:'medium',timeStyle:'short'}):'');
+   y+=boxH+52;if(sg){doc.setFontSize(7);doc.setTextColor(130);doc.text(T2('Signed electronically on ','Firmado electrónicamente el ')+new Date(sg.at).toISOString()+T2(' · Document ID ',' · ID del documento ')+sg.hash+(sg.seal&&sg.seal.txid?T2(' · Sealed on BSV tx ',' · Sellado en BSV tx ')+sg.seal.txid.slice(0,16):''),M,y);doc.setTextColor(0);y+=12}}
   if(d.includePhotos!==false&&(d.photos||[]).length){
-    doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text('Job photos / Fotos del trabajo',M,M);
+    doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(T2('Job photos','Fotos del trabajo'),M,M);
     const cw=(W-2*M-20)/3,ch=cw;let k=0;
     for(const ph of d.photos.slice(0,9)){
       const b=await idb.get(ph.id).catch(()=>null);if(!b)continue;
@@ -1862,10 +1871,10 @@ async function buildPDF(d){
   }
   if(p.logo&&lp!=='header'){try{const im=await new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=p.logo});const bs=360,sc=Math.min(bs/im.width,bs/im.height),w=im.width*sc,h=im.height*sc;const np=doc.getNumberOfPages();
     for(let i=1;i<=np;i++){doc.setPage(i);doc.saveGraphicsState();doc.setGState(new doc.GState({opacity:0.07}));doc.addImage(p.logo,/png/i.test(p.logo.slice(0,30))?'PNG':'JPEG',(W-w)/2,(H-h)/2+40,w,h);doc.restoreGraphicsState()}}catch(e){}}
-  const pages=doc.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(140);doc.text('Made with Invoice Free del Obrero',W/2,H-20,{align:'center'})}
+  const pages=doc.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(8);doc.setTextColor(140);doc.text(T2('Made with','Hecho con')+' Invoice Free del Obrero',W/2,H-20,{align:'center'})}
   return doc;
 }
-const pdfName=d=>(d.kind==='estimate'?'Estimate-':'Invoice-')+d.number+'.pdf';
+const pdfName=d=>{const es=docLang(d)==='es';return (d.kind==='estimate'?(es?'Presupuesto-':'Estimate-'):(es?'Factura-':'Invoice-'))+d.number+'.pdf'};
 async function downloadPDF(d){const doc=await buildPDF(d);if(doc)doc.save(pdfName(d))}
 async function sharePDF(d){
   const doc=await buildPDF(d);if(!doc)return;
@@ -1883,7 +1892,7 @@ async function sendDoc(d,how,o){
   o=o||{};const cl=S.clients[d.clientId]||{},isEst=d.kind==='estimate';
   let to=o.to!==undefined?o.to:(how==='email'?((cl.emails||[]).filter(Boolean)[0]||''):(cl.mobile||''));
   if(how!=='email')to=(to||'').replace(/[^\d+]/g,'');
-  const subj=o.subject||((isEst?'Estimate EST':'Invoice #')+d.number+(S.profile.company?' — '+S.profile.company:''));
+  const subj=o.subject||((isEst?(docLang(d)==='es'?'Presupuesto EST':'Estimate EST'):(docLang(d)==='es'?'Factura #':'Invoice #'))+d.number+(S.profile.company?' — '+S.profile.company:''));
   const body=o.body||docText(d);
   const doc=await buildPDF(d);if(!doc)return;
   const file=new File([doc.output('blob')],pdfName(d),{type:'application/pdf'});
