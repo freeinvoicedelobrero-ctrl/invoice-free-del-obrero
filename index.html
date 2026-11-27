@@ -157,6 +157,7 @@ textarea.in{min-height:84px;resize:vertical}
 .btn.bad{color:var(--bad)}
 .btn[disabled]{opacity:.5}
 .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.dacts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0 0 6px}.dacts .btn{padding:12px 6px;font-size:14px}
 .btns .wide{grid-column:1/-1}
 .sigpad{width:100%;height:190px;background:#fff;border-radius:10px;touch-action:none;display:block}
 .sigrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -196,6 +197,7 @@ textarea.in{min-height:84px;resize:vertical}
 .steps .st{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;min-width:0}
 .steps .st::before{content:"";position:absolute;top:17px;right:50%;width:100%;height:3px;background:var(--line);z-index:0}
 .steps .st:first-child::before{display:none}
+.steps .stb{background:none;border:0;padding:0;font:inherit;color:inherit}.steps .stb .sd{color:var(--accent)}.steps .stb.on .sd{color:var(--muted)}
 .steps .st.on::before{background:#2E7D5B}
 .steps .dot{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--bg,#000);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;color:var(--muted)}
 .steps .st.on .dot{background:#163d2c;border-color:#2E7D5B;color:#3ddc97}
@@ -728,8 +730,48 @@ function docSteps(d){
   const s=status(d);
   const head=isEst?(d.convertedTo?[rt('Convertido en factura','Converted to invoice'),'']:d.accepted?[rt('Aceptado por el cliente','Accepted by the customer'),rt('Listo para hacer la factura','Ready to invoice')]:d.sig?[rt('Firmado por el cliente','Signed by the customer'),'']:d.sent?[rt('Esperando respuesta','Waiting for the customer'),'']:[rt('Borrador','Draft'),rt('Toca Enviar cuando esté listo','Tap Send when ready')])
    :s==='paid'?[rt('Pago completado','Payment completed'),money(c.total)]:s==='overdue'?[rt('Pago vencido','Payment overdue'),rt('Saldo','Balance')+' '+money(c.balance)]:s==='partial'?[rt('Pago parcial recibido','Partial payment received'),rt('Falta','Remaining')+' '+money(c.balance)]:s==='unsent'?[rt('Sin enviar','Not sent yet'),rt('Toca Enviar para mandarla','Tap Send to deliver it')]:[rt('Esperando pago','Waiting for payment'),money(c.balance)];
-  return `<div class="steps" role="list" aria-label="${rt('Estado','Status')}"><div class="sr">${st.map(([l,v],i)=>`<div class="st${done[i]?' on':''}${i===now?' now':''}" role="listitem" aria-label="${esc(l)}${done[i]?' ✓':''}"><div class="dot">${done[i]?ok:`<span style="font-size:13px;font-weight:700">${i+1}</span>`}</div><div class="sl">${esc(l)}</div><div class="sd">${done[i]&&v!==true?stepDate(v):'&nbsp;'}</div></div>`).join('')}</div><div class="sh">${esc(head[0])}${head[1]?`<small>${esc(head[1])}</small>`:''}</div></div>`;
+  const sealIx=!isEst&&menuCloudOK()?2:-1;
+  return `<div class="steps" role="list" aria-label="${rt('Estado','Status')}"><div class="sr">${st.map(([l,v],i)=>{const inner=`<div class="dot">${done[i]?ok:`<span style="font-size:13px;font-weight:700">${i+1}</span>`}</div><div class="sl">${esc(l)}</div><div class="sd">${done[i]&&v!==true?stepDate(v):(i===sealIx?rt('toca','tap'):'&nbsp;')}</div>`;
+    return i===sealIx?`<button class="st stb${done[i]?' on':''}${i===now?' now':''}" role="listitem" data-act="sealStep" data-id="${d.id}" aria-label="${esc(l)}${done[i]?' ✓':''} · ${done[i]?rt('Verificar sello','Verify seal'):rt('Sellar en BSV','Seal on BSV')}">${inner}</button>`:`<div class="st${done[i]?' on':''}${i===now?' now':''}" role="listitem" aria-label="${esc(l)}${done[i]?' ✓':''}">${inner}</div>`}).join('')}</div><div class="sh">${esc(head[0])}${head[1]?`<small>${esc(head[1])}</small>`:''}</div></div>`;
 }
+/* invoice screen, simple: one big button that changes with the step, plus Get paid, Preview and a small "More" popup */
+function docPrimary(d){const c=calc(d),isEst=d.kind==='estimate',id=d.id;
+  if(!d.sent)return [`openSend`,ic('mail')+' '+t('tab_send')];
+  if(isEst){if(d.convertedTo)return ['openDoc',t('estConverted')+' →',d.convertedTo];if(!d.sig&&!d.accepted)return ['clientSign','✍ '+t('clientSigns')];return ['convert',t('convert')]}
+  if(c.balance>0.005)return ['pay',t('recordPayment')];
+  const lp=(d.payments||[]).slice(-1)[0];return lp?['receipt',rt('Mandar recibo','Send receipt'),id,lp.id]:['sharePdf',t('sharePdf')]}
+function docActions(d){const isEst=d.kind==='estimate',c=calc(d);const [act,label,did,pid]=docPrimary(d);
+  const cobrar=!isEst&&c.balance>0.005;
+  return `<button class="btn primary" style="margin:12px 0 10px;display:flex;align-items:center;justify-content:center;gap:8px" data-act="${act}" data-id="${esc(did||d.id)}"${pid?` data-p="${esc(pid)}"`:''}>${label}</button>
+  <div class="dacts">${cobrar?`<button class="btn" data-act="payOpen" data-id="${d.id}">$ ${rt('Cobrar','Get paid')}</button>`:`<button class="btn" data-act="sharePdf" data-id="${d.id}">${t('sharePdf')}</button>`}<button class="btn" data-act="openPreview" data-id="${d.id}">${t('tab_preview')}</button><button class="btn" data-act="docMore" data-id="${d.id}" aria-label="${rt('Más opciones','More options')}">⋯ ${t('more')}</button></div>`}
+function sigLine(d){const sg=d.sig;if(!sg)return '';const when=new Date(sg.at).toLocaleString(lang==='es'?'es-MX':'en-US',{dateStyle:'medium',timeStyle:'short'});const changed=SIGCHK[d.id+':'+(d.updatedAt||0)]===true;
+  return `<div class="group"><div class="gl">${t('signatures')}</div><div style="display:flex;gap:12px;align-items:center"><img src="${sg.img}" alt="" style="height:44px;max-width:45%;background:#fff;border-radius:8px;padding:2px"><div class="small">✓ ${esc(sg.name)}<br>${esc(when)}</div></div>${changed?`<p class="small red">${t('changedAfterSign')}</p>`:''}</div>`}
+const MORE_CSS=`#morePop{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding:10px}
+#morePop .mc{width:100%;max-width:420px;max-height:80dvh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:6px 0;box-shadow:0 12px 36px rgba(0,0,0,.5);margin-bottom:env(safe-area-inset-bottom,0px)}
+#morePop .mi{display:block;width:100%;text-align:left;background:none;border:0;padding:14px 18px;font:inherit;color:inherit;text-decoration:none}#morePop .mi+.mi{border-top:1px solid var(--line)}#morePop .mi:active{background:var(--line)}#morePop .mi.bad{color:var(--bad)}`;
+function closeMore(){const w=document.getElementById('morePop');if(w)w.remove()}
+function popCard(html){closeMore();if(!document.getElementById('moreCss')){const st=document.createElement('style');st.id='moreCss';st.textContent=MORE_CSS;document.head.appendChild(st)}
+  const w=document.createElement('div');w.id='morePop';w.innerHTML=`<div class="mc" role="dialog" aria-modal="true">${html}</div>`;
+  w.addEventListener('click',e=>{if(e.target===w){closeMore();return}const b=e.target.closest('[data-act],a');if(b&&!b.dataset.keep)setTimeout(closeMore,0)});document.body.appendChild(w)}
+function docMore(id){const d=S.docs[id];if(!d)return;const c=calc(d),isEst=d.kind==='estimate',p=S.profile;const [prim]=docPrimary(d);
+  const it=(act,label,extra)=>`<button class="mi" data-act="${act}" data-id="${id}"${extra||''}>${label}</button>`;
+  const rows=[prim!=='openSend'&&d.sent?it('openSend',t('tab_send')):'',
+   !isEst&&d.sent&&c.balance>0.005?it('openReminder',t('sendReminder')):'',
+   prim!=='sharePdf'?it('sharePdf',t('sharePdf')):'',it('pdf',t('downloadPdf')),
+   it('toggleSent',d.sent?t('markUnsent'):t('markSent')),
+   !d.sig&&prim!=='clientSign'?it('clientSign','✍ '+t('clientSigns')):'',d.sig?it('clearClientSig',t('removeClientSig')):'',
+   !p.sig?it('mySign',t('addMySig')):'',
+   isEst&&!d.accepted&&!d.convertedTo?it('accept',t('markAccepted')):'',
+   isEst&&!d.convertedTo&&prim!=='convert'?it('convert',t('convert')):'',
+   !isEst&&menuCloudOK()?(sealOk(d)?`<a class="mi" href="${esc(sealLink(d))}" target="_blank" rel="noopener">✓ ${rt('Verificar sello BSV','Verify BSV seal')}</a>`:it('sealNow',rt('Sellar en BSV','Seal on BSV'))):'',
+   it('copyDoc',t('copyText')),it('duplicate',t('duplicate')),
+   `<button class="mi bad" data-act="docDelAsk" data-id="${id}" data-keep="1">${t('del')}</button>`];
+  popCard(rows.filter(Boolean).join(''))}
+function cobrarSheet(id){return{live:true,render(){const d=S.docs[id];if(!d)return sheetHead('');return sheetHead(rt('Cobrar','Get paid')+' · #'+esc(d.number),{close:true})+`<div class="wrap sheet-b">${paySection(d)}</div>`}}}
+function sealErrPop(e){const j=(e&&e.info)||{};const msg=String(e&&e.message||'');
+  const why=/fund empty/.test(msg)?rt('La función no encontró monedas en el fondo, o el explorador (WhatsOnChain) no le respondió.','The function found no coins in the fund, or the explorer (WhatsOnChain) did not answer.'):/not configured/.test(msg)?rt('Falta la llave del fondo (SEAL_WIF) en Supabase.','The fund key (SEAL_WIF) is missing in Supabase.'):/daily limit/.test(msg)?rt('Se llegó al límite de sellos de hoy.','Today\'s seal limit was reached.'):rt('No se pudo sellar ahora.','Could not seal right now.');
+  const info=[j.address?rt('Dirección que usa la función','Address the function uses')+': '+j.address:'',j.net?rt('Red','Network')+': '+j.net:'',j.detail?rt('Detalle','Detail')+': '+j.detail:'',!j.address&&!j.detail?msg:''].filter(Boolean).join('\n');
+  popCard(`<div style="padding:14px 18px"><b style="font-size:17px">${rt('No se pudo sellar','Could not seal')}</b><p class="small" style="margin:8px 0">${esc(why)}</p><pre class="mono" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;margin:0;padding:10px;border-radius:10px">${esc(info)}</pre></div><button class="mi" data-act="copy" data-v="${esc(info)}">${rt('Copiar detalle','Copy detail')}</button><button class="mi" data-act="closeMore">${rt('Cerrar','Close')}</button>`)}
 function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&d.sig){const k=d.id+':'+(d.updatedAt||0);if(SIGCHK[k]===undefined){SIGCHK[k]='?';docHash(d).then(h=>{SIGCHK[k]=h!==d.sig.hash;if(SIGCHK[k])redrawSheet()})}}},render(){
   const d=S.docs[id];if(!d)return sheetHead('')+`<div class="wrap"><div class="empty">${t('noData')}</div></div>`;
   const c=calc(d),s=status(d),cl=S.clients[d.clientId]||{},j=jobOf(d);
@@ -738,6 +780,7 @@ function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&
   return sheetHead(title,{right:`<button class="textbtn" data-act="editDoc" data-id="${id}">${t('edit')}</button>`})+`<div class="wrap sheet-b">
   <div class="hero"><div class="no num">${money(isEst?c.total:c.balance)}</div><div class="due">${isEst?t('total'):t('balance')} ${badge(s)} ${dueText(d)}</div></div>
   ${docSteps(d)}
+  ${docActions(d)}
   <div class="group"><div class="kv"><span>${t('billTo')}</span><span>${esc(cl.name||'—')}</span></div>
   ${j?`<div class="kv"><span>${t('job')}</span><span>${esc(j.name)}</span></div>`:''}
   ${j&&j.address?`<div class="kv"><span>${t('jobSite')}</span><span>${esc(j.address)}<br><a class="linkbtn" style="padding:4px 0" href="${mapsURL(j.address)}" target="_blank" rel="noopener">${ic('pin')} ${t('openMaps')}</a></span></div>`:''}
@@ -751,25 +794,10 @@ function docDetail(id){return{live:true,pay:true,chk(){const d=S.docs[id];if(d&&
   ${isEst?'':`<div class="tot"><span>${t('paidSoFar')}</span><span>−${money(c.paid)}</span></div><div class="tot big bal ${c.balance<=0.005?'zero':''}"><span>${t('balance')}</span><span>${money(c.balance)}</span></div>`}
   </div>
   ${(d.photos||[]).length?`<div class="group"><div class="gl">${t('photos')} (${d.photos.length}/9)</div><div class="photos">${d.photos.map((p,k)=>`<button class="photo" data-act="viewPhoto" data-id="${id}" data-k="${k}"><img data-photo="${p.id}" alt="${esc(p.caption||'')}">${p.caption?`<span class="cap">${esc(p.caption)}</span>`:''}</button>`).join('')}</div></div>`:''}
-  <div class="btns">
-  ${isEst?(d.convertedTo?`<button class="btn wide" data-act="openDoc" data-id="${d.convertedTo}">${t('estConverted')} →</button>`:`<button class="btn primary wide" data-act="convert" data-id="${id}">${t('convert')}</button>`)
-  :`<button class="btn primary wide" data-act="pay" data-id="${id}" ${c.balance<=0.005?'disabled':''}>${c.balance<=0.005?t('paidInFull'):t('recordPayment')}</button>`}
-  <div class="row2"><button class="btn" data-act="openSend" data-id="${id}">${ic('mail')} ${t('tab_send')}</button><button class="btn" data-act="openPreview" data-id="${id}">${t('tab_preview')}</button></div>
-  ${!isEst&&c.balance>0.005&&d.sent?`<button class="btn wide" data-act="openReminder" data-id="${id}">${ic('bell')} ${t('sendReminder')}${(d.reminders||[]).length?` <span class="small">(${d.reminders.length})</span>`:''}</button>`:''}
-  <button class="btn" data-act="sharePdf" data-id="${id}">${t('sharePdf')}</button>
-  <button class="btn" data-act="pdf" data-id="${id}">${t('downloadPdf')}</button>
-  <button class="btn" data-act="toggleSent" data-id="${id}">${d.sent?t('markUnsent'):t('markSent')}</button>
-  <button class="btn" data-act="copyDoc" data-id="${id}">${t('copyText')}</button>
-  ${isEst&&!d.convertedTo&&!d.accepted?`<button class="btn" data-act="accept" data-id="${id}">${t('markAccepted')}</button>`:''}
-  <button class="btn" data-act="duplicate" data-id="${id}">${t('duplicate')}</button>
-  </div>
-  ${!isEst&&c.balance>0.005?paySection(d):''}
-  ${sealRow(d)}
-  ${sigBlock(d)}
+  ${sigLine(d)}
   ${isEst?'':`<div class="group"><div class="gl">${t('payments')}</div>${(d.payments||[]).length?d.payments.map(p=>`<div class="kv"><span>${fdate(p.date)} · ${esc(p.method)}${p.ref?' · '+esc(p.ref):''}${p.coin?`<br><span class="small">${esc(p.coin)}</span>`:''}${p.txid?`<br><span class="small mono" style="padding:2px 4px">${esc(p.txid)}</span>`:''}${p.note?`<br><span class="small">${esc(p.note)}</span>`:''}</span><span class="num green">${money(p.amount)} <button class="textbtn" style="padding:2px 6px;vertical-align:middle" data-act="receipt" data-id="${id}" data-p="${p.id}">${rt('Recibo','Receipt')}</button><button class="iconbtn" style="padding:2px;vertical-align:middle" data-act="delPay" data-id="${id}" data-p="${p.id}" aria-label="${t('del')}">${ic('trash')}</button></span></div>`).join(''):`<p class="small">${t('noPayments')}</p>`}</div>`}
   ${d.payInstr?`<div class="group"><div class="gl">${t('payInstr')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.payInstr)}</p></div>`:''}
   ${d.notes?`<div class="group"><div class="gl">${t('notes')}</div><p style="white-space:pre-wrap;margin:0">${esc(d.notes)}</p></div>`:''}
-  <div id="delZone"><button class="btn bad" data-act="askDel" data-id="${id}">${t('del')}</button></div>
   </div>`;
 },after(){fetchPrices();this.chk&&this.chk()}}}
 
@@ -1499,11 +1527,11 @@ async function sealDoc(d,quiet){
     const c=invoiceCanon(d);const hh=await sha256hex(c);
     const r=await fetch(MCFG.supabaseUrl+'/functions/v1/seal',{method:'POST',headers:{'Content-Type':'application/json',apikey:MCFG.supabaseAnonKey},body:JSON.stringify({hash:hh,kind:'inv'})});
     const j=await r.json().catch(()=>({}));
-    if(!r.ok||!/^[0-9a-f]{64}$/.test(j.txid||''))throw new Error(j.error||('http '+r.status));
+    if(!r.ok||!/^[0-9a-f]{64}$/.test(j.txid||'')){const er=new Error(j.error||('http '+r.status));er.info=j;throw er}
     const seal={h:hh,c,txid:j.txid,net:j.net==='main'?'main':'test',at:Date.now()};
     const real=S.docs[d.id]||d;real.seal=seal;if(real!==d)d.seal=seal;commit();
     if(!quiet)toast(rt('Factura sellada en BSV','Invoice sealed on BSV'));return seal;
-  }catch(e){if(quiet)sealOff=true;else toast(rt('No se pudo sellar ahora: ','Could not seal right now: ')+String(e&&e.message||'').slice(0,60));return null}
+  }catch(e){if(quiet)sealOff=true;else sealErrPop(e);return null}
   finally{delete sealBusy[d.id]}
 }
 function sealRow(d){if(!d||d.kind==='estimate'||!menuCloudOK())return '';
@@ -2008,6 +2036,11 @@ const A={
   chainSkip:e=>{const d=S.docs[e.dataset.id];if(d&&e.dataset.tx){d.bsvSeen=[...(d.bsvSeen||[]),e.dataset.tx];persist()}runChainCheck(e.dataset.id)},
   chainConfirm:e=>chainConfirm(e.dataset.id),
   storeBsv:()=>storeBsvStart(),
+  payOpen:e=>showSheet(cobrarSheet(e.dataset.id)),
+  docMore:e=>docMore(e.dataset.id),
+  closeMore:()=>closeMore(),
+  docDelAsk:e=>{if(e.dataset.sure){closeMore();A.delDoc(e);return}e.dataset.sure='1';e.textContent=t('confirmDel')+' '+t('yesDel');},
+  sealStep:e=>{const d=S.docs[e.dataset.id];if(d&&sealOk(d)){window.open(sealLink(d),'_blank','noopener');return}A.sealNow(e)},
   sealNow:async e=>{const d=S.docs[e.dataset.id];sealOff=false;await sealDoc(d,false);redrawSheet()},
   sharePayLink:e=>sharePayLink(S.docs[e.dataset.id]),
   receipt:e=>receiptPDF(S.docs[e.dataset.id],e.dataset.p),
