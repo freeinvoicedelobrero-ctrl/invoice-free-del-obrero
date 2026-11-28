@@ -118,7 +118,10 @@ button.btn[disabled]{opacity:.6}
         .then(function(r){return r.json().catch(function(){return {}})}).then(function(j){if(j&&/^[0-9a-f]{64}$/.test(j.txid||''))seal={h:sh,txid:j.txid,net:j.net==='main'?'main':'test',at:Date.now()}}).catch(function(){})
     }).then(function(){
       return rpc('sign_put',{p_tok:o.t,p_data:JSON.stringify({img:img,name:name,at:at,h:o.h,ua:navigator.userAgent.slice(0,120),seal:seal})})
-    }).then(function(){done(seal)}).catch(function(e){go.disabled=false;msg.textContent=/already/.test(String(e))?T.already:T.err});
+    }).then(function(){
+      /* phone alert to the seller (if they turned alerts on); never blocks the signature */
+      if(/^[0-9a-f]{32}$/.test(o.pn||''))fetch(CFG.supabaseUrl+'/functions/v1/push',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json',apikey:CFG.supabaseAnonKey},body:JSON.stringify({op:'sig',ch:o.pn,n:o.n,who:name})}).catch(function(){});
+      done(seal)}).catch(function(e){go.disabled=false;msg.textContent=/already/.test(String(e))?T.already:T.err});
   };
   }
 })();

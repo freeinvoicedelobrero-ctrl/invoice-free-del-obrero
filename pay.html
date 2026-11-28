@@ -143,6 +143,8 @@ h2{font-size:15px;margin:0 0 8px}
     else if(sMail){href='mailto:'+encodeURIComponent(sMail)+'?subject='+encodeURIComponent((es?'Pago de factura #':'Invoice payment #')+o.n)+'&body='+encodeURIComponent(msg);note=T.viaMail}
     else if(sPhone){href='https://wa.me/'+full+'?text='+encodeURIComponent(msg);note=T.viaWa}
     notified=true;
+    /* phone alert to the seller (if they turned alerts on); the message below still goes out as before */
+    if(/^[0-9a-f]{32}$/.test(o.pn||'')&&window.OBRERO_CONFIG&&OBRERO_CONFIG.supabaseUrl)try{fetch(OBRERO_CONFIG.supabaseUrl+'/functions/v1/push',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json',apikey:OBRERO_CONFIG.supabaseAnonKey},body:JSON.stringify({op:'paid',ch:o.pn,n:o.n,who:name,m:method,amt:money(bal)})}).catch(function(){})}catch(e){}
     if(href){out.appendChild(el('p','ok',note));location.href=href}
     else{out.appendChild(el('p','small',T.noSeller));out.appendChild(el('div','mono',msg));out.appendChild(copyBtn(T.copy,msg))}
   }

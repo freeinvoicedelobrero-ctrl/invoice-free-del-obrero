@@ -811,9 +811,29 @@ function addAlert(key,icon,text,docId){const a=alertsList();if(a.some(x=>x.key==
 function unreadAlerts(){return alertsList().filter(x=>!x.read).length}
 function paintBell(){const b=document.getElementById('bellBtn');if(!b)return;const n=unreadAlerts();b.innerHTML=ic('bell',2)+(n?`<span class="bdg">${n>9?'9+':n}</span>`:'');b.setAttribute('aria-label',rt('Alertas','Alerts')+(n?' ('+n+')':''))}
 function checkDueAlerts(){const today=todayISO();invoicesAll().forEach(d=>{const c=calc(d);if(d.sent&&c.balance>0.005&&c.due<today)addAlert('due:'+d.id+':'+c.due,'⏰',rt('Factura #','Invoice #')+d.number+rt(' venció · saldo ',' is overdue · balance ')+money(c.balance)+' · '+clientName(d.clientId),d.id)})}
+/* ---- phone alerts (Web Push): the "push" Edge Function sends them even when the app is closed ---- */
+function pushSupported(){return 'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window&&menuCloudOK()}
+function pushIOSNeedsInstall(){return /iP(hone|ad|od)/.test(navigator.userAgent)&&!(navigator.standalone||matchMedia('(display-mode: standalone)').matches)}
+function pushCall(b){return fetch(MCFG.supabaseUrl+'/functions/v1/push',{method:'POST',headers:{'Content-Type':'application/json',apikey:MCFG.supabaseAnonKey},body:JSON.stringify(b)}).then(r=>r.json().catch(()=>({})).then(j=>{if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j}))}
+function pushCh(){return S.profile.pushOn&&/^[0-9a-f]{32}$/.test(S.profile.pushId||'')?S.profile.pushId:''}
+function pushRow(){if(!('Notification' in window)&&!pushIOSNeedsInstall())return '';const on=pushCh()&&('Notification' in window)&&Notification.permission==='granted';
+  return `<div style="border-top:1px solid var(--line,#26292F);margin-top:6px;padding:10px 18px 14px">${on?`<div class="small">📲 ${rt('Alertas en este teléfono: activas','Phone alerts: on')} · <button class="textbtn" data-act="pushTest" data-keep="1">${rt('Probar','Test')}</button> · <button class="textbtn" data-act="pushOff" data-keep="1">${rt('Apagar','Turn off')}</button></div>`
+  :`<button class="btn primary" style="width:100%" data-act="pushOn" data-keep="1">📲 ${rt('Avisarme en el teléfono','Alert me on my phone')}</button><div class="small" style="margin-top:6px">${rt('Te avisa cuando firmen o reporten un pago, aunque la app esté cerrada.','Get notified when a customer signs or reports a payment, even with the app closed.')}</div>`}</div>`}
+async function pushOn(){
+  if(pushIOSNeedsInstall()){popCard(`<div style="padding:16px 18px"><b>📲 ${rt('Primero instala la app','Install the app first')}</b><p class="small">${rt('En iPhone: toca Compartir ⬆️ y luego "Agregar a inicio". Abre la app desde el ícono y vuelve a tocar "Avisarme en el teléfono".','On iPhone: tap Share ⬆️, then "Add to Home Screen". Open the app from the icon and tap "Alert me on my phone" again.')}</p></div>`);return}
+  if(!pushSupported()){toast(rt('Este navegador no permite alertas','This browser does not support alerts'));return}
+  try{const perm=await Notification.requestPermission();if(perm!=='granted'){toast(rt('Permiso negado. Actívalo en Ajustes del teléfono.','Permission denied. Turn it on in your phone settings.'));return}
+    const reg=await navigator.serviceWorker.ready;const {key}=await pushCall({op:'key'});
+    const raw=Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((key.length+3)%4)),c=>c.charCodeAt(0));
+    let sub=await reg.pushManager.getSubscription();if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:raw});
+    if(!/^[0-9a-f]{32}$/.test(S.profile.pushId||''))S.profile.pushId=newTok();
+    await pushCall({op:'sub',ch:S.profile.pushId,lang,sub:sub.toJSON()});S.profile.pushOn=true;commit();
+    await pushCall({op:'test',ch:S.profile.pushId}).catch(()=>{});toast(rt('✓ Alertas activas','✓ Alerts on'));alertsPop()
+  }catch(e){toast(rt('No se pudo activar: ','Could not turn on: ')+(e.message||e))}}
+async function pushOff(){try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){await pushCall({op:'unsub',ch:S.profile.pushId,endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}S.profile.pushOn=false;commit();toast(rt('Alertas apagadas','Alerts off'));alertsPop()}
 function alertsPop(){const a=alertsList();const when=t0=>{const m=Math.round((Date.now()-t0)/60000);return m<1?rt('ahora','now'):m<60?m+' min':m<1440?Math.round(m/60)+' h':new Date(t0).toLocaleDateString(lang==='es'?'es-MX':'en-US',{month:'short',day:'numeric'})};
   popCard(`<div style="padding:14px 18px 6px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:17px">🔔 ${rt('Alertas','Alerts')}</b>${a.length?`<button class="textbtn" data-act="alertsClear" data-keep="1">${rt('Borrar todo','Clear all')}</button>`:''}</div>
-  ${a.length?a.map((x,i)=>`<button class="mi" data-act="alertOpen" data-i="${i}" style="display:flex;gap:12px;align-items:flex-start${x.read?';opacity:.65':''}"><span style="font-size:20px;line-height:1.2">${x.icon}</span><span style="flex:1;min-width:0">${x.read?'':'<b>'}${esc(x.text)}${x.read?'':'</b>'}<br><span class="small">${when(x.at)}</span></span></button>`).join(''):`<p class="small" style="padding:4px 18px 16px;margin:0">${rt('No hay alertas. Aquí te avisamos cuando un cliente firme, llegue un pedido o venza una factura.','No alerts. You will see here when a customer signs, an order arrives or an invoice becomes overdue.')}</p>`}`);
+  ${a.length?a.map((x,i)=>`<button class="mi" data-act="alertOpen" data-i="${i}" style="display:flex;gap:12px;align-items:flex-start${x.read?';opacity:.65':''}"><span style="font-size:20px;line-height:1.2">${x.icon}</span><span style="flex:1;min-width:0">${x.read?'':'<b>'}${esc(x.text)}${x.read?'':'</b>'}<br><span class="small">${when(x.at)}</span></span></button>`).join(''):`<p class="small" style="padding:4px 18px 16px;margin:0">${rt('No hay alertas. Aquí te avisamos cuando un cliente firme, llegue un pedido o venza una factura.','No alerts. You will see here when a customer signs, an order arrives or an invoice becomes overdue.')}</p>`}${pushRow()}`);
   a.forEach(x=>x.read=true);persist();paintBell()}
 let ordersSeen=null;
 async function checkOrderAlerts(){if(!menuCloudOK()||!S.profile.menuId)return;try{await loadOrders()}catch(e){return}(ordersState.list||[]).filter(o=>o.status==='new').forEach(o=>{let d={};try{d=typeof o.data==='string'?JSON.parse(o.data):(o.data||{})}catch(e){}
@@ -831,7 +851,7 @@ function newTok(){const a=new Uint8Array(16);crypto.getRandomValues(a);return [.
 async function signLink(d){if(!d.signTok){d.signTok=newTok();commit()}if(!d.signSecret){d.signSecret=newTok();commit()}const c=calc(d),cl=S.clients[d.clientId]||{},p=S.profile;
   const o={v:1,t:d.signTok,k:d.kind,n:String(d.number),s:(p.company||'').slice(0,80),sp:(p.phone||'').slice(0,30),c:(cl.name||'').slice(0,80),dt:d.date||'',cur:ccy(),
     it:(d.items||[]).filter(i=>i.desc||+i.rate).slice(0,60).map(i=>[String(i.desc||'').slice(0,140),+i.qty||0,String(i.unit||''),r2(+i.rate||0)]),tot:r2(c.total),
-    terms:String(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'')).slice(0,6000),acc:docLang(d)==='es'?`Al firmar, el cliente acepta el trabajo, el precio y los términos de este documento y autoriza a ${p.company||'el contratista'} a comenzar.`:`By signing, the customer accepts the work, price and terms of this document and authorizes ${p.company||'the contractor'} to proceed.`,l:docLang(d),h:await docHash(d)};
+    terms:String(d.contractTerms!==undefined?d.contractTerms:(p.contractTerms||'')).slice(0,6000),acc:docLang(d)==='es'?`Al firmar, el cliente acepta el trabajo, el precio y los términos de este documento y autoriza a ${p.company||'el contratista'} a comenzar.`:`By signing, the customer accepts the work, price and terms of this document and authorizes ${p.company||'the contractor'} to proceed.`,l:docLang(d),h:await docHash(d)};if(pushCh())o.pn=pushCh();
   d.signHash=o.h;commit();
   /* the document waits in the cloud under the token, so the link stays short and WhatsApp does not cut it */
   await menuRpc('sign_offer',{p_tok:d.signTok,p_secret:d.signSecret,p_doc:JSON.stringify(o)});
@@ -1589,7 +1609,7 @@ function payData(d){
   const ms=enabledMethods().filter(m=>PRESETS[m.type]?.ach||(payAddress(m,d)||'').trim()).sort((a,b)=>rank(a)-rank(b)||(a.order||0)-(b.order||0)).map(m=>{
     const pr=PRESETS[m.type]||{};const v=pr.ach?achText(m):m.type==='stripe'?(m.address||'').trim().replace(/[?#].*$/,''):(payAddress(m,d)||'').trim();
     const nm=(m.name||'').trim();const row=[m.type,nm&&nm!==pr.label?nm:'',v];if(m.network)row.push(m.network);return row});
-  const o={v:1,s:(S.profile.company||'').trim(),n:String(d.number),mm:payRef(d),b:r2(Math.max(0,c.balance)).toFixed(2),cur:ccy(),m:ms,l:docLang(d)};if(photosShared(d))o.ph=d.photoTok;
+  const o={v:1,s:(S.profile.company||'').trim(),n:String(d.number),mm:payRef(d),b:r2(Math.max(0,c.balance)).toFixed(2),cur:ccy(),m:ms,l:docLang(d)};if(photosShared(d))o.ph=d.photoTok;if(pushCh())o.pn=pushCh();
   const ph=(S.profile.phone||'').replace(/[^\d+]/g,'');if(ph)o.p=ph;
   /* the customer's own contact, to prefill where the receipt goes */
   const cl=S.clients[d.clientId]||{};const ce=(cl.emails||[]).map(x=>(x||'').trim()).find(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));if(ce)o.ce=ce;const cp=(cl.mobile||'').trim();if(cp.replace(/\D/g,'').length>=7)o.cp=cp;const em=(S.profile.email||'').trim();if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em))o.e=em;
@@ -2155,6 +2175,7 @@ const A={
   docMore:e=>docMore(e.dataset.id),
   sharePhotos:e=>sharePhotos(S.docs[e.dataset.id]),
   alerts:()=>alertsPop(),
+  pushOn:()=>pushOn(),pushOff:()=>pushOff(),pushTest:()=>pushCall({op:'test',ch:pushCh()}).then(j=>toast(j.sent?rt('✓ Enviada','✓ Sent'):rt('No llegó a ningún teléfono. Apaga y vuelve a activar.','No phone got it. Turn alerts off and on again.'))).catch(e=>toast(e.message)),
   alertsClear:()=>{S.meta.alerts=[];persist();paintBell();closeMore()},
   alertOpen:e=>{const x=alertsList()[+e.dataset.i];if(!x)return;if(x.docId&&S.docs[x.docId]){A.openDoc({dataset:{id:x.docId}})}else if(x.key.startsWith('order:')){A.storeOpen();if(A.ordersOpen)A.ordersOpen()}},
   closeMore:()=>closeMore(),

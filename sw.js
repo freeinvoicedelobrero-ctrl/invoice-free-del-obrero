@@ -1,5 +1,5 @@
 /* Invoice Free del Obrero — offline support. Bump VERSION when you change files. */
-const VERSION = 'obrero-v84';
+const VERSION = 'obrero-v85';
 const SHELL = ['./', './index.html', './menu.html', './recibo.html', './pay.html', './sello.html', './firma.html', './fotos.html', './manifest.webmanifest', './roofer.png', './cloud.js', './config.js', './icon-192.png', './icon-512.png', './lib-jspdf.js', './lib-autotable.js', './lib-qrcode.js', './lib-supabase.js', './lib-bip39-en.json'];
 const CDN = []; // libraries are now self-hosted in SHELL
 self.addEventListener('install', e => {
@@ -20,4 +20,19 @@ self.addEventListener('fetch', e => {
   }
   // Libraries and fonts: cache first
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put(e.request, copy)); return res; })));
+});
+
+/* Phone alerts (Web Push) from the "push" Edge Function */
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {} } catch (x) { d = { body: e.data && e.data.text() } }
+  e.waitUntil(self.registration.showNotification(d.title || 'Invoice Free del Obrero', { body: d.body || '', tag: d.tag || undefined, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: d.url || './' } }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || './', self.registration.scope).href;
+  e.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) if (c.url.startsWith(self.registration.scope) && 'focus' in c) return c.focus();
+    return clients.openWindow(url);
+  }));
 });
