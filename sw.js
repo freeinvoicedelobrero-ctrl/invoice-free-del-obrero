@@ -1,13 +1,7 @@
 /* Invoice Free del Obrero — offline support. Bump VERSION when you change files. */
-const VERSION = 'obrero-v83';
-const SHELL = ['./', './index.html', './menu.html', './recibo.html', './pay.html', './sello.html', './firma.html', './fotos.html', './manifest.webmanifest', './roofer.png', './cloud.js', './config.js', './icon-192.png', './icon-512.png'];
-const CDN = [
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js',
-  'https://cdn.jsdelivr.net/npm/bip39@3.1.0/src/wordlists/english.json'
-];
+const VERSION = 'obrero-v84';
+const SHELL = ['./', './index.html', './menu.html', './recibo.html', './pay.html', './sello.html', './firma.html', './fotos.html', './manifest.webmanifest', './roofer.png', './cloud.js', './config.js', './icon-192.png', './icon-512.png', './lib-jspdf.js', './lib-autotable.js', './lib-qrcode.js', './lib-supabase.js', './lib-bip39-en.json'];
+const CDN = []; // libraries are now self-hosted in SHELL
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL).then(() => Promise.all(CDN.map(u => c.add(u).catch(() => {}))))));
   self.skipWaiting();

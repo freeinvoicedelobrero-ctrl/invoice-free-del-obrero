@@ -84,7 +84,7 @@ async function decryptStr(keyB64,s){const [v,iv,ct]=s.split('.');if(v!=='v1')thr
 let WL=null;
 async function wordlist(){
   if(WL)return WL;
-  for(const u of ['bip39-english.json','https://cdn.jsdelivr.net/npm/bip39@3.1.0/src/wordlists/english.json']){
+  for(const u of ['bip39-english.json','lib-bip39-en.json']){
     try{const r=await fetch(u);if(r.ok){const j=await r.json();if(Array.isArray(j)&&j.length===2048){WL=j;return WL}}}catch(e){}
   }
   throw new Error(t('wordlistFail'));
