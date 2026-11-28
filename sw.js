@@ -1,5 +1,5 @@
 /* Invoice Free del Obrero — offline support. Bump VERSION when you change files. */
-const VERSION = 'obrero-v90';
+const VERSION = 'obrero-v91';
 const SHELL = ['./', './index.html', './menu.html', './recibo.html', './pay.html', './sello.html', './firma.html', './fotos.html', './manifest.webmanifest', './roofer.png', './cloud.js', './config.js', './icon-192.png', './icon-512.png', './lib-jspdf.js', './lib-autotable.js', './lib-qrcode.js', './lib-supabase.js', './lib-bip39-en.json'];
 const CDN = []; // libraries are now self-hosted in SHELL
 self.addEventListener('install', e => {
