@@ -2278,6 +2278,8 @@ load();
 const madeRecur=runRecurring();
 showWelcome=!S.profile.started;
 render();
+/* app-icon shortcuts: ./?go=newInvoice etc. */
+try{const go=new URLSearchParams(location.search).get('go');if(go&&['newInvoice','newEstimate','storeOpen','reports'].includes(go)&&!showWelcome&&A[go]){history.replaceState(null,'',location.pathname);setTimeout(()=>A[go](),150)}}catch(e){}
 if(madeRecur)setTimeout(()=>toast(rt(`${madeRecur} factura(s) recurrente(s) lista(s) para enviar`,`${madeRecur} recurring invoice(s) ready to send`)),600);
 if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 if(navigator.storage&&navigator.storage.persist){navigator.storage.persist().catch(()=>{})}

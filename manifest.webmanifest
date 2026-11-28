@@ -1,16 +1,26 @@
 {
+  "id": "./",
   "name": "Invoice Free del Obrero",
   "short_name": "Free Obrero",
-  "description": "Free, open-source invoicing for roofers and tradespeople. English / Español.",
+  "description": "Free invoicing, quick sales and P2P payments for everyone. Your business and finances in one place. English / Español.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",
-  "lang": "es",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "New invoice", "short_name": "Invoice", "url": "./?go=newInvoice", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Quick sale", "short_name": "Charge", "url": "./?go=storeOpen", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "New estimate", "short_name": "Estimate", "url": "./?go=newEstimate", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Payments", "short_name": "Payments", "url": "./?go=reports", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]
 }
