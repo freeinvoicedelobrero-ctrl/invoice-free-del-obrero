@@ -93,8 +93,8 @@ h2{font-size:15px;margin:0 0 8px}
   var cur=/^[A-Z]{3}$/.test(o.cur)?o.cur:'USD',bal=+o.b,memo=String(o.mm||'').replace(/[^A-Za-z0-9-]/g,'').slice(0,24),seller=String(o.s||'').slice(0,80);
   var sPhone=String(o.p||'').replace(/[^\d+]/g,'').slice(0,16),sMail=EMAIL.test(o.e||'')?String(o.e).slice(0,120):'';
   function money(v){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:cur}).format(v)}catch(e){return cur+' '+(+v).toFixed(2)}}
-  var P={stripe:{l:'Stripe',k:'card'},zelle:{l:'Zelle',k:'fiat'},cashapp:{l:'Cash App',k:'fiat'},venmo:{l:'Venmo',k:'fiat'},paypal:{l:'PayPal',k:'fiat'},ach:{l:es?'Transferencia bancaria (ACH)':'Bank transfer (ACH)',k:'fiat'},
-    btc:{l:'Bitcoin',s:'BTC',cg:'bitcoin',dp:8},bsv:{l:'Bitcoin SV',s:'BSV',cg:'bitcoin-cash-sv',dp:8},ln:{l:'Bitcoin Lightning',s:'BTC'},xmr:{l:'Monero',s:'XMR',cg:'monero',dp:6},eth:{l:'Ethereum',s:'ETH',cg:'ethereum',dp:6},
+  var P={stripe:{l:'Stripe',k:'card'},zelle:{l:'Zelle',k:'fiat'},cashapp:{l:'Cash App',k:'fiat'},venmo:{l:'Venmo',k:'fiat'},paypal:{l:'PayPal',k:'fiat'},sepa:{l:es?'Transferencia SEPA / IBAN':'Bank transfer (SEPA / IBAN)',k:'fiat'},spei:{l:'SPEI / CLABE',k:'fiat'},pix:{l:'PIX',k:'fiat'},upi:{l:'UPI',k:'fiat'},interac:{l:'Interac e-Transfer',k:'fiat'},wise:{l:'Wise',k:'fiat'},revolut:{l:'Revolut',k:'fiat'},mercadopago:{l:'Mercado Pago',k:'fiat'},nequi:{l:'Nequi',k:'fiat'},bizum:{l:'Bizum',k:'fiat'},mpesa:{l:'M-Pesa',k:'fiat'},gcash:{l:'GCash',k:'fiat'},ach:{l:es?'Transferencia bancaria (ACH)':'Bank transfer (ACH)',k:'fiat'},
+    btc:{l:'Bitcoin',s:'BTC',cg:'bitcoin',dp:8},bsv:{l:'Bitcoin SV',s:'BSV',cg:'bitcoin-cash-sv',dp:8},ln:{l:'Bitcoin Lightning',s:'BTC'},xmr:{l:'Monero',s:'XMR',cg:'monero',dp:6},eth:{l:'Ethereum',s:'ETH',cg:'ethereum',dp:6},hype:{l:'Hyperliquid',s:'HYPE',cg:'hyperliquid',dp:6},arrr:{l:'Pirate Chain',s:'ARRR',cg:'pirate-chain',dp:6},
     ltc:{l:'Litecoin',s:'LTC',cg:'litecoin',dp:6},sol:{l:'Solana',s:'SOL',cg:'solana',dp:6},usdc:{l:'USDC',s:'USDC',st:1},usdt:{l:'USDT',s:'USDT',st:1},custom:{l:es?'Otra moneda':'Other coin'}};
   var ms=o.m.filter(function(r){return Array.isArray(r)&&P[r[0]]&&typeof r[2]==='string'&&r[2].trim()}).map(function(r){return{t:r[0],nm:String(r[1]||'').slice(0,40),v:r[2].trim().slice(0,600),net:String(r[3]||'').slice(0,20)}});
   function label(m){return m.t==='stripe'?(es?'tarjeta o banco':'card or bank'):(m.nm||P[m.t].l)}
@@ -111,11 +111,12 @@ h2{font-size:15px;margin:0 0 8px}
 
   function uri(m,amt){var a=m.v,n=encodeURIComponent(memo);
     switch(m.t){case 'btc':return 'bitcoin:'+a+(amt?'?amount='+amt+'&label='+n:'');case 'ln':return 'lightning:'+a;case 'xmr':return 'monero:'+a+(amt?'?tx_amount='+amt+'&tx_description='+n:'');
-      case 'eth':return 'ethereum:'+a;case 'ltc':return 'litecoin:'+a+(amt?'?amount='+amt:'');case 'sol':return 'solana:'+a+(amt?'?amount='+amt:'');case 'bsv':return a;
+      case 'eth':return 'ethereum:'+a;case 'ltc':return 'litecoin:'+a+(amt?'?amount='+amt:'');case 'sol':return 'solana:'+a+(amt?'?amount='+amt:'');case 'bsv':case 'hype':case 'arrr':return a;
       case 'stripe':{if(!/^https:\/\/buy\.stripe\.com\/[A-Za-z0-9_]+\/?$/.test(a))return null;var em=rcEmail();return a+'?client_reference_id='+n+(em?'&prefilled_email='+encodeURIComponent(em):'')}
       case 'cashapp':return 'https://cash.app/$'+encodeURIComponent(a.replace(/^\$/,''))+'/'+bal.toFixed(2);
       case 'venmo':return 'https://venmo.com/u/'+encodeURIComponent(a.replace(/^@/,''));
       case 'paypal':{var u=a.replace(/^https?:\/\//,'').replace(/^paypal\.me\//i,'').replace(/[^A-Za-z0-9_.-]/g,'');return u?'https://paypal.me/'+u+'/'+bal.toFixed(2)+cur:null}
+      case 'upi':return 'upi://pay?pa='+encodeURIComponent(a)+'&pn='+encodeURIComponent(o.s||'')+'&tn='+n+'&am='+bal.toFixed(2)+'&cu='+cur;
       default:return null}}
   function qr(text){if(!window.qrcode||!text)return null;try{var q=qrcode(0,'M');q.addData(text);q.make();var d=el('div','qr');d.innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true});return d}catch(e){return null}}
   function copyBtn(lbl,val,onUse){var b=el('button','btn',lbl);b.type='button';b.onclick=function(){if(onUse)onUse();var done=function(){b.textContent=T.copied;setTimeout(function(){b.textContent=lbl},1500)};if(navigator.clipboard)navigator.clipboard.writeText(val).then(done,function(){})};return b}
