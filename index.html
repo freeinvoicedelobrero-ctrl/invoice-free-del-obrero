@@ -583,7 +583,7 @@ function vMore(){
   ${sec(t('secCashflow'),it('walletOpen',t('wallet'),esc(t('walletHeader'))))}
   ${sec(t('secItems'),it('recurOpen',rt('Facturas recurrentes','Recurring invoices'))+it('savedItems',t('savedItems'))+it('expensesOpen',t('expenses'),expMonth?t('thisMonth')+': '+money(expMonth):''))}
   ${sec(t('secInsights'),it('reports',t('reports')))}
-  ${sec(t('secBusiness'),(window.cloudMoreRow?window.cloudMoreRow():'')+it('settings',t('settings'),esc(S.profile.company))+it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never'))))}
+  ${sec(t('secBusiness'),(window.cloudMoreRow?window.cloudMoreRow():'')+it('settings',t('settings'),esc(S.profile.company))+(lockSupported()?it('lockOpen',rt('Candado con huella o cara','App lock (fingerprint / face)'),lockCred()?rt('Activo','On'):rt('Apagado','Off')):'')+it('importExport',t('importExport'),t('lastBackup')+': '+(S.profile.lastBackup?fdate(S.profile.lastBackup):t('never'))))}
   ${sec(t('secSupport'),it('shareApp',t('shareApp'),t('shareAppSub'))+it('donateOpen',t('donate'),t('donateSub'))+it('helpOpen',t('help'))+it('aboutOpen',t('about')))}
   </div>
   <div class="group"><div class="gl">${t('language')}</div><div class="seg"><button data-act="setLang" data-v="es" aria-pressed="${lang==='es'}">Español</button><button data-act="setLang" data-v="en" aria-pressed="${lang==='en'}">English</button></div></div>
@@ -652,7 +652,27 @@ function ensureXmrSub(d,m){
   const free=subs.find(s=>!m.used[s]);if(!free)return null;
   m.used[free]=d.number;d.xmrSub=free;d.xmrMethod=m.id;persist();return free;
 }
-function payRef(d){if(!d.payRef){const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';d.payRef='F'+(String(d.number).replace(/\D/g,'')||'0')+'-'+[...crypto.getRandomValues(new Uint8Array(4))].map(x=>A[x%A.length]).join('');if(S.docs[d.id]===d)persist()}return d.payRef}
+/* ---- App lock: fingerprint / face / phone PIN through the phone's own secure chip (WebAuthn). Kept on this phone only. ---- */
+const LOCK_KEY='obrero-lock';let lockShownAt=0,hiddenAt=0;
+function lockSupported(){return !!(window.PublicKeyCredential&&navigator.credentials&&window.isSecureContext)}
+function lockCred(){try{return localStorage.getItem(LOCK_KEY)||''}catch(e){return ''}}
+const b64uE=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64uD=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4)),c=>c.charCodeAt(0));
+async function lockCheck(){const id=lockCred();if(!id)return true;
+  const a=await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{type:'public-key',id:b64uD(id)}],userVerification:'required',timeout:60000}});
+  return !!(a&&a.rawId&&b64uE(a.rawId)===id)}
+async function lockOn(){try{
+  const c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'Invoice Free del Obrero'},
+    user:{id:crypto.getRandomValues(new Uint8Array(16)),name:(S.profile.company||'Obrero').slice(0,60),displayName:(S.profile.company||'Obrero').slice(0,60)},
+    pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'discouraged'},timeout:60000}});
+  localStorage.setItem(LOCK_KEY,b64uE(c.rawId));toast(rt('🔒 Candado activo','🔒 App lock on'));render()}catch(e){toast(rt('No se pudo activar el candado','Could not turn on the lock'))}}
+async function lockOffAsk(){try{if(await lockCheck()){localStorage.removeItem(LOCK_KEY);toast(rt('Candado apagado','App lock off'));render()}}catch(e){toast(rt('No se pudo verificar','Could not verify'))}}
+function showLock(){if(!lockCred()||document.getElementById('appLock'))return;lockShownAt=Date.now();const el=document.createElement('div');el.id='appLock';
+  el.style.cssText='position:fixed;inset:0;z-index:9999;background:#000;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center';
+  el.innerHTML=`<div style="font-size:54px">🔒</div><div style="font-size:20px;font-weight:700">Invoice Free del Obrero</div><div class="small" style="max-width:280px">${rt('Usa tu huella, cara o PIN del teléfono para abrir.','Use your fingerprint, face or phone PIN to open.')}</div><button class="btn primary" id="unlockBtn" style="min-width:220px">${rt('Desbloquear','Unlock')}</button>`;
+  document.body.appendChild(el);const go=async()=>{try{if(await lockCheck())el.remove()}catch(e){}};el.querySelector('#unlockBtn').onclick=go;setTimeout(go,300)}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=Date.now();else if(hiddenAt&&Date.now()-hiddenAt>5*60e3)showLock()});
+function payRef(d){if(!d.payRef){const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789';const r=[...crypto.getRandomValues(new Uint8Array(8))].map(x=>A[x%A.length]).join('');d.payRef=r.slice(0,4)+'-'+r.slice(4); /* private: says nothing about the invoice number */if(S.docs[d.id]===d)persist()}return d.payRef}
 function payURI(m,d,amt){
   const a=(m.address||'').trim(),n=encodeURIComponent(payRef(d));
   switch(m.type){
@@ -2200,6 +2220,8 @@ const A={
   sharePhotos:e=>sharePhotos(S.docs[e.dataset.id]),
   alerts:()=>alertsPop(),
   pushOn:()=>pushOn(),pushOff:()=>pushOff(),pushTest:()=>pushCall({op:'test',ch:pushCh()}).then(j=>toast(j.sent?rt('✓ Enviada','✓ Sent'):rt('No llegó a ningún teléfono. Apaga y vuelve a activar.','No phone got it. Turn alerts off and on again.'))).catch(e=>toast(e.message)),
+  lockOpen:()=>popCard(lockCred()?`<div style="padding:16px 18px"><b>🔒 ${rt('Candado activo','App lock is on')}</b><p class="small">${rt('La app pide tu huella, cara o PIN al abrir y después de 5 minutos sin usarla.','The app asks for your fingerprint, face or PIN when it opens and after 5 minutes away.')}</p><button class="btn" style="width:100%" data-act="lockOff">${rt('Apagar candado','Turn off lock')}</button></div>`:`<div style="padding:16px 18px"><b>🔒 ${rt('Candado con huella o cara','App lock')}</b><p class="small">${rt('Si pierdes el teléfono, nadie podrá ver tus clientes, facturas ni pagos. Usa la huella, la cara o el PIN de tu teléfono.','If you lose your phone, nobody can see your customers, invoices or payments. Uses your phone fingerprint, face or PIN.')}</p><button class="btn primary" style="width:100%" data-act="lockOn">${rt('Activar candado','Turn on lock')}</button></div>`),
+  lockOn:()=>{closeMore&&closeMore();lockOn()},lockOff:()=>{closeMore&&closeMore();lockOffAsk()},
   alertsClear:()=>{S.meta.alerts=[];persist();paintBell();closeMore()},
   alertOpen:e=>{const x=alertsList()[+e.dataset.i];if(!x)return;if(x.docId&&S.docs[x.docId]){A.openDoc({dataset:{id:x.docId}})}else if(x.key.startsWith('order:')){A.storeOpen();if(A.ordersOpen)A.ordersOpen()}},
   closeMore:()=>closeMore(),
@@ -2323,6 +2345,7 @@ load();
 const madeRecur=runRecurring();
 showWelcome=!S.profile.started;
 render();
+showLock();
 /* app-icon shortcuts: ./?go=newInvoice etc. */
 try{const go=new URLSearchParams(location.search).get('go');if(go&&['newInvoice','newEstimate','storeOpen','reports'].includes(go)&&!showWelcome&&A[go]){history.replaceState(null,'',location.pathname);setTimeout(()=>A[go](),150)}}catch(e){}
 if(madeRecur)setTimeout(()=>toast(rt(`${madeRecur} factura(s) recurrente(s) lista(s) para enviar`,`${madeRecur} recurring invoice(s) ready to send`)),600);
